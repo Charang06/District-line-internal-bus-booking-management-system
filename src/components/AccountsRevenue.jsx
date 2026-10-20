@@ -178,21 +178,28 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint }) {
         </div>
 
         <section className="content-card accounts-total-card">
-          <div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong>
-          <div className="accounts-revenue-actions">
-            <span className="accounts-live-status">● Draft / Unreconciled · Entry locks after submission</span>
-            <button type="button" className="ghost-button" onClick={resetForm}>Reset form</button>
-            <button type="button" className="secondary-button" onClick={onPrint}>Print manifest voucher</button>
-            <button type="button" className="secondary-button" onClick={exportCsv}>Export CSV</button>
-            <button type="submit" className="primary-button" disabled={saving || !busNo.trim() || seatCount > SEAT_LAYOUT.totalSeats}>{saving ? 'Saving…' : '✓ Submit & lock revenue entry'}</button>
+          <div className="accounts-total-main">
+            <span className="accounts-currency-badge">LKR</span>
+            <div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue :</h2></div>
+            <strong>{money(totalRevenue)}</strong>
+          </div>
+          <div className="accounts-total-controls">
+            <div className="accounts-draft-status"><strong>● Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div>
+            <div className="accounts-revenue-actions">
+              <button type="button" className="ghost-button" onClick={resetForm}>Reset Form</button>
+              <button type="button" className="secondary-button" onClick={onPrint}>▣ Print Manifest Voucher</button>
+              <button type="button" className="secondary-button" onClick={exportCsv}>⇩ Export CSV</button>
+            </div>
+            <button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || seatCount > SEAT_LAYOUT.totalSeats || totalRevenue <= 0}>{saving ? 'Saving revenue entry…' : '✓ Submit & Lock Revenue Entry'}</button>
+            {totalRevenue <= 0 && <span className="accounts-submit-hint">Enter at least one seat or cargo amount to submit.</span>}
           </div>
         </section>
       </form>
 
       <section className="content-card accounts-recent-card">
-        <div className="accounts-panel-heading"><div><h2>Recent operational revenue submissions</h2><p>Locked manual revenue entries.</p></div><span>{loadingEntries ? 'Loading…' : `${entries.length} ENTRIES`}</span></div>
-        <div className="daily-revenue-table-wrap"><table><thead><tr><th>Entry</th><th>Date</th><th>Bus No</th><th>Corridor</th><th>Seat revenue (Rs.)</th><th>Cargo revenue (Rs.)</th><th>Gross total (Rs.)</th><th>Status</th></tr></thead><tbody>
-          {entries.map((entry) => <tr key={entry.id}><td>{entry.entry_code}</td><td>{entry.travel_date}</td><td>{entry.bus_no}</td><td>{entry.route_label}</td><td>{money(entry.seat_subtotal)}</td><td>{money(entry.cargo_subtotal)}</td><td><strong>{money(entry.total_revenue)}</strong></td><td><span className="accounts-live-status">Locked</span></td></tr>)}
+        <div className="accounts-panel-heading"><div><h2>RECENT OPERATIONAL REVENUE SUBMISSIONS</h2><p>Live ledger of manually submitted trip revenue.</p></div><span>{loadingEntries ? 'Loading…' : '● REVENUE LEDGER'}</span></div>
+        <div className="daily-revenue-table-wrap"><table><thead><tr><th>Date</th><th>Bus No</th><th>Corridor</th><th>Driver / Conductor</th><th>Seat rev. (Rs.)</th><th>Cargo rev. (Rs.)</th><th>Gross total (Rs.)</th><th>Audit status</th></tr></thead><tbody>
+          {entries.map((entry) => <tr key={entry.id}><td>{entry.travel_date}</td><td>{entry.bus_no}</td><td>{entry.route_label}</td><td>{entry.driver_name || '—'} / {entry.conductor_name || '—'}</td><td>{money(entry.seat_subtotal)}</td><td>{money(entry.cargo_subtotal)}</td><td><strong>{money(entry.total_revenue)}</strong></td><td><span className="accounts-entry-locked">Locked · {entry.entry_code}</span></td></tr>)}
           {!loadingEntries && !entries.length && <tr><td colSpan="8" className="daily-revenue-empty">No manual revenue submissions yet.</td></tr>}
         </tbody></table></div>
       </section>
