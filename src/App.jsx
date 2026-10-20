@@ -74,6 +74,7 @@ function App() {
   const [showBusForm, setShowBusForm] = useState(false)
   const [editingBus, setEditingBus] = useState(null)
   const [adminStats, setAdminStats] = useState(null)
+  const [adminDataLoading, setAdminDataLoading] = useState(false)
   const [staffList, setStaffList] = useState([])
   const [revenuePeriod, setRevenuePeriod] = useState('daily')
   const [revenueDate, setRevenueDate] = useState(todayIso())
@@ -533,9 +534,11 @@ function App() {
         conductor_phone: '',
       })
       showMessage(`Bus section ${data.trip.trip_code} added. Enter the bus number and crew when they are confirmed.`)
-      const next = await loadTrips(token, selectedDate, routeCode)
+      setTrips((current) => [...current, data.trip].sort((a, b) => (
+        String(a.travel_date || '').localeCompare(String(b.travel_date || ''))
+        || Number(a.id) - Number(b.id)
+      )))
       setActiveTripId(data.trip.id)
-      setTrips(next)
       if (activeTab === 'Dashboard') await openAdminDashboard()
     } catch (err) {
       showMessage(err.message, true)
@@ -680,6 +683,7 @@ function App() {
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
       return
     }
+    setAdminDataLoading(true)
     try {
       const [data, staffData] = await Promise.all([api.adminDashboard(token), api.adminStaff(token)])
       setAdminStats(data)
@@ -687,6 +691,8 @@ function App() {
     } catch (err) {
       showMessage(err.message, true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
+    } finally {
+      setAdminDataLoading(false)
     }
   }
 
@@ -885,7 +891,7 @@ function App() {
                   return
                 }
                 setActiveTab(tab)
-                if (tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') openAdminDashboard()
+                if ((tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') && !adminStats) openAdminDashboard()
                 if (tab === 'Staff') openStaffManagement()
                 if (tab === 'Log') loadLogs(token, activeTrip)
               }}
@@ -1464,6 +1470,14 @@ function App() {
               {staffList.map((person) => <tr key={person.id}><td>{person.full_name}<small className="staff-username">{person.username}</small></td><td>{person.status || 'active'}</td><td>{person.permissions?.passengers ? 'Allowed' : 'Blocked'}</td><td>{person.permissions?.cargo ? 'Allowed' : 'Blocked'}</td><td>{person.permissions?.trips ? 'Allowed' : 'Blocked'}</td></tr>)}
               {!staffList.length && <tr><td colSpan="5" className="daily-revenue-empty">No staff accounts found.</td></tr>}
             </tbody></table></div>
+          </section>
+        </main>
+      )}
+
+      {(activeTab === 'Dashboard' || activeTab === 'Accounts' || activeTab === 'Customers') && isAdmin && !adminStats && (
+        <main className="content-page dashboard-page">
+          <section className="content-card" role="status" aria-live="polite">
+            {adminDataLoading ? 'Loading account data…' : 'Account data is not available yet.'}
           </section>
         </main>
       )}
