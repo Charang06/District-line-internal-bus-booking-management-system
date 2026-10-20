@@ -5292,6 +5292,40 @@ label span {
     page: cargoManifest;
   }
 
+  .app-shell.print-accounts > :not(.accounts-revenue-page) {
+    display: none !important;
+  }
+
+  .app-shell.print-accounts .accounts-revenue-page,
+  .app-shell.print-accounts .accounts-revenue-page .content-card {
+    display: block !important;
+    width: 100%;
+    margin: 0 0 10px;
+    padding: 12px;
+    color: #17212d;
+    background: #fff;
+    box-shadow: none;
+    break-inside: avoid;
+  }
+
+  .app-shell.print-accounts .accounts-revenue-page .accounts-trip-details,
+  .app-shell.print-accounts .accounts-revenue-page .accounts-revenue-columns {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .app-shell.print-accounts .accounts-trip-details label {
+    display: block;
+  }
+
+  .app-shell.print-accounts .accounts-revenue-actions {
+    display: none !important;
+  }
+
+  .app-shell.print-accounts .accounts-route-switch button {
+    display: none;
+  }
+
   .cargo-manifest-paper {
     width: 100%;
     color: #17212d;
@@ -5683,4 +5717,352 @@ label span {
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.7;
+}
+
+.accounts-revenue-page {
+  gap: 16px;
+}
+
+.accounts-revenue-titlebar,
+.accounts-trip-details,
+.accounts-total-card,
+.accounts-recent-card,
+.accounts-revenue-panel {
+  border: 1px solid #e4e9ef;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 3px 12px rgba(21, 37, 59, 0.04);
+}
+
+.accounts-revenue-titlebar,
+.accounts-total-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.accounts-revenue-titlebar h1,
+.accounts-total-card h2 {
+  margin: 4px 0 0;
+  color: #17253a;
+}
+
+.accounts-kicker,
+.accounts-total-card > div > span {
+  color: #9a7b43;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.accounts-route-switch {
+  display: flex;
+  gap: 5px;
+  padding: 5px;
+  border-radius: 12px;
+  background: #f0f3f7;
+}
+
+.accounts-route-switch button {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #536174;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.accounts-route-switch button.active {
+  background: #d8b978;
+  color: #18263b;
+  box-shadow: 0 2px 6px rgba(43, 49, 60, 0.12);
+}
+
+.accounts-trip-details {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.accounts-trip-details label {
+  display: grid;
+  gap: 7px;
+  color: #344154;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.accounts-trip-details input,
+.accounts-trip-details select {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 11px;
+  border: 1px solid #dce3eb;
+  border-radius: 8px;
+  background: #f6f8fa;
+  color: #26364b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.accounts-trip-details input[readonly] {
+  opacity: 1;
+}
+
+.accounts-revenue-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.accounts-revenue-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 18px;
+  border-color: #eee3c8;
+  background: #fffdf7;
+}
+
+.accounts-panel-heading,
+.accounts-subtotal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.accounts-panel-heading h2 {
+  margin: 0;
+  color: #1d2a3c;
+  font-size: 1.05rem;
+}
+
+.accounts-panel-heading > span {
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: #fff3cf;
+  color: #80652f;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.accounts-revenue-panel .daily-revenue-table-wrap {
+  margin-top: 14px;
+  overflow: visible;
+}
+
+.accounts-revenue-panel .daily-revenue-table-wrap table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.accounts-seat-table th:nth-child(1) { width: 43%; }
+.accounts-seat-table th:nth-child(2) { width: 28%; }
+.accounts-seat-table th:nth-child(3) { width: 29%; }
+
+.accounts-cargo-table th:nth-child(1) { width: 68%; }
+.accounts-cargo-table th:nth-child(2) { width: 32%; }
+
+.accounts-revenue-panel .daily-revenue-table-wrap th,
+.accounts-revenue-panel .daily-revenue-table-wrap td {
+  padding: 7px 6px;
+  overflow-wrap: anywhere;
+}
+
+.accounts-revenue-panel table input {
+  width: 100%;
+  min-width: 0;
+  min-height: 32px;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  border: 1px solid #dce3eb;
+  border-radius: 6px;
+  background: #f6f8fa;
+  color: #26364b;
+  font: inherit;
+  text-align: right;
+}
+
+.accounts-seat-count-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.accounts-seat-count-cell input {
+  flex: 0 0 58px;
+  width: 58px !important;
+  text-align: center !important;
+}
+
+.accounts-seat-count-cell span {
+  min-width: 0;
+  color: #526176;
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.accounts-seat-table input {
+  font-size: 0.82rem;
+}
+
+.accounts-seat-table td:last-child {
+  text-align: right;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.accounts-cargo-description {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.accounts-cargo-description input:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.accounts-cargo-tag {
+  flex: 0 0 auto;
+  max-width: 110px;
+  padding: 4px 7px;
+  border-radius: 5px;
+  background: #edf2f7;
+  color: #526176;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.accounts-add-row,
+.accounts-remove-row {
+  border: 0;
+  background: transparent;
+  color: #775e2d;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.accounts-add-row {
+  align-self: flex-start;
+  margin-top: 8px;
+  padding: 5px 0;
+}
+
+.accounts-remove-row {
+  flex: 0 0 20px;
+  padding: 0;
+  color: #9a4751;
+  font-size: 1.2rem;
+}
+
+.accounts-subtotal {
+  margin-top: auto;
+  padding-top: 18px;
+  color: #334155;
+  font-weight: 800;
+}
+
+.accounts-subtotal strong,
+.accounts-total-card > strong {
+  padding: 10px 14px;
+  border: 1px solid #dce3eb;
+  border-radius: 9px;
+  background: #f2f5f8;
+  color: #17253a;
+  font-variant-numeric: tabular-nums;
+}
+
+.accounts-total-card {
+  flex-wrap: wrap;
+  padding: 20px;
+  border-color: #e1e9e2;
+  background: #fbfdfb;
+}
+
+.accounts-total-card > strong {
+  min-width: 230px;
+  padding: 12px 18px;
+  text-align: right;
+  font-size: 1.35rem;
+}
+
+.accounts-revenue-actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.accounts-live-status {
+  margin-right: auto;
+  color: #32836a;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.accounts-recent-card {
+  padding: 18px;
+}
+
+.accounts-recent-card .accounts-panel-heading {
+  margin-bottom: 14px;
+}
+
+.accounts-recent-card .accounts-panel-heading p {
+  margin: 5px 0 0;
+  color: #6b7788;
+  font-size: 0.84rem;
+}
+
+@media (max-width: 900px) {
+  .accounts-trip-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .accounts-revenue-titlebar,
+  .accounts-total-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .accounts-route-switch {
+    flex-direction: column;
+  }
+
+  .accounts-revenue-columns,
+  .accounts-trip-details {
+    grid-template-columns: 1fr;
+  }
+
+  .accounts-revenue-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .accounts-live-status {
+    margin: 0 0 5px;
+  }
+
+  .accounts-total-card > strong {
+    min-width: 0;
+    text-align: left;
+  }
 }

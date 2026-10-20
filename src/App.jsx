@@ -4,6 +4,7 @@ import { api, assetUrl } from './api'
 import TripWorkspace from './components/TripWorkspace'
 import StaffManagement from './components/StaffManagement'
 import AdminProfile from './components/AdminProfile'
+import AccountsRevenue from './components/AccountsRevenue'
 import { ROUTES, SEAT_LAYOUT, routeByCode } from './data/seatLayout'
 
 const TOKEN_KEY = 'district-line-token'
@@ -1482,140 +1483,7 @@ function App() {
         </main>
       )}
 
-      {activeTab === 'Accounts' && isAdmin && adminStats && (
-        <main className="content-page dashboard-page">
-          <section className="content-card expense-entry-card">
-            <div className="dashboard-section-heading"><div><h2>Create bus duty</h2><p>Enter the bus number used on both journeys. It does not need to be registered in Bus Management.</p></div></div>
-            <form className="expense-entry-form duty-create-form" onSubmit={handleCreateDuty}>
-              <label>Bus No<input required list="duty-bus-number-options" value={dutyForm.bus_no} onChange={(event) => setDutyForm({ bus_no: event.target.value, first_trip_id: '', return_trip_id: '' })} placeholder="Enter or select bus number" /><datalist id="duty-bus-number-options">{[...new Set(unassignedDutyTrips.map((trip) => trip.registration_no).filter(Boolean))].map((busNo) => <option key={busNo} value={busNo} />)}</datalist></label>
-              <label>First journey<select required value={dutyForm.first_trip_id} onChange={(event) => setDutyForm((current) => ({ ...current, first_trip_id: event.target.value, return_trip_id: '' }))}><option value="">Select first journey</option>{eligibleFirstDutyTrips.map((trip) => <option key={trip.id} value={trip.id}>{trip.travel_date} · {trip.route_label} · {trip.trip_code}</option>)}</select></label>
-              <label>Return journey<select required value={dutyForm.return_trip_id} onChange={(event) => setDutyForm((current) => ({ ...current, return_trip_id: event.target.value }))} disabled={!firstDutyTrip}><option value="">Select return journey</option>{eligibleReturnDutyTrips.map((trip) => <option key={trip.id} value={trip.id}>{trip.travel_date} · {trip.route_label} · {trip.trip_code}</option>)}</select></label>
-              <button type="submit" className="primary-button" disabled={dutySaving || !eligibleReturnDutyTrips.some((trip) => String(trip.id) === dutyForm.return_trip_id)}>{dutySaving ? 'Saving…' : 'Create duty'}</button>
-            </form>
-          </section>
-          <section className="content-card">
-            <div className="dashboard-section-heading"><div><h2>Bus duty financial review</h2><p>Booking revenue excludes cancelled and unconfirmed seats. Active duty profits update until finalized; finalized reports use a saved snapshot.</p></div></div>
-            <div className="revenue-filter-controls duty-filter-controls">
-              <label>Bus<select value={dutyFilters.bus_id} onChange={(event) => setDutyFilters((current) => ({ ...current, bus_id: event.target.value }))}><option value="">All buses</option>{(adminStats.buses || []).map((bus) => <option key={bus.id} value={bus.id}>{bus.registration_no}</option>)}</select></label>
-              <label>Status<select value={dutyFilters.status} onChange={(event) => setDutyFilters((current) => ({ ...current, status: event.target.value }))}><option value="">All statuses</option>{Object.entries(DUTY_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
-              <label>Start date from<input type="date" value={dutyFilters.start_from} onChange={(event) => setDutyFilters((current) => ({ ...current, start_from: event.target.value }))} /></label>
-              <label>Start date to<input type="date" value={dutyFilters.start_to} onChange={(event) => setDutyFilters((current) => ({ ...current, start_to: event.target.value }))} /></label>
-              <label>Completion from<input type="date" value={dutyFilters.completion_from} onChange={(event) => setDutyFilters((current) => ({ ...current, completion_from: event.target.value }))} /></label>
-              <label>Completion to<input type="date" value={dutyFilters.completion_to} onChange={(event) => setDutyFilters((current) => ({ ...current, completion_to: event.target.value }))} /></label>
-            </div>
-            <div className="stats-grid duty-totals-grid">
-              <div className="metric-card"><span>Selected duty revenue</span><strong>Rs. {visibleDutyTotals.revenue.toLocaleString('en-US')}</strong></div>
-              <div className="metric-card"><span>Selected duty expenses</span><strong>Rs. {visibleDutyTotals.expenses.toLocaleString('en-US')}</strong></div>
-              <div className="metric-card"><span>Combined net profit</span><strong>Rs. {visibleDutyTotals.profit.toLocaleString('en-US')}</strong></div>
-            </div>
-            <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Duty ID</th><th>Bus No</th><th>First journey</th><th>Return journey</th><th>Total revenue</th><th>Total expenses</th><th>Net profit</th><th>Status</th><th>Details</th></tr></thead>
-              <tbody>
-                {visibleDuties.map((duty) => <tr key={duty.id}><td>{duty.duty_code}</td><td>{duty.bus_no}</td><td>{duty.first_trip.travel_date} · {duty.first_trip.route_label}</td><td>{duty.return_trip.travel_date} · {duty.return_trip.route_label}</td><td>Rs. {Number(duty.total_revenue).toLocaleString('en-US')}</td><td>Rs. {Number(duty.total_expenses).toLocaleString('en-US')}</td><td><strong>Rs. {Number(duty.net_profit).toLocaleString('en-US')}</strong></td><td>{DUTY_STATUS_LABELS[duty.status] || duty.status}</td><td><button type="button" className="ghost-button small" onClick={() => setSelectedDutyId(duty.id)}>Review</button></td></tr>)}
-                {!visibleDuties.length && <tr><td colSpan="9" className="daily-revenue-empty">No bus duties match these filters.</td></tr>}
-              </tbody>
-            </table></div>
-          </section>
-          {selectedDuty && (
-            <section className="content-card duty-detail-card">
-              <div className="dashboard-section-heading"><div><h2>{selectedDuty.duty_code} · {selectedDuty.bus_no}</h2><p>{DUTY_STATUS_LABELS[selectedDuty.status]}{selectedDuty.finalized_at ? ` · Finalized ${selectedDuty.finalized_at}` : ''}</p></div><button type="button" className="ghost-button small" onClick={() => setSelectedDutyId(null)}>Close details</button></div>
-              <div className="duty-journey-grid">
-                {[['First journey', selectedDuty.first_trip], ['Return journey', selectedDuty.return_trip]].map(([label, trip]) => <article key={trip.id}><h3>{label}</h3><p><strong>{trip.route_label}</strong></p><p>{trip.travel_date} · {trip.trip_code} · {trip.status}</p><p>Booking revenue: <strong>Rs. {Number(trip.revenue.total).toLocaleString('en-US')}</strong></p><p>Collected: Rs. {Number(trip.revenue.collected).toLocaleString('en-US')} · Outstanding: Rs. {Number(trip.revenue.outstanding).toLocaleString('en-US')}</p></article>)}
-              </div>
-              <div className="stats-grid duty-totals-grid">
-                <div className="metric-card"><span>Total duty revenue</span><strong>Rs. {Number(selectedDuty.total_revenue).toLocaleString('en-US')}</strong></div>
-                <div className="metric-card"><span>Collected / outstanding</span><strong>Rs. {Number(selectedDuty.total_collected).toLocaleString('en-US')} / {Number(selectedDuty.total_outstanding).toLocaleString('en-US')}</strong></div>
-                <div className="metric-card"><span>Total duty expenses</span><strong>Rs. {Number(selectedDuty.total_expenses).toLocaleString('en-US')}</strong></div>
-                <div className="metric-card"><span>Other income</span><strong>Rs. {Number(selectedDuty.adjustment_totals?.other_income || 0).toLocaleString('en-US')}</strong></div>
-                <div className="metric-card"><span>Cancellation fees</span><strong>Rs. {Number(selectedDuty.adjustment_totals?.cancellation_fees || 0).toLocaleString('en-US')}</strong></div>
-                <div className="metric-card"><span>Refunds</span><strong>Rs. {Number(selectedDuty.adjustment_totals?.refunds || 0).toLocaleString('en-US')}</strong></div>
-                <div className="metric-card"><span>Net profit</span><strong>Rs. {Number(selectedDuty.net_profit).toLocaleString('en-US')}</strong></div>
-              </div>
-              <div className="dashboard-section-heading"><div><h3>Duty financial details</h3><p>Expenses reduce profit. Fees and other income increase it. Cancelled fares are already excluded from booking revenue, so refunds are shown here without subtracting them twice.</p></div></div>
-              <div className="daily-revenue-table-wrap"><table><thead><tr><th>Date</th><th>Journey</th><th>Entry type</th><th>Description</th><th>Seat</th><th>Amount</th><th>Profit effect</th>{selectedDuty.status !== 'finalized' && <th>Action</th>}</tr></thead><tbody>
-                {[...selectedDuty.expenses.map((expense) => ({ ...expense, kind: 'expense', entry_date: expense.expense_date, entry_type: `Expense · ${expense.category}`, seat_number: '', effect: -Number(expense.amount), key: `expense-${expense.id}` })), ...((selectedDuty.adjustments || []).map((adjustment) => ({ ...adjustment, kind: 'adjustment', entry_date: adjustment.adjustment_date, entry_type: ({ refund: 'Cancellation refund', cancellation_fee: 'Cancellation fee', replacement_booking: 'Replacement booking (existing entry)', other_income: 'Other income' })[adjustment.type], effect: adjustment.type === 'refund' ? 0 : Number(adjustment.amount), key: `adjustment-${adjustment.id}` })))].sort((a, b) => a.entry_date.localeCompare(b.entry_date) || a.key.localeCompare(b.key)).map((entry) => <tr key={entry.key}><td>{entry.entry_date}</td><td>{entry.trip_id ? (entry.trip_id === selectedDuty.first_trip.id ? 'First journey' : 'Return journey') : 'Shared duty'}</td><td>{entry.entry_type}</td><td>{entry.description}</td><td>{entry.seat_number || '—'}</td><td>Rs. {Number(entry.amount).toLocaleString('en-US')}</td><td className={entry.kind === 'adjustment' && entry.type === 'refund' ? 'duty-neutral-amount' : entry.effect < 0 ? 'duty-loss-amount' : 'duty-income-amount'}>{entry.kind === 'adjustment' && entry.type === 'refund' ? 'No profit effect' : `${entry.effect < 0 ? '−' : '+'}Rs. ${Math.abs(entry.effect).toLocaleString('en-US')}`}</td>{selectedDuty.status !== 'finalized' && <td><button type="button" className="ghost-button small duty-entry-delete" disabled={dutySaving} onClick={() => handleDeleteDutyEntry(entry)}>Delete</button></td>}</tr>)}
-                {!selectedDuty.expenses.length && !(selectedDuty.adjustments || []).length && <tr><td colSpan={selectedDuty.status === 'finalized' ? '7' : '8'} className="daily-revenue-empty">No financial details recorded for this duty yet.</td></tr>}
-              </tbody></table></div>
-              {selectedDuty.status !== 'finalized' && <form className="expense-entry-form duty-expense-form" onSubmit={handleAddDutyExpense}>
-                <label>Expense date<input required type="date" value={dutyExpenseForm.expense_date} onChange={(event) => setDutyExpenseForm((current) => ({ ...current, expense_date: event.target.value }))} /></label>
-                <label>Journey<select value={dutyExpenseForm.trip_id} onChange={(event) => setDutyExpenseForm((current) => ({ ...current, trip_id: event.target.value }))}><option value="">Shared duty cost</option><option value={selectedDuty.first_trip.id}>First journey</option><option value={selectedDuty.return_trip.id}>Return journey</option></select></label>
-                <label>Category<select value={dutyExpenseForm.category} onChange={(event) => setDutyExpenseForm((current) => ({ ...current, category: event.target.value }))}><option>Fuel</option><option>Driver allowance</option><option>Conductor allowance</option><option>Driver wage</option><option>Conductor wage</option><option>Driver salary</option><option>Conductor salary</option><option>Maintenance</option><option>Toll / parking charge</option><option>Other expenses</option></select></label>
-                <label>Description<input required maxLength="240" value={dutyExpenseForm.description} onChange={(event) => setDutyExpenseForm((current) => ({ ...current, description: event.target.value }))} placeholder="Expense details" /></label>
-                <label>Amount (Rs.)<input required type="number" min="1" step="1" value={dutyExpenseForm.amount} onChange={(event) => setDutyExpenseForm((current) => ({ ...current, amount: event.target.value }))} placeholder="0" /></label>
-                <button type="submit" className="primary-button" disabled={dutySaving}>{dutySaving ? 'Saving…' : 'Add duty expense'}</button>
-              </form>}
-              {selectedDuty.status !== 'finalized' && <form className="expense-entry-form duty-expense-form duty-adjustment-form" onSubmit={handleAddDutyAdjustment}>
-                <label>Entry date<input required type="date" value={dutyAdjustmentForm.adjustment_date} onChange={(event) => setDutyAdjustmentForm((current) => ({ ...current, adjustment_date: event.target.value }))} /></label>
-                <label>Journey<select value={dutyAdjustmentForm.trip_id} onChange={(event) => setDutyAdjustmentForm((current) => ({ ...current, trip_id: event.target.value }))}><option value="">Shared duty</option><option value={selectedDuty.first_trip.id}>First journey</option><option value={selectedDuty.return_trip.id}>Return journey</option></select></label>
-                <label>Entry type<select value={dutyAdjustmentForm.type} onChange={(event) => setDutyAdjustmentForm((current) => ({ ...current, type: event.target.value }))}><option value="other_income">Other income</option><option value="refund">Cancellation refund</option><option value="cancellation_fee">Cancellation fee</option></select></label>
-                <label>Description<input required maxLength="240" value={dutyAdjustmentForm.description} onChange={(event) => setDutyAdjustmentForm((current) => ({ ...current, description: event.target.value }))} placeholder="e.g. luggage fee, cancelled seat refund" /></label>
-                <label>Amount (Rs.)<input required type="number" min="1" step="1" value={dutyAdjustmentForm.amount} onChange={(event) => setDutyAdjustmentForm((current) => ({ ...current, amount: event.target.value }))} placeholder="0" /></label>
-                <label>Seat number (optional)<input maxLength="12" value={dutyAdjustmentForm.seat_number} onChange={(event) => setDutyAdjustmentForm((current) => ({ ...current, seat_number: event.target.value }))} placeholder="e.g. 12" /></label>
-                <button type="submit" className="primary-button" disabled={dutySaving}>{dutySaving ? 'Saving…' : 'Add financial entry'}</button>
-              </form>}
-              {selectedDuty.status === 'awaiting_financial_review' && <div className="duty-finalize-actions"><p>Both journeys are marked completed. Review the figures before finalizing this historical profit report.</p><button type="button" className="primary-button" onClick={() => { setFinalizeDutyTarget(selectedDuty); setAcknowledgeNoDutyExpenses(false) }}>Finalize profit</button></div>}
-              {selectedDuty.status === 'finalized' && <p className="hint">This report is finalized and uses its saved financial snapshot. Duty expenses and linked bookings are locked.</p>}
-            </section>
-          )}
-          <div className="stats-grid">
-            <div className="metric-card"><span>Passenger income</span><strong>Rs. {revenueSummary.passenger.toLocaleString('en-US')}</strong></div>
-            <div className="metric-card"><span>Cargo income</span><strong>Rs. {revenueSummary.cargo.toLocaleString('en-US')}</strong></div>
-            <div className="metric-card"><span>Total income</span><strong>Rs. {revenueSummary.total.toLocaleString('en-US')}</strong></div>
-            <div className="metric-card"><span>General expenses</span><strong>Rs. {accountsExpenseTotal.toLocaleString('en-US')}</strong></div>
-            <div className="metric-card"><span>Income after general expenses</span><strong>Rs. {(revenueSummary.total - accountsExpenseTotal).toLocaleString('en-US')}</strong></div>
-          </div>
-          <section className="content-card expense-entry-card monthly-expenses-card">
-            <div className="dashboard-section-heading monthly-expenses-heading">
-              <div><h2>Monthly expenses</h2><p>Record and review general expenses for the selected month.</p></div>
-              <label>Month<input type="month" value={monthlyExpenseMonth} onChange={(event) => setMonthlyExpenseMonth(event.target.value)} /></label>
-            </div>
-            <form className="expense-entry-form" onSubmit={handleAddExpense}>
-              <label>Expense month<input required type="month" value={expenseForm.expense_month} onChange={(event) => setExpenseForm((current) => ({ ...current, expense_month: event.target.value }))} /></label>
-              <label>Category<select value={expenseForm.category} onChange={(event) => setExpenseForm((current) => ({ ...current, category: event.target.value }))}><option>Fuel</option><option>Driver allowance</option><option>Conductor allowance</option><option>Driver wage</option><option>Conductor wage</option><option>Driver salary</option><option>Conductor salary</option><option>Toll / parking charge</option><option>Other expenses</option><option>Maintenance</option><option>Supplies</option><option>Salaries</option><option>Tolls</option><option>Other</option></select></label>
-              <label>Description<input required maxLength="240" value={expenseForm.description} onChange={(event) => setExpenseForm((current) => ({ ...current, description: event.target.value }))} placeholder="e.g. Monthly vehicle insurance" /></label>
-              <label>Amount (Rs.)<input required type="number" min="1" step="1" value={expenseForm.amount} onChange={(event) => setExpenseForm((current) => ({ ...current, amount: event.target.value }))} placeholder="0" /></label>
-              <button type="submit" className="primary-button" disabled={expenseSaving}>{expenseSaving ? 'Saving…' : 'Add expense'}</button>
-            </form>
-            <div className="daily-revenue-heading monthly-expenses-total"><div><h3>{monthlyExpenseMonth ? new Date(`${monthlyExpenseMonth}-01T00:00:00`).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : 'Select a month'}</h3><p>{monthlyExpenses.length} expense record(s)</p></div><strong>Rs. {monthlyExpenseTotal.toLocaleString('en-US')}</strong></div>
-            <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
-              <tbody>
-                {monthlyExpenses.map((expense) => <tr key={expense.id}><td>{expense.category}</td><td>{expense.description}</td><td><strong>Rs. {Number(expense.amount).toLocaleString('en-US')}</strong></td></tr>)}
-                {!monthlyExpenses.length && <tr><td colSpan="3" className="daily-revenue-empty">No general expenses recorded for this month.</td></tr>}
-              </tbody>
-            </table></div>
-          </section>
-          <section className="content-card dashboard-filter-bar">
-            <div><h2>Accounts filters</h2><p>Income follows the selected route and period. Expense totals follow the selected dates.</p></div>
-            <div className="revenue-filter-controls">
-              <label>Period<select value={revenuePeriod} onChange={(event) => setRevenuePeriod(event.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
-              <label>Choose date<input type="date" value={revenueDate} onChange={(event) => setRevenueDate(event.target.value)} /></label>
-              <label>Route<select value={dashboardRoute} onChange={(event) => setDashboardRoute(event.target.value)}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
-              <strong>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
-            </div>
-          </section>
-          <section className="content-card daily-revenue-card">
-            <div className="daily-revenue-heading"><div><h2>Income by trip</h2><p>{filteredRevenue.length} trip(s) in the selected period</p></div><strong>Rs. {revenueSummary.total.toLocaleString('en-US')}</strong></div>
-            <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Travel date</th><th>Bus No</th><th>Trip No</th><th>Route</th><th>Passenger income</th><th>Cargo income</th><th>Total income</th></tr></thead>
-              <tbody>
-                {filteredRevenue.map((day) => <tr key={day.trip_id ? `account-trip-${day.trip_id}` : `${day.travel_date}-${day.route_code || 'unknown'}-${day.registration_no || 'unassigned'}`}><td>{day.travel_date}</td><td>{day.registration_no || 'Unassigned'}</td><td>{day.trip_code || 'Unassigned'}</td><td>{day.route_label || 'Unassigned'}</td><td>Rs. {Number(day.passenger_revenue).toLocaleString('en-US')}</td><td>Rs. {Number(day.cargo_revenue).toLocaleString('en-US')}</td><td><strong>Rs. {Number(day.total_revenue).toLocaleString('en-US')}</strong></td></tr>)}
-                {!filteredRevenue.length && <tr><td colSpan="7" className="daily-revenue-empty">No income recorded for this period and route.</td></tr>}
-              </tbody>
-            </table></div>
-          </section>
-          <section className="content-card daily-revenue-card">
-            <div className="daily-revenue-heading"><div><h2>General expenses in selected date range</h2><p>Expenses not associated with a bus duty · {accountsExpenses.length} record(s)</p></div><strong>Rs. {accountsExpenseTotal.toLocaleString('en-US')}</strong></div>
-            <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Date</th><th>Category</th><th>Description</th><th>Amount</th></tr></thead>
-              <tbody>
-                {accountsExpenses.map((expense) => <tr key={expense.id}><td>{expense.expense_date}</td><td>{expense.category}</td><td>{expense.description}</td><td><strong>Rs. {Number(expense.amount).toLocaleString('en-US')}</strong></td></tr>)}
-                {!accountsExpenses.length && <tr><td colSpan="4" className="daily-revenue-empty">No expenses recorded for this period.</td></tr>}
-              </tbody>
-            </table></div>
-          </section>
-        </main>
-      )}
+      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue data={adminStats} token={token} showMessage={showMessage} onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }} />}
 
       {activeTab === 'Customers' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">

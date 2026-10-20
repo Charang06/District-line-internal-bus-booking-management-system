@@ -722,6 +722,103 @@ app.post('/api/admin/expenses', authMiddleware, requireAdmin, async (req, res) =
   res.status(201).json({ expense })
 })
 
+app.get('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, res) => {
+  const entries = await all(`
+    SELECT id, entry_code, trip_id, travel_date, route_code, route_label, bus_no,
+      driver_name, conductor_name, seat_rows_json, cargo_rows_json,
+      seat_subtotal, cargo_subtotal, total_revenue, status, created_at, locked_at
+    FROM revenue_entries
+    ORDER BY travel_date DESC, id DESC
+    LIMIT 100
+  `)
+  res.json({ entries })
+})
+
+app.post('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, res) => {
+  const travelDate = String(req.body?.travel_date || '').trim()
+  const routeCode = String(req.body?.route_code || '').trim()
+  const busNo = String(req.body?.bus_no || '').trim()
+  const driverName = String(req.body?.driver_name || '').trim()
+  const conductorName = String(req.body?.conductor_name || '').trim()
+  const tripId = req.body?.trip_id ? Number(req.body.trip_id) : null
+  const seatRows = req.body?.seat_rows
+  const cargoRows = req.body?.cargo_rows
+
+  if (!isIsoCalendarDate(travelDate)) return res.status(400).json({ message: 'Enter a valid travel date.' })
+  if (!ROUTES[routeCode]) return res.status(400).json({ message: 'Choose a valid corridor.' })
+  if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
+  if (driverName.length > 80 || conductorName.length > 80) return res.status(400).json({ message: 'Driver and conductor names must be 80 characters or fewer.' })
+  if (tripId !== null && (!Number.isSafeInteger(tripId) || tripId < 1)) return res.status(400).json({ message: 'Choose a valid trip.' })
+  if (!Array.isArray(seatRows) || seatRows.length !== 4) return res.status(400).json({ message: 'Enter all four seat fare categories.' })
+  if (!Array.isArray(cargoRows) || cargoRows.length > 30) return res.status(400).json({ message: 'Cargo rows are invalid or exceed the 30-row limit.' })
+
+  if (tripId !== null) {
+    const trip = await get('SELECT id, travel_date, route_code FROM trips WHERE id = ?', [tripId])
+    if (!trip || trip.travel_date !== travelDate || trip.route_code !== routeCode) {
+      return res.status(400).json({ message: 'The selected trip does not match the chosen date and corridor.' })
+    }
+  }
+
+  const seatCategories = ['Standard', 'Intermediate', 'Special', 'Agent / Extra']
+  const cleanSeatRows = []
+  let seatCount = 0
+  for (let index = 0; index < seatCategories.length; index += 1) {
+    const row = seatRows[index] || {}
+    const count = Number(row.count)
+    const amount = Number(row.amount)
+    if (!Number.isSafeInteger(count) || count < 0 || count > 49 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
+      return res.status(400).json({ message: `Enter a valid seat count and whole-rupee amount for ${seatCategories[index]}.` })
+    }
+    seatCount += count
+    cleanSeatRows.push({ category: seatCategories[index], count, amount, total: count * amount })
+  }
+  if (seatCount > 49) return res.status(400).json({ message: 'Seat counts cannot exceed the 49-seat bus capacity.' })
+
+  const cleanCargoRows = []
+  for (const row of cargoRows) {
+    const description = String(row?.description || '').trim()
+    const tag = String(row?.tag || '').trim()
+    const amount = Number(row?.amount)
+    if (!description || description.length > 120 || tag.length > 40 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
+      return res.status(400).json({ message: 'Enter a description (up to 120 characters) and a valid whole-rupee amount for each cargo row.' })
+    }
+    cleanCargoRows.push({ description, tag, amount })
+  }
+
+  if (!seatCount && !cleanCargoRows.some((row) => row.amount > 0)) {
+    return res.status(400).json({ message: 'Enter at least one seat or cargo amount before submitting.' })
+  }
+
+  const seatSubtotal = cleanSeatRows.reduce((sum, row) => sum + row.total, 0)
+  const cargoSubtotal = cleanCargoRows.reduce((sum, row) => sum + row.amount, 0)
+  const totalRevenue = seatSubtotal + cargoSubtotal
+  try {
+    const inserted = await run(`
+      INSERT INTO revenue_entries (
+        trip_id, travel_date, route_code, route_label, bus_no, driver_name, conductor_name,
+        seat_rows_json, cargo_rows_json, seat_subtotal, cargo_subtotal, total_revenue,
+        status, created_by, locked_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'locked', ?, CURRENT_TIMESTAMP)
+    `, [
+      tripId, travelDate, routeCode, ROUTES[routeCode].label, busNo, driverName, conductorName,
+      JSON.stringify(cleanSeatRows), JSON.stringify(cleanCargoRows), seatSubtotal, cargoSubtotal, totalRevenue, req.user.id,
+    ])
+    const entryCode = `REV-${String(inserted.id).padStart(6, '0')}`
+    await run('UPDATE revenue_entries SET entry_code = ? WHERE id = ?', [entryCode, inserted.id])
+    await audit(req.user, 'revenue_entry.lock', 'revenue_entry', inserted.id, `${entryCode}: Rs. ${totalRevenue}`)
+    const entry = await get(`
+      SELECT id, entry_code, trip_id, travel_date, route_code, route_label, bus_no,
+        driver_name, conductor_name, seat_rows_json, cargo_rows_json,
+        seat_subtotal, cargo_subtotal, total_revenue, status, created_at, locked_at
+      FROM revenue_entries WHERE id = ?
+    `, [inserted.id])
+    return res.status(201).json({ entry })
+  } catch (error) {
+    console.error('Revenue entry save failed:', error)
+    return res.status(500).json({ message: 'Could not save and lock the revenue entry.' })
+  }
+})
+
 app.post('/api/admin/duties', authMiddleware, requireAdmin, async (req, res) => {
   const busNo = String(req.body?.bus_no || '').trim()
   const firstTripId = Number(req.body?.first_trip_id)
