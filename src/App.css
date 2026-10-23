@@ -5266,6 +5266,59 @@ label span {
   .aisle-index {
     width: 34px;
   }
+
+  .reservation-panel .two-col,
+  .reservation-panel .fare-row,
+  .cargo-panel .two-col {
+    width: auto;
+    min-width: 0;
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reservation-panel .two-col > label,
+  .reservation-panel .fare-row > label,
+  .cargo-panel .two-col > label,
+  .cargo-payment-control,
+  .cargo-description-field {
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  .reservation-grid {
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .reservation-grid label {
+    min-width: 0;
+    grid-template-columns: minmax(48px, 72px) minmax(0, 104px);
+  }
+
+  .reservation-grid input,
+  .reservation-panel input,
+  .reservation-panel select,
+  .reservation-panel textarea,
+  .cargo-panel input,
+  .cargo-panel select,
+  .cargo-panel textarea {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .fare-row:last-of-type label {
+    margin-left: 10px;
+    max-width: none;
+  }
+
+  .cargo-payment-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* Home workspace fills the page with compact, aligned columns. */
@@ -6498,22 +6551,84 @@ button,
     grid-area: user;
     justify-self: stretch;
     justify-content: space-between;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     min-width: 0;
+    gap: 8px;
+    padding: 6px 8px;
     padding-top: 8px;
     border-top: 1px solid #e0e6ee;
   }
 
   .topbar-profile-button {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 9px;
+  }
+
+  .topbar-profile-button > div:last-child,
+  .topbar-profile-button > div:last-child strong,
+  .topbar-profile-button > div:last-child small {
+    display: block;
+    max-width: 100%;
+    line-height: 1.3;
     min-width: 0;
   }
 
   .topbar-profile-button > div:last-child {
-    min-width: 0;
+    flex: 1 1 auto;
   }
 
   .topbar-profile-button strong,
   .topbar-profile-button small {
     overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .topbar-user .user-avatar {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+  }
+
+  .topbar-logout-button {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .admin-profile-hero {
+    align-items: flex-start;
+    min-width: 0;
+    gap: 12px;
+  }
+
+  .admin-profile-hero > div:last-child {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-profile-hero strong,
+  .admin-profile-hero small {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .admin-profile-photo {
+    flex: 0 0 64px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .admin-profile-modal .reservation-actions {
+    flex-wrap: wrap;
+  }
+
+  .admin-profile-modal .reservation-actions > button {
+    flex: 1 1 140px;
+    min-height: 44px;
   }
 
   .nav-tabs {
