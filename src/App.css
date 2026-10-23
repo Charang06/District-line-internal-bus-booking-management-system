@@ -6355,6 +6355,452 @@ label span {
 .profit-chart-x-axis { padding-top: 5px; color: #536174; font-size: .65rem; font-weight: 700; text-align: center; }
 @media (max-width: 680px) { .profit-report-filters { width: 100%; } .profit-report-filters label { flex: 1; min-width: 0; } .profit-report-totals { grid-template-columns: 1fr; } }
 
+/* Responsive shell and shared layout safeguards. */
+.mobile-nav-toggle {
+  display: none;
+}
+
+.content-page,
+.dashboard,
+.dashboard-page,
+.accounts-route-revenue-form,
+.daily-revenue-table-wrap,
+.content-card,
+.stats-grid > *,
+.dashboard-record-grid > *,
+.dashboard-seat-chart-card {
+  min-width: 0;
+}
+
+.daily-revenue-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.daily-revenue-table-wrap table {
+  min-width: 640px;
+}
+
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (min-width: 761px) and (max-width: 1100px) {
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px 16px;
+    padding-inline: 16px;
+  }
+
+  .topbar-brand,
+  .topbar-user {
+    flex: 1 1 220px;
+  }
+
+  .topbar-user {
+    justify-content: flex-end;
+  }
+
+  .nav-tabs {
+    order: 3;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .dashboard {
+    grid-template-columns: minmax(220px, 0.34fr) minmax(0, 0.66fr);
+    padding-inline: 16px;
+  }
+
+  .content-page {
+    padding: 22px 16px 26px;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand toggle"
+      "user user"
+      "nav nav";
+    align-items: center;
+    justify-content: stretch;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .topbar-brand {
+    grid-area: brand;
+    justify-self: stretch;
+    justify-content: flex-start;
+    gap: 10px;
+  }
+
+  .topbar-brand .nav-logo {
+    width: 48px;
+    height: 38px;
+    object-fit: contain;
+  }
+
+  .topbar-left {
+    min-width: 0;
+    padding: 7px 9px;
+    font-size: 0.68rem;
+    letter-spacing: 0.04em;
+    overflow-wrap: anywhere;
+  }
+
+  .mobile-nav-toggle {
+    grid-area: toggle;
+    display: flex;
+    width: 44px;
+    height: 44px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid #d5dde7;
+    border-radius: 10px;
+    background: #fff;
+    color: #17283b;
+    cursor: pointer;
+  }
+
+  .mobile-nav-toggle span {
+    display: block;
+    width: 19px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+
+  .mobile-nav-toggle:focus-visible,
+  .nav-button:focus-visible {
+    outline: 3px solid #c99954;
+    outline-offset: 2px;
+  }
+
+  .topbar-user {
+    grid-area: user;
+    justify-self: stretch;
+    justify-content: space-between;
+    min-width: 0;
+    padding-top: 8px;
+    border-top: 1px solid #e0e6ee;
+  }
+
+  .topbar-profile-button {
+    min-width: 0;
+  }
+
+  .topbar-profile-button > div:last-child {
+    min-width: 0;
+  }
+
+  .topbar-profile-button strong,
+  .topbar-profile-button small {
+    overflow-wrap: anywhere;
+  }
+
+  .nav-tabs {
+    grid-area: nav;
+    display: none;
+    width: 100%;
+    max-width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    padding: 8px;
+    border: 1px solid #e0e6ee;
+    border-radius: 12px;
+    background: #fff;
+  }
+
+  .nav-tabs.is-open {
+    display: flex;
+  }
+
+  .nav-button {
+    min-height: 44px;
+    padding: 11px 14px;
+    text-align: left;
+  }
+
+  .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 12px 20px;
+  }
+
+  .dashboard .left-panel,
+  .dashboard .main-panel,
+  .dashboard .trip-workspaces,
+  .dashboard .trip-seat-column,
+  .dashboard .trip-entry-column {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .dashboard .seat-layout,
+  .dashboard .route-card,
+  .dashboard .route-boxes,
+  .dashboard .trip-workspaces,
+  .dashboard-record-grid,
+  .dashboard-seat-chart-grid,
+  .accounts-route-revenue-form .accounts-revenue-columns,
+  .accounts-expense-sector-grid,
+  .accounts-expense-summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .content-page,
+  .dashboard-page {
+    padding: 16px 12px 22px;
+  }
+
+  .content-card {
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+
+  .stats-grid,
+  .profit-report-totals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-filter-bar,
+  .dashboard-section-heading,
+  .trip-controls-heading,
+  .accounts-revenue-titlebar,
+  .accounts-expense-items-heading,
+  .accounts-panel-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dashboard-filter-bar > *,
+  .trip-controls-filters > *,
+  .revenue-filter-controls > *,
+  .accounts-revenue-ledger-filters > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .trip-controls-filters,
+  .accounts-revenue-ledger-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .trip-controls-filters > strong,
+  .trip-controls-filters > button,
+  .accounts-revenue-period-filters {
+    grid-column: 1 / -1;
+  }
+
+  .modal-backdrop {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
+  }
+
+  .modal,
+  .staff-form-modal,
+  .admin-profile-modal,
+  .duty-finalize-modal {
+    width: 100%;
+    max-width: 560px;
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    margin: auto;
+  }
+
+  .modal form,
+  .modal .form-grid,
+  .staff-form-grid,
+  .profile-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .modal-actions,
+  .reservation-actions,
+  .accounts-revenue-actions,
+  .accounts-expense-actions,
+  .toolbar-actions {
+    flex-wrap: wrap;
+  }
+
+  .modal-actions > button,
+  .reservation-actions > button,
+  .accounts-expense-actions button {
+    min-height: 44px;
+  }
+
+  .daily-revenue-table-wrap table {
+    min-width: 700px;
+  }
+
+  .accounts-revenue-panel .daily-revenue-table-wrap table {
+    min-width: 0;
+  }
+
+  .accounts-expense-item,
+  .expense-entry-form,
+  .duty-expense-form,
+  .duty-adjustment-form,
+  .staff-crew-add-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footer-inner,
+  .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding-inline: 10px;
+  }
+
+  .topbar-left {
+    font-size: 0.62rem;
+  }
+
+  .dashboard {
+    padding-inline: 8px;
+  }
+
+  .content-page,
+  .dashboard-page {
+    padding-inline: 8px;
+  }
+
+  .content-card {
+    padding: 11px;
+  }
+
+  .stats-grid,
+  .profit-report-totals,
+  .trip-controls-filters,
+  .accounts-revenue-ledger-filters,
+  .booking-header,
+  .accounts-expense-details,
+  .accounts-trip-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-revenue-titlebar,
+  .accounts-section-switch,
+  .accounts-section-switch button {
+    width: 100%;
+  }
+
+  .accounts-section-switch {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .customer-analytics-heading,
+  .customer-destination-grid {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .dashboard-seat-chart-period,
+  .customer-analytics-heading > label {
+    width: 100%;
+  }
+
+  .calendar-grid,
+  .log-calendar-grid {
+    gap: 3px;
+  }
+
+  .action-toast {
+    right: 8px;
+    left: 8px;
+    width: auto;
+  }
+
+  .accounts-total-main {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .accounts-total-main > strong {
+    width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 360px) {
+  .topbar-brand .nav-logo {
+    width: 40px;
+  }
+
+  .topbar-left {
+    padding-inline: 6px;
+    letter-spacing: 0;
+  }
+
+  .dashboard,
+  .content-page,
+  .dashboard-page {
+    padding-inline: 6px;
+  }
+
+  .content-card {
+    padding: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    display: grid;
+    justify-items: center;
+    overflow-x: clip;
+    padding: 12px;
+  }
+
+  .login-panel {
+    justify-self: center;
+    width: min(430px, calc(100vw - 24px));
+    min-width: 0;
+    padding: 24px 18px 20px;
+  }
+
+  .login-panel h1 {
+    font-size: clamp(1.55rem, 7.5vw, 2.1rem);
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .login-panel > p {
+    font-size: 0.9rem;
+  }
+
+  .login-panel .brand-logo {
+    max-width: 100%;
+  }
+}
+
 .accounts-draft-status {
   grid-row: span 2;
   display: flex;

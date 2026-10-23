@@ -61,6 +61,7 @@ function App() {
     }
   })
   const [activeTab, setActiveTab] = useState('Home')
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: 'admin_kt', password: '' })
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
@@ -1025,7 +1026,19 @@ function App() {
           <img className="nav-logo" src="/logo-transparent.png" alt="District Line" />
           <div className="topbar-left">Operational date: {selectedDate}</div>
         </div>
-        <nav className="nav-tabs">
+        <button
+          type="button"
+          className="mobile-nav-toggle"
+          aria-label={mobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={mobileNavOpen}
+          aria-controls="primary-navigation"
+          onClick={() => setMobileNavOpen((open) => !open)}
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
+        <nav id="primary-navigation" className={`nav-tabs${mobileNavOpen ? ' is-open' : ''}`} aria-label="Main navigation">
           {navTabs.map((tab) => (
             <button
               key={tab}
@@ -1037,6 +1050,7 @@ function App() {
                   return
                 }
                 setActiveTab(tab)
+                setMobileNavOpen(false)
                 if ((tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') && !adminStats) openAdminDashboard()
                 if (tab === 'Staff') openStaffManagement()
                 if (tab === 'Log') loadLogs(token, activeTrip)
