@@ -1331,6 +1331,7 @@ function App() {
               </select>
               <button type="button" className="ghost-button small" onClick={() => loadLogs(token, activeTrip)}>Search</button>
             </div>
+            <div className="log-table-scroll passenger-log-table-scroll">
             <table className="print-passengers">
               <thead>
                 <tr>
@@ -1396,6 +1397,7 @@ function App() {
                 })}
               </tbody>
             </table>
+            </div>
           </section>
 
           <section className="content-card log-card">
@@ -1419,6 +1421,7 @@ function App() {
                 {staffPermissions.cargo && <button type="button" className="primary-button small cargo-entry-button" onClick={() => openEntryForm('cargo')}>New Freight Entry</button>}
               </div>
             </div>
+            <div className="log-table-scroll cargo-log-table-scroll">
             <table className="print-cargo cargo-log-table">
               <thead>
                 <tr>
@@ -1455,6 +1458,7 @@ function App() {
                 </tr>
               </tfoot>
             </table>
+            </div>
           </section>
         </main>
       )}

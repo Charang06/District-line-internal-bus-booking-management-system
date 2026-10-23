@@ -7845,3 +7845,84 @@ button,
     grid-template-columns: minmax(60px, 1fr) auto auto;
   }
 }
+
+.log-table-scroll {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.passenger-log-table-scroll table {
+  min-width: 1080px;
+}
+
+.cargo-log-table-scroll table {
+  display: table;
+  min-width: 1180px;
+  overflow: visible;
+}
+
+@media (max-width: 900px) {
+  .cargo-log-table-scroll .cargo-log-table tfoot td {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 760px) {
+  .dashboard .seat {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .log-card .cargo-log-toolbar {
+    margin: 0;
+  }
+
+  .log-card .filter-row {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .log-card .filter-row > input {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .log-card .filter-row > select {
+    flex: 1 1 calc(50% - 8px);
+    width: auto;
+    min-width: 0;
+  }
+
+  .log-card .filter-row > button,
+  .log-card .filter-row > .from-filter-count {
+    flex: 1 1 100%;
+  }
+
+  .log-card .logs-toolbar > .toolbar-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+}
+
+@media print {
+  .log-table-scroll {
+    max-width: none;
+    overflow: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
