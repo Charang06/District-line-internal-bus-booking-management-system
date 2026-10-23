@@ -38,6 +38,25 @@ export function buildConfirmationMessage(booking, bookings = [booking], hotline 
   ].join('\n')
 }
 
+export function buildCancellationMessage(booking, bookings = [booking], hotline = smsConfig().hotline) {
+  const seats = bookings.map((item) => item.seat_number).join(', ')
+  const date = new Date(`${booking.travel_date}T12:00:00Z`).toLocaleDateString('en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC',
+  })
+  return [
+    'DISTRICT LINE',
+    '',
+    'Your seat booking has been cancelled.',
+    `Route: ${booking.boarding_point || '—'} to ${booking.destination || '—'}`,
+    `Date: ${date}`,
+    `Seat No: ${seats}`,
+    `Bus No: ${booking.registration_no || '—'}`,
+    `Hotline: ${hotline}`,
+    '',
+    'For assistance, please contact us.',
+  ].join('\n')
+}
+
 export async function sendSms({ to, message, idempotencyKey }) {
   const config = smsConfig()
   if (!config.configured) {

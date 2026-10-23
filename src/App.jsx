@@ -25,6 +25,19 @@ function todayIso() {
   return `${year}-${month}-${day}`
 }
 
+function formatSmsDateTime(value) {
+  if (!value) return ''
+  const raw = String(value).trim()
+  const normalized = raw.includes('T') ? raw : raw.replace(' ', 'T')
+  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)
+  const parsed = new Date(hasTimezone ? normalized : `${normalized}Z`)
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toLocaleString()
+}
+
+function defaultDepartureTime(routeCode) {
+  return routeCode === 'KTY_CMB' ? '22:30' : '20:30'
+}
+
 function persistUser(nextUser) {
   if (nextUser) localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
 }
@@ -77,11 +90,20 @@ function App() {
   const [adminStats, setAdminStats] = useState(null)
   const [adminDataLoading, setAdminDataLoading] = useState(false)
   const [staffList, setStaffList] = useState([])
+  const [crewList, setCrewList] = useState([])
+  const [busContactList, setBusContactList] = useState([])
   const [revenuePeriod, setRevenuePeriod] = useState('daily')
   const [revenueDate, setRevenueDate] = useState(todayIso())
+  const [seatChartPeriod, setSeatChartPeriod] = useState('week')
   const [dashboardRoute, setDashboardRoute] = useState('')
   const [dashboardTrip, setDashboardTrip] = useState('')
+  const [profitPeriod, setProfitPeriod] = useState('day')
+  const [profitDate, setProfitDate] = useState(todayIso())
+  const [profitRoute, setProfitRoute] = useState('')
+  const [profitTrip, setProfitTrip] = useState('')
+  const [profitLedger, setProfitLedger] = useState({ revenueEntries: [], expenseSubmissions: [] })
   const [customerPeriod, setCustomerPeriod] = useState('6')
+  const [customerChartPeriod, setCustomerChartPeriod] = useState('6')
   const [customerToday] = useState(() => todayIso())
   const [monthlyExpenseMonth, setMonthlyExpenseMonth] = useState(() => todayIso().slice(0, 7))
   const [expenseForm, setExpenseForm] = useState({ expense_month: todayIso().slice(0, 7), category: 'Fuel', description: '', amount: '' })
@@ -94,8 +116,6 @@ function App() {
   const [finalizeDutyTarget, setFinalizeDutyTarget] = useState(null)
   const [acknowledgeNoDutyExpenses, setAcknowledgeNoDutyExpenses] = useState(false)
   const [dutyFilters, setDutyFilters] = useState({ bus_id: '', status: '', start_from: '', start_to: '', completion_from: '', completion_to: '' })
-  const [passengerRecordSearch, setPassengerRecordSearch] = useState('')
-  const [passengerRecordStatus, setPassengerRecordStatus] = useState('')
   const [printMode, setPrintMode] = useState(null)
   const [entryFocus, setEntryFocus] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
@@ -133,6 +153,16 @@ function App() {
   })
   const route = routeByCode(routeCode)
   const activeTrip = trips.find((trip) => trip.id === activeTripId) || trips[0] || null
+  const knownDriverNames = [...new Set([...(crewList || []).filter((member) => member.role === 'driver').map((member) => member.full_name), ...(adminStats?.crewMembers || []).filter((member) => member.role === 'driver').map((member) => member.full_name), ...trips.map((item) => item.driver_name), ...buses.map((item) => item.driver_name)].map((name) => String(name || '').trim()).filter(Boolean))]
+  const knownConductorNames = [...new Set([...(crewList || []).filter((member) => member.role === 'conductor').map((member) => member.full_name), ...(adminStats?.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => member.full_name), ...trips.map((item) => item.conductor_name), ...buses.map((item) => item.conductor_name)].map((name) => String(name || '').trim()).filter(Boolean))]
+
+  useEffect(() => {
+    if (!token || !isAdmin) return
+    Promise.all([api.adminCrew(token), api.adminBusContacts(token)]).then(([crewResult, contactResult]) => {
+      setCrewList(crewResult.crew || [])
+      setBusContactList(contactResult.contacts || [])
+    }).catch(() => {})
+  }, [token, isAdmin])
   const bookedSeatCount = customerLogs.filter((log) => log.status !== 'cancelled').length
 
   const dashboardRange = useMemo(() => {
@@ -159,20 +189,36 @@ function App() {
   const matchesDashboardRoute = (row) => !dashboardRoute || row.route_code === dashboardRoute
   const matchesDashboardTrip = (row) => !dashboardTrip || String(row.trip_id || '') === dashboardTrip
   const filteredRevenue = useMemo(() => (adminStats?.dailyRevenue || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row)), [adminStats, dashboardRange, dashboardRoute, dashboardTrip])
+  const seatBookingCharts = useMemo(() => {
+    const anchor = new Date(`${revenueDate}T00:00:00`)
+    if (Number.isNaN(anchor.getTime())) return []
+    let start
+    let end
+    if (seatChartPeriod === 'week') {
+      start = new Date(anchor)
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7))
+      end = new Date(start)
+      end.setDate(end.getDate() + 6)
+    } else {
+      start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
+      end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
+    }
+    const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    const dates = []
+    for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) dates.push(iso(cursor))
+    const routes = ['KTY_CMB', 'CMB_KTY']
+    return routes.map((code) => {
+      const counts = new Map(dates.map((date) => [date, 0]))
+      ;(adminStats?.dailyRevenue || []).forEach((row) => {
+        if (row.route_code !== code || !counts.has(row.travel_date)) return
+        if (dashboardTrip && String(row.trip_id || '') !== dashboardTrip) return
+        counts.set(row.travel_date, counts.get(row.travel_date) + Number(row.passenger_count || 0))
+      })
+      return { code, dates, counts: dates.map((date) => counts.get(date) || 0) }
+    })
+  }, [adminStats, revenueDate, seatChartPeriod, dashboardTrip])
   const filteredTrips = useMemo(() => (adminStats?.trips || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row)), [adminStats, dashboardRange, dashboardRoute, dashboardTrip])
   const filteredPassengerRecords = useMemo(() => (adminStats?.passengerRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row)), [adminStats, dashboardRange, dashboardRoute, dashboardTrip])
-  const visiblePassengerRecords = useMemo(() => {
-    const query = passengerRecordSearch.trim().toLocaleLowerCase()
-    return filteredPassengerRecords.filter((row) => {
-      const isCancelled = row.status === 'cancelled'
-      const isConfirmed = row.status === 'confirmed' && row.confirmation_status === 'confirmed'
-      if (passengerRecordStatus === 'confirmed' && !isConfirmed) return false
-      if (passengerRecordStatus === 'cancelled' && !isCancelled) return false
-      if (!query) return true
-      return [row.passenger_name, row.contact, row.seat_number, row.route_label, row.registration_no, row.trip_code, row.travel_date, row.status, row.confirmation_status]
-        .some((value) => String(value || '').toLocaleLowerCase().includes(query))
-    })
-  }, [filteredPassengerRecords, passengerRecordSearch, passengerRecordStatus])
   const filteredCargoRecords = useMemo(() => (adminStats?.cargoRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row)), [adminStats, dashboardRange, dashboardRoute, dashboardTrip])
   const accountsExpenses = useMemo(() => (adminStats?.expenses || []).filter((expense) => !expense.duty_id && isInDashboardRange(expense.expense_date)), [adminStats, dashboardRange])
   const accountsExpenseTotal = useMemo(() => accountsExpenses.reduce((total, expense) => total + Number(expense.amount || 0), 0), [accountsExpenses])
@@ -201,16 +247,72 @@ function App() {
     expenses: total.expenses + Number(duty.total_expenses || 0),
     profit: total.profit + Number(duty.net_profit || 0),
   }), { revenue: 0, expenses: 0, profit: 0 }), [visibleDuties])
+  const profitReport = useMemo(() => {
+    const month = profitPeriod === 'month' ? profitDate.slice(0, 7) : ''
+    const selectedDate = new Date(`${profitDate}T00:00:00`)
+    const weekStart = new Date(selectedDate)
+    weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7))
+    const weekEnd = new Date(weekStart)
+    weekEnd.setDate(weekEnd.getDate() + 6)
+    const toIso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+    const groups = new Map()
+    const matchesPeriod = (date) => {
+      const value = String(date || '').slice(0, 10)
+      if (profitPeriod === 'month') return value.startsWith(month)
+      if (profitPeriod === 'week') return value >= toIso(weekStart) && value <= toIso(weekEnd)
+      return value === profitDate
+    }
+    const keyFor = (date, bus, route) => `${String(date || '').slice(0, 10)}|${String(bus || '').trim().toLowerCase()}|${route || ''}`
+    for (const entry of profitLedger.revenueEntries || []) {
+      if (entry.status !== 'locked' || !matchesPeriod(entry.travel_date)) continue
+      const key = keyFor(entry.travel_date, entry.bus_no, entry.route_code)
+      const row = groups.get(key) || { id: key, report_date: entry.travel_date, bus_no: entry.bus_no, route_label: entry.route_label, route_code: entry.route_code, driver_name: entry.driver_name, conductor_name: entry.conductor_name, total_revenue: 0, total_expenses: 0 }
+      row.total_revenue += Number(entry.total_revenue || 0)
+      if (!row.driver_name) row.driver_name = entry.driver_name
+      if (!row.conductor_name) row.conductor_name = entry.conductor_name
+      groups.set(key, row)
+    }
+    for (const submission of profitLedger.expenseSubmissions || []) {
+      if (submission.status !== 'locked' || !matchesPeriod(submission.expense_date)) continue
+      const route = submission.route_code || ''
+      const key = keyFor(submission.expense_date, submission.bus_no, route)
+      const row = groups.get(key) || { id: key, report_date: submission.expense_date, bus_no: submission.bus_no, route_label: ROUTES.find((item) => item.code === route)?.label || route, route_code: route, driver_name: submission.driver_name, conductor_name: submission.conductor_name, total_revenue: Number(submission.gross_revenue || 0), total_expenses: 0 }
+      row.total_expenses += Number(submission.total_expense || 0)
+      if (!row.driver_name) row.driver_name = submission.driver_name
+      if (!row.conductor_name) row.conductor_name = submission.conductor_name
+      groups.set(key, row)
+    }
+    const rows = [...groups.values()]
+      .filter((row) => (!profitRoute || row.route_code === profitRoute) && (!profitTrip || String(row.trip_id || '') === profitTrip || String(row.bus_no || '').toLowerCase() === String((adminStats?.trips || []).find((trip) => String(trip.id) === profitTrip)?.registration_no || '').toLowerCase()))
+      .map((row) => ({ ...row, net_profit: row.total_revenue - row.total_expenses }))
+      .sort((a, b) => String(b.report_date).localeCompare(String(a.report_date)))
+    return { rows, totals: rows.reduce((sum, row) => ({ revenue: sum.revenue + Number(row.total_revenue || 0), expenses: sum.expenses + Number(row.total_expenses || 0), profit: sum.profit + Number(row.net_profit || 0) }), { revenue: 0, expenses: 0, profit: 0 }) }
+  }, [profitLedger, profitDate, profitPeriod, profitRoute, profitTrip, adminStats])
+  const profitChartRows = useMemo(() => {
+    const byDate = new Map()
+    for (const row of profitReport.rows) {
+      const date = String(row.report_date || '').slice(0, 10)
+      if (!date) continue
+      const total = byDate.get(date) || { revenue: 0, profit: 0 }
+      total.revenue += Number(row.total_revenue || 0)
+      total.profit += Number(row.net_profit || 0)
+      byDate.set(date, total)
+    }
+    return [...byDate.entries()].map(([date, total]) => ({
+      date,
+      percentage: total.revenue > 0 ? total.profit / total.revenue * 100 : 0,
+    })).sort((a, b) => a.date.localeCompare(b.date))
+  }, [profitReport.rows])
+  const profitChartMin = Math.min(0, ...profitChartRows.map((row) => row.percentage))
+  const profitChartMax = Math.max(0, ...profitChartRows.map((row) => row.percentage))
+  const profitChartSpan = Math.max(1, profitChartMax - profitChartMin)
+  const profitChartTicks = Array.from({ length: 5 }, (_, index) => profitChartMax - (profitChartSpan * index / 4))
   const sortedRegularCustomers = useMemo(() => {
-    const periodMonths = customerPeriod === 'all' ? 0 : Number(customerPeriod)
     const endDate = customerToday
-    const [year, month, day] = customerToday.split('-').map(Number)
-    const monthIndex = year * 12 + month - 1 - periodMonths
-    const startYear = Math.floor(monthIndex / 12)
-    const startMonth = ((monthIndex % 12) + 12) % 12 + 1
-    const leapYear = startYear % 4 === 0 && (startYear % 100 !== 0 || startYear % 400 === 0)
-    const daysInMonth = [31, leapYear ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][startMonth - 1]
-    const startDate = periodMonths ? `${startYear}-${String(startMonth).padStart(2, '0')}-${String(Math.min(day, daysInMonth)).padStart(2, '0')}` : ''
+    const start = new Date(`${customerToday}T00:00:00`)
+    if (customerPeriod === 'week') start.setDate(start.getDate() - 6)
+    else if (customerPeriod !== 'all') start.setMonth(start.getMonth() - Number(customerPeriod))
+    const startDate = customerPeriod === 'all' ? '' : `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
     return [...(adminStats?.regularCustomers || [])]
       .map((customer) => {
         const dates = (customer.trip_dates || []).filter((date) => customerPeriod === 'all' || (date >= startDate && date <= endDate))
@@ -220,6 +322,25 @@ function App() {
       .filter((customer) => customer.trip_count >= 2)
       .sort((a, b) => b.trip_count - a.trip_count || b.month_count - a.month_count || String(b.last_trip_date).localeCompare(String(a.last_trip_date)))
   }, [adminStats, customerPeriod, customerToday])
+
+  const popularDestinationsByRoute = useMemo(() => {
+    const start = new Date(`${customerToday}T00:00:00`)
+    if (customerChartPeriod === 'week') start.setDate(start.getDate() - 6)
+    else start.setMonth(start.getMonth() - Number(customerChartPeriod))
+    const startDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
+    const byRoute = { KTY_CMB: new Map(), CMB_KTY: new Map() }
+    ;(adminStats?.passengerRecords || []).forEach((booking) => {
+      if (booking.status !== 'confirmed' || booking.confirmation_status !== 'confirmed' || !byRoute[booking.route_code]) return
+      if (!booking.travel_date || booking.travel_date < startDate || booking.travel_date > customerToday) return
+      const destination = String(booking.destination || '').trim()
+      if (!destination) return
+      const key = destination.toLocaleLowerCase()
+      const current = byRoute[booking.route_code].get(key) || { destination, count: 0 }
+      current.count += 1
+      byRoute[booking.route_code].set(key, current)
+    })
+    return Object.fromEntries(Object.entries(byRoute).map(([code, destinations]) => [code, [...destinations.values()].sort((a, b) => b.count - a.count || a.destination.localeCompare(b.destination))]))
+  }, [adminStats, customerChartPeriod, customerToday])
 
   const revenueSummary = useMemo(() => filteredRevenue.reduce((total, day) => ({
     passenger: total.passenger + Number(day.passenger_revenue || 0),
@@ -274,18 +395,22 @@ function App() {
       if (group) group.bookings.push(booking)
       else groups.set(key, { ...booking, bookings: [booking] })
     }
-    return [...groups.values()].map((group) => ({
-      ...group,
-      seat_numbers: group.bookings.map((booking) => booking.seat_number).sort((a, b) => Number(a) - Number(b)),
-      all_confirmed: group.bookings.every((booking) => booking.status !== 'cancelled' && booking.confirmation_status === 'confirmed'),
-      any_active: group.bookings.some((booking) => booking.status !== 'cancelled'),
-      fare_total: group.bookings.reduce((total, booking) => total + Number(booking.fare || 0), 0),
-      sms_sent_at: group.bookings.map((booking) => booking.sms_sent_at).filter(Boolean).sort().at(-1) || null,
-      sms_error: group.bookings.find((booking) => booking.sms_error)?.sms_error || '',
-      sms_status: group.bookings.every((booking) => booking.sms_status === group.bookings[0].sms_status)
-        ? group.bookings[0].sms_status
-        : 'mixed',
-    })).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id))
+    return [...groups.values()].map((group) => {
+      const latestSms = [...group.bookings].sort((a, b) => String(a.sms_sent_at || '').localeCompare(String(b.sms_sent_at || ''))).at(-1)
+      return {
+        ...group,
+        seat_numbers: group.bookings.map((booking) => booking.seat_number).sort((a, b) => Number(a) - Number(b)),
+        all_confirmed: group.bookings.every((booking) => booking.status !== 'cancelled' && booking.confirmation_status === 'confirmed'),
+        any_active: group.bookings.some((booking) => booking.status !== 'cancelled'),
+        fare_total: group.bookings.reduce((total, booking) => total + Number(booking.fare || 0), 0),
+        sms_sent_at: latestSms?.sms_sent_at || null,
+        sms_message_type: latestSms?.sms_message_type || 'confirmation',
+        sms_error: group.bookings.find((booking) => booking.sms_error)?.sms_error || '',
+        sms_status: group.bookings.every((booking) => booking.sms_status === group.bookings[0].sms_status)
+          ? group.bookings[0].sms_status
+          : 'mixed',
+      }
+    }).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id))
   }, [customerLogs])
 
   const showMessage = useCallback((text, isError = false) => {
@@ -466,8 +591,7 @@ function App() {
     }
   }
 
-  const handleSmsToggle = async (booking, checked) => {
-    if (!checked) return
+  const handleSendConfirmationSms = async (booking) => {
     const bookings = booking.bookings || [booking]
     const pending = bookings.filter((item) => !['sent', 'delivered'].includes(item.sms_status) && item.status !== 'cancelled' && item.confirmation_status === 'confirmed')
     if (!pending.length) return
@@ -475,6 +599,22 @@ function App() {
     try {
       for (const item of pending) await api.sendSms(token, item.id, item.sms_status === 'failed')
       showMessage(`SMS requests sent for seat${pending.length === 1 ? '' : 's'} ${pending.map((item) => item.seat_number).join(', ')}.`)
+      await loadLogs(token, activeTrip)
+    } catch (err) {
+      showMessage(err.message, true)
+      await loadLogs(token, activeTrip)
+    } finally {
+      setSmsBusyId(null)
+    }
+  }
+
+  const handleCancellationSms = async (booking) => {
+    const bookings = booking.bookings || [booking]
+    setSmsBusyId(booking.id)
+    try {
+      const retry = bookings.some((item) => item.sms_message_type === 'cancellation' && item.sms_status === 'failed')
+      await api.sendCancellationSms(token, booking.id, retry)
+      showMessage(`Cancellation SMS sent for seat${bookings.length === 1 ? '' : 's'} ${bookings.map((item) => item.seat_number).join(', ')}.`)
       await loadLogs(token, activeTrip)
     } catch (err) {
       showMessage(err.message, true)
@@ -509,7 +649,7 @@ function App() {
       travel_date: trip?.travel_date || selectedDate,
       route_code: trip?.route_code || routeCode,
       bus_no: trip?.registration_no || '',
-      departure_time: trip?.departure_time || '20:30',
+      departure_time: trip?.departure_time || defaultDepartureTime(trip?.route_code || routeCode),
       status: trip?.status || 'scheduled',
       driver_name: trip?.driver_name || '',
       driver_phone: trip?.driver_phone || '',
@@ -529,6 +669,7 @@ function App() {
         travel_date: selectedDate,
         route_code: routeCode,
         bus_no: '',
+        departure_time: defaultDepartureTime(routeCode),
         driver_name: '',
         driver_phone: '',
         conductor_name: '',
@@ -686,9 +827,10 @@ function App() {
     }
     setAdminDataLoading(true)
     try {
-      const [data, staffData] = await Promise.all([api.adminDashboard(token), api.adminStaff(token)])
+      const [data, staffData, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminStaff(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
       setAdminStats(data)
       setStaffList(staffData.staff || [])
+      setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
     } catch (err) {
       showMessage(err.message, true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
@@ -718,8 +860,9 @@ function App() {
   }
 
   const refreshAccountsData = async () => {
-    const data = await api.adminDashboard(token)
+    const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
     setAdminStats(data)
+    setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
     return data
   }
 
@@ -817,8 +960,10 @@ function App() {
       return
     }
     try {
-      const staffData = await api.adminStaff(token)
+      const [staffData, crewData, contactsData] = await Promise.all([api.adminStaff(token), api.adminCrew(token), api.adminBusContacts(token)])
       setStaffList(staffData.staff || [])
+      setCrewList(crewData.crew || [])
+      setBusContactList(contactsData.contacts || [])
     } catch (err) {
       showMessage(err.message, true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
@@ -1078,9 +1223,8 @@ function App() {
                 <b>Night Super Express Service</b>
               </div>
               <div className="log-corridor-options">
-                {ROUTES.map((item, index) => {
+                {ROUTES.map((item) => {
                   const selected = item.code === routeCode
-                  const routeTrip = selected ? activeTrip : null
                   return (
                     <button
                       key={item.code}
@@ -1094,10 +1238,7 @@ function App() {
                         setRouteCode(item.code)
                       }}
                     >
-                      <span className="log-corridor-kicker">Corridor {index === 0 ? 'Inbound' : 'Outbound'} · C-0{index + 1}<i>{selected ? '✓' : '○'}</i></span>
                       <strong>{item.label}</strong>
-                      <small>{item.via.replace('Via ', '')}</small>
-                      <span className="log-corridor-meta">{routeTrip?.departure_time ? `Dep: ${routeTrip.departure_time}` : 'Departure: —'} <b>·</b> {selected ? `${trips.length} bus section${trips.length === 1 ? '' : 's'}` : 'Select corridor to view buses'} {routeTrip?.registration_no ? <em>{routeTrip.registration_no}</em> : null}</span>
                     </button>
                   )
                 })}
@@ -1181,6 +1322,7 @@ function App() {
                 <tr>
                   <th>Seat</th>
                   <th>Passenger</th>
+                  <th>Gender</th>
                   <th>Contact</th>
                   <th>From</th>
                   <th>To</th>
@@ -1196,11 +1338,18 @@ function App() {
                 {customerLogRows.map((log) => {
                   const isConfirmed = log.all_confirmed
                   const isCancelled = !log.any_active
+                  const formattedSmsDateTime = formatSmsDateTime(log.sms_sent_at)
                   const canSendSms = log.bookings.some((booking) => booking.status !== 'cancelled' && booking.confirmation_status === 'confirmed' && !['sent', 'delivered'].includes(booking.sms_status))
+                  const cancellationSmsSent = log.bookings.every((booking) => booking.sms_message_type === 'cancellation' && ['sent', 'delivered'].includes(booking.sms_status))
+                  const canSendCancellationSms = isCancelled && !cancellationSmsSent
+                  const smsStatusLabel = log.sms_message_type === 'cancellation' && ['sent', 'delivered'].includes(log.sms_status)
+                    ? 'Cancellation sent'
+                    : ({ pending: 'Pending', queued: 'Sending', sent: 'Sent', delivered: 'Sent', failed: 'Failed', mixed: 'Mixed' }[log.sms_status] || log.sms_status)
                   return (
                     <tr key={log.booking_group_id || log.id} className={isCancelled ? 'row-cancelled' : ''}>
                       <td>{log.seat_numbers.join(', ')}</td>
                       <td>{log.passenger_name}</td>
+                      <td>{log.gender || '—'}</td>
                       <td>{log.contact}</td>
                       <td>{log.boarding_point}</td>
                       <td>{log.destination}</td>
@@ -1208,10 +1357,11 @@ function App() {
                       <td>{log.notes || '—'}</td>
                       <td><span className={`confirmation-pill ${isCancelled ? 'cancelled' : (isConfirmed ? 'confirmed' : 'unconfirmed')}`}>{isCancelled ? 'cancelled' : (isConfirmed ? 'confirmed' : 'unconfirmed')}</span></td>
                       <td className="no-print">
-                        <span className={`sms-pill ${log.sms_status === 'queued' ? 'sending' : log.sms_status}`}>{smsBusyId === log.id ? 'Sending' : ({ pending: 'Pending', queued: 'Sending', sent: 'Sent', delivered: 'Sent', failed: 'Failed', mixed: 'Mixed' }[log.sms_status] || log.sms_status)}</span>
-                        {log.sms_sent_at ? <small className="sms-meta">{new Date(`${log.sms_sent_at.replace(' ', 'T')}Z`).toLocaleString()}</small> : null}
+                        <span className={`sms-pill ${log.sms_status === 'queued' ? 'sending' : log.sms_status}`}>{smsBusyId === log.id ? 'Sending' : smsStatusLabel}</span>
+                        {formattedSmsDateTime ? <small className="sms-meta">{formattedSmsDateTime}</small> : null}
                         {log.sms_error ? <small className="sms-meta sms-error-text">{log.sms_error}</small> : null}
-                        {isConfirmed && canSendSms && staffPermissions.passengers ? <label className="sms-send-control"><input type="checkbox" disabled={smsBusyId === log.id} onChange={(event) => handleSmsToggle(log, event.target.checked)} /> Send Confirmation SMS</label> : null}
+                        {isConfirmed && canSendSms && staffPermissions.passengers ? <button type="button" className="sms-send-button" disabled={smsBusyId === log.id} onClick={() => handleSendConfirmationSms(log)}>{log.sms_status === 'failed' ? 'Retry confirmation SMS' : 'Send confirmation SMS'}</button> : null}
+                        {canSendCancellationSms && staffPermissions.passengers ? <button type="button" className="sms-send-button cancellation-sms-button" disabled={smsBusyId === log.id} onClick={() => handleCancellationSms(log)}>{smsBusyId === log.id ? 'Sending…' : (log.sms_message_type === 'cancellation' && log.sms_status === 'failed' ? 'Retry cancellation SMS' : 'Send cancellation SMS')}</button> : null}
                       </td>
                       <td className="no-print">
                         <input
@@ -1342,7 +1492,7 @@ function App() {
       )}
 
       {activeTab === 'Staff' && isAdmin && (
-        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
+        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} busContactList={busContactList} setBusContactList={setBusContactList} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
           if (result.id === user?.id && result.permissions?.home === false && activeTab === 'Home') {
             const nextTab = result.permissions?.log !== false ? 'Log' : 'Info'
             setActiveTab(nextTab)
@@ -1353,17 +1503,6 @@ function App() {
 
       {activeTab === 'Dashboard' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">
-          <section className="content-card dashboard-filter-bar">
-            <div><h2>Dashboard filters</h2><p>Date range, route, bus, and trip apply to revenue, trips, passenger records, and cargo records.</p></div>
-            <div className="revenue-filter-controls">
-              <label>Period<select value={revenuePeriod} onChange={(event) => setRevenuePeriod(event.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
-              <label>Choose date<input type="date" value={revenueDate} onChange={(event) => setRevenueDate(event.target.value)} /></label>
-              <label>Route<select value={dashboardRoute} onChange={(event) => setDashboardRoute(event.target.value)}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
-              <label>Bus<select value={dashboardTrip} onChange={(event) => setDashboardTrip(event.target.value)}><option value="">All buses</option>{(adminStats.trips || []).filter((trip) => isInDashboardRange(trip.travel_date) && (!dashboardRoute || trip.route_code === dashboardRoute)).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
-              <strong>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
-              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenuePeriod('daily'); setRevenueDate(todayIso()); setDashboardRoute(''); setDashboardTrip('') }}>Reset</button>
-            </div>
-          </section>
           <div className="stats-grid">
             <div className="metric-card"><span>Registered buses</span><strong>{adminStats.buses.length}</strong></div>
             <div className="metric-card"><span>Trips in selected filters</span><strong>{filteredTrips.length}</strong></div>
@@ -1374,53 +1513,108 @@ function App() {
             <div className="metric-card"><span>SMS pending</span><strong>{adminStats.sms?.pending || 0}</strong></div>
             <div className="metric-card"><span>SMS sent / failed</span><strong>{adminStats.sms?.sent || 0} / {adminStats.sms?.failed || 0}</strong></div>
           </div>
-          {!adminStats.smsGateway?.configured && <p className="hint">SMS gateway is pending configuration. Bookings still work.</p>}
-          <section className="content-card location-analytics-card">
+          <section className="content-card daily-revenue-card profit-report-card">
             <div className="dashboard-section-heading">
-              <div><h2>Passenger Location Analytics</h2><p>Popular boarding and destination locations based on confirmed bookings in the selected filters.</p></div>
+              <div><h2>Profit report</h2><p>Finalized bus duties with accounting totals from Accounts.</p></div>
+              <div className="profit-report-filters">
+                <label>Period<select value={profitPeriod} onChange={(event) => setProfitPeriod(event.target.value)}><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select></label>
+                <label>{profitPeriod === 'month' ? 'Month' : profitPeriod === 'week' ? 'Week containing' : 'Date'}<input type={profitPeriod === 'month' ? 'month' : 'date'} value={profitPeriod === 'month' ? profitDate.slice(0, 7) : profitDate} onChange={(event) => setProfitDate(profitPeriod === 'month' ? `${event.target.value}-01` : event.target.value)} /></label>
+                <label>Route<select value={profitRoute} onChange={(event) => { setProfitRoute(event.target.value); setProfitTrip('') }}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
+                <label>Trip<select value={profitTrip} onChange={(event) => setProfitTrip(event.target.value)}><option value="">All trips</option>{(adminStats.trips || []).filter((trip) => {
+                  if (profitRoute && trip.route_code !== profitRoute) return false
+                  if (profitPeriod === 'month') return trip.travel_date?.startsWith(profitDate.slice(0, 7))
+                  if (profitPeriod === 'week') {
+                    const chosen = new Date(`${profitDate}T00:00:00`)
+                    const start = new Date(chosen)
+                    start.setDate(start.getDate() - ((start.getDay() + 6) % 7))
+                    const end = new Date(start)
+                    end.setDate(end.getDate() + 6)
+                    const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+                    return trip.travel_date >= iso(start) && trip.travel_date <= iso(end)
+                  }
+                  return trip.travel_date === profitDate
+                }).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || trip.bus_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
+              </div>
+            </div>
+            <div className="stats-grid profit-report-totals">
+              <div className="metric-card"><span>Total revenue</span><strong>Rs. {profitReport.totals.revenue.toLocaleString('en-US')}</strong></div>
+              <div className="metric-card"><span>Total expense</span><strong>Rs. {profitReport.totals.expenses.toLocaleString('en-US')}</strong></div>
+              <div className="metric-card"><span>Profit amount</span><strong>Rs. {profitReport.totals.profit.toLocaleString('en-US')}</strong></div>
+            </div>
+            <div className="profit-chart-wrap">
+              <h3>Profit margin by date</h3>
+              {profitChartRows.length ? <div className="profit-chart-layout" role="img" aria-label={`Profit margin percentage by date, ranging from ${profitChartMin.toFixed(1)}% to ${profitChartMax.toFixed(1)}%`}>
+                <div className="profit-chart-y-axis"><span>Profit margin (%)</span>{profitChartTicks.map((tick, index) => <small key={index}>{tick.toFixed(0)}%</small>)}</div>
+                <div className="profit-chart-plot">
+                  <div className="profit-chart-gridlines">{profitChartTicks.map((tick, index) => <div key={index} className="profit-chart-gridline"><span>{tick.toFixed(0)}%</span></div>)}</div>
+                  <div className="profit-chart-bars">
+                    {profitChartRows.map(({ date, percentage }) => <div className="profit-chart-column" key={date} title={`${date}: ${percentage.toFixed(1)}% profit margin`}>
+                      <div className={`profit-chart-bar${percentage < 0 ? ' negative' : ''}`} style={{ height: `${Math.max(2, (percentage - profitChartMin) / profitChartSpan * 100)}%` }} />
+                      <small>{date.slice(5)}</small>
+                    </div>)}
+                  </div>
+                  <div className="profit-chart-x-axis">Date</div>
+                </div>
+              </div> : <p className="daily-revenue-empty">No profit data to chart for these filters.</p>}
             </div>
             <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Rank</th><th>Location</th><th>Travel date(s)</th><th>Boarding bookings</th><th>Destination bookings</th><th>Total location activity</th></tr></thead>
-              <tbody>
-                {passengerLocationAnalytics.slice(0, 15).map((location, index) => (
-                  <tr key={location.location.toLocaleLowerCase()}><td>{index + 1}</td><td>{location.location}</td><td>{location.travelDates.join(', ') || '—'}</td><td>{location.boardingCount}</td><td>{location.destinationCount}</td><td><strong>{location.totalBookings}</strong></td></tr>
-                ))}
-                {!passengerLocationAnalytics.length && <tr><td colSpan="6" className="daily-revenue-empty">No confirmed passenger location data for these filters.</td></tr>}
-              </tbody>
+              <thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver</th><th>Conductor</th><th>Total revenue</th><th>Profit amount</th></tr></thead>
+              <tbody>{profitReport.rows.map((duty) => <tr key={duty.id}><td>{duty.report_date}</td><td>{duty.bus_no || '—'}</td><td>{duty.route_label || duty.route_code || '—'}</td><td>{duty.driver_name || '—'}</td><td>{duty.conductor_name || '—'}</td><td>Rs. {Number(duty.total_revenue || 0).toLocaleString('en-US')}</td><td><strong>Rs. {Number(duty.net_profit || 0).toLocaleString('en-US')}</strong></td></tr>)}
+              {!profitReport.rows.length && <tr><td colSpan="7" className="daily-revenue-empty">No locked Accounts entries for this period.</td></tr>}</tbody>
             </table></div>
           </section>
-          <section className="content-card daily-revenue-card">
-            <div className="daily-revenue-heading">
-              <div>
-                <h2>Revenue report</h2>
-                <p>Passenger and cargo totals for {filteredRevenue.length} trip(s) in the selected range</p>
-              </div>
-              <strong>Rs. {revenueSummary.total.toLocaleString('en-US')}</strong>
+          <section className="content-card dashboard-seat-chart-section">
+            <div className="dashboard-section-heading">
+              <div><h2>Seats booked by travel date</h2><p>Confirmed seats for each route during the selected week or month.</p></div>
+              <label className="dashboard-seat-chart-period">Period<select value={seatChartPeriod} onChange={(event) => setSeatChartPeriod(event.target.value)}><option value="week">Week</option><option value="month">Month</option></select></label>
             </div>
-            <div className="daily-revenue-table-wrap">
-              <table>
-                <thead><tr><th>Travel date</th><th>Bus No</th><th>Trip No</th><th>Route</th><th>Passengers</th><th>Passenger revenue</th><th>Cargo items</th><th>Cargo revenue</th><th>Total revenue</th></tr></thead>
-                <tbody>
-                  {filteredRevenue.map((day) => (
-                    <tr key={day.trip_id ? `trip-${day.trip_id}` : `${day.travel_date}-${day.route_code || 'unknown'}-${day.registration_no || 'unassigned'}`}>
-                      <td>{day.travel_date}</td>
-                      <td>{day.registration_no || 'Unassigned'}</td>
-                      <td>{day.trip_code || 'Unassigned'}</td>
-                      <td>{day.route_label || 'Unassigned'}</td>
-                      <td>{day.passenger_count}</td>
-                      <td>Rs. {Number(day.passenger_revenue).toLocaleString('en-US')}</td>
-                      <td>{day.cargo_count}</td>
-                      <td>Rs. {Number(day.cargo_revenue).toLocaleString('en-US')}</td>
-                      <td><strong>Rs. {Number(day.total_revenue).toLocaleString('en-US')}</strong></td>
-                    </tr>
-                  ))}
-                  {!filteredRevenue.length && <tr><td colSpan="9" className="daily-revenue-empty">No revenue recorded for this period and route.</td></tr>}
-                </tbody>
-              </table>
+            <div className="dashboard-seat-chart-grid">
+              {seatBookingCharts.map((chart) => {
+                const maximum = Math.max(0, ...chart.counts)
+                const step = Math.max(1, Math.ceil(maximum / 4))
+                const axisMaximum = Math.max(step * 4, 4)
+                const plot = { left: 42, top: 16, width: 730, height: 210 }
+                const bandWidth = plot.width / chart.dates.length
+                const barWidth = Math.max(3, Math.min(24, bandWidth * 0.66))
+                const showDateLabel = (index) => seatChartPeriod === 'week' || index % 5 === 0 || index === chart.dates.length - 1
+                return <article className="dashboard-seat-chart-card" key={chart.code}>
+                  <h3>{chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}</h3>
+                  <svg className="dashboard-seat-chart" viewBox="0 0 800 285" role="img" aria-label={`Confirmed seats booked by date: ${chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}`}>
+                    {[0, 1, 2, 3, 4].map((tick) => {
+                      const value = axisMaximum - tick * step
+                      const y = plot.top + (tick / 4) * plot.height
+                      return <g key={`grid-${tick}`}><line x1={plot.left} y1={y} x2={plot.left + plot.width} y2={y} className="dashboard-seat-gridline" /><text x={plot.left - 8} y={y + 4} textAnchor="end" className="dashboard-seat-axis-label">{value}</text></g>
+                    })}
+                    <line x1={plot.left} y1={plot.top} x2={plot.left} y2={plot.top + plot.height} className="dashboard-seat-axis" />
+                    <line x1={plot.left} y1={plot.top + plot.height} x2={plot.left + plot.width} y2={plot.top + plot.height} className="dashboard-seat-axis" />
+                    {chart.counts.map((count, index) => {
+                      const height = (count / axisMaximum) * plot.height
+                      const x = plot.left + index * bandWidth + (bandWidth - barWidth) / 2
+                      const y = plot.top + plot.height - height
+                      return <g key={chart.dates[index]}>
+                        <rect x={x} y={y} width={barWidth} height={Math.max(count ? 2 : 0, height)} rx="2" className="dashboard-seat-bar"><title>{`${chart.dates[index]}: ${count} seats`}</title></rect>
+                        {showDateLabel(index) && <text x={plot.left + index * bandWidth + bandWidth / 2} y={plot.top + plot.height + 22} textAnchor="middle" className="dashboard-seat-axis-label">{chart.dates[index].slice(5)}</text>}
+                      </g>
+                    })}
+                  </svg>
+                </article>
+              })}
             </div>
           </section>
+          {!adminStats.smsGateway?.configured && <p className="hint">SMS gateway is pending configuration. Bookings still work.</p>}
           <section className="content-card">
-            <div className="dashboard-section-heading"><h2>Trip controls</h2><button type="button" className="primary-button small" onClick={handleAddBus}>Add trip / bus section</button></div>
+            <div className="dashboard-section-heading trip-controls-heading">
+              <div><h2>Trip controls</h2><p>Filter trips by date, route, or individual trip.</p></div>
+              <button type="button" className="primary-button small" onClick={handleAddBus}>Add trip / bus section</button>
+            </div>
+            <div className="trip-controls-filters">
+              <label>Period<select value={revenuePeriod} onChange={(event) => setRevenuePeriod(event.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
+              <label>Choose date<input type="date" value={revenueDate} onChange={(event) => setRevenueDate(event.target.value)} /></label>
+              <label>Route<select value={dashboardRoute} onChange={(event) => { setDashboardRoute(event.target.value); setDashboardTrip('') }}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
+              <label>Trip<select value={dashboardTrip} onChange={(event) => setDashboardTrip(event.target.value)}><option value="">All trips</option>{(adminStats.trips || []).filter((trip) => isInDashboardRange(trip.travel_date) && (!dashboardRoute || trip.route_code === dashboardRoute)).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
+              <strong>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
+              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenuePeriod('daily'); setRevenueDate(todayIso()); setDashboardRoute(''); setDashboardTrip('') }}>Reset filters</button>
+            </div>
             <div className="daily-revenue-table-wrap"><table>
               <thead><tr><th>Code</th><th>Date</th><th>Route</th><th>Bus</th><th>Driver name</th><th>Conductor name</th><th>Booked</th><th>Available</th><th>Controls</th></tr></thead>
               <tbody>
@@ -1441,37 +1635,6 @@ function App() {
               </tbody>
             </table></div>
           </section>
-          <div className="dashboard-record-grid">
-            <section className="content-card">
-              <div className="dashboard-section-heading passenger-record-heading">
-                <h2>Passenger records</h2>
-                <div className="revenue-filter-controls passenger-record-controls">
-                  <label>Search<input type="search" placeholder="Name, mobile, seat, route..." value={passengerRecordSearch} onChange={(event) => setPassengerRecordSearch(event.target.value)} /></label>
-                  <label>Booking status<select value={passengerRecordStatus} onChange={(event) => setPassengerRecordStatus(event.target.value)}><option value="">All statuses</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option></select></label>
-                </div>
-              </div>
-              <div className="daily-revenue-table-wrap"><table><thead><tr><th>Date</th><th>Passenger</th><th>Mobile No.</th><th>Seat</th><th>Route</th><th>Bus No</th><th>Trip No</th><th>Fare</th><th>Status</th></tr></thead><tbody>
-              {visiblePassengerRecords.slice(0, 12).map((item) => <tr key={item.id}><td>{item.travel_date}</td><td>{item.passenger_name}</td><td>{item.contact || '—'}</td><td>{item.seat_number}</td><td>{item.route_label}</td><td>{item.registration_no || 'Unassigned'}</td><td>{item.trip_code || 'Unassigned'}</td><td>Rs. {Number(item.fare || 0).toLocaleString('en-US')}</td><td>{item.status === 'cancelled' ? 'cancelled' : item.confirmation_status}</td></tr>)}
-              {!visiblePassengerRecords.length && <tr><td colSpan="9" className="daily-revenue-empty">No passenger records match these filters.</td></tr>}
-            </tbody></table></div></section>
-            <section className="content-card"><h2>Cargo records</h2><div className="daily-revenue-table-wrap"><table><thead><tr><th>Date</th><th>Bill no</th><th>Route</th><th>Bus No</th><th>Trip No</th><th>Description</th><th>Customer Name</th><th>Contact Number</th><th>Charge</th></tr></thead><tbody>
-              {filteredCargoRecords.slice(0, 12).map((item) => <tr key={item.id}><td>{item.travel_date || '—'}</td><td>{item.cargo_ref}</td><td>{item.route_label || 'Unassigned'}</td><td>{item.registration_no || 'Unassigned'}</td><td>{item.trip_code || 'Unassigned'}</td><td>{item.description}</td><td>{item.sender_name || item.receiver_name || '—'}</td><td>{item.sender_phone || item.receiver_phone || '—'}</td><td>Rs. {Number(item.charge || 0).toLocaleString('en-US')}</td></tr>)}
-              {!filteredCargoRecords.length && <tr><td colSpan="9" className="daily-revenue-empty">No cargo records in this period.</td></tr>}
-            </tbody></table></div></section>
-          </div>
-          <section className="content-card">
-            <div className="dashboard-section-heading">
-              <div>
-                <h2>Staff accounts</h2>
-                <p className="staff-permission-caption staff-page-caption">{staffList.length} staff account{staffList.length === 1 ? '' : 's'} · account creation, permissions, and password resets are on the Staff page.</p>
-              </div>
-              <button type="button" className="primary-button small" onClick={() => { setActiveTab('Staff'); openStaffManagement() }}>Manage staff</button>
-            </div>
-            <div className="daily-revenue-table-wrap"><table><thead><tr><th>Staff member</th><th>Status</th><th>Passenger</th><th>Cargo</th><th>Trips</th></tr></thead><tbody>
-              {staffList.map((person) => <tr key={person.id}><td>{person.full_name}<small className="staff-username">{person.username}</small></td><td>{person.status || 'active'}</td><td>{person.permissions?.passengers ? 'Allowed' : 'Blocked'}</td><td>{person.permissions?.cargo ? 'Allowed' : 'Blocked'}</td><td>{person.permissions?.trips ? 'Allowed' : 'Blocked'}</td></tr>)}
-              {!staffList.length && <tr><td colSpan="5" className="daily-revenue-empty">No staff accounts found.</td></tr>}
-            </tbody></table></div>
-          </section>
         </main>
       )}
 
@@ -1483,10 +1646,30 @@ function App() {
         </main>
       )}
 
-      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue data={adminStats} token={token} showMessage={showMessage} onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }} />}
+      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue data={{ ...adminStats, crewMembers: crewList }} token={token} showMessage={showMessage} onRefresh={refreshAccountsData} onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }} />}
 
       {activeTab === 'Customers' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">
+          <section className="customer-destination-section">
+            <div className="customer-analytics-heading">
+              <div><h2>Popular destinations</h2><p>Confirmed bookings by destination within each route.</p></div>
+              <label>Period<select value={customerChartPeriod} onChange={(event) => setCustomerChartPeriod(event.target.value)}><option value="week">Last week</option><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option></select></label>
+            </div>
+            <div className="customer-destination-grid">
+              {[{ code: 'KTY_CMB', title: 'Kattankudy to Colombo' }, { code: 'CMB_KTY', title: 'Colombo to Kattankudy' }].map((route) => {
+                const destinations = popularDestinationsByRoute[route.code] || []
+                const maxCount = Math.max(1, ...destinations.map((item) => item.count))
+                return <section className="content-card customer-destination-chart" key={route.code}>
+                  <h3>{route.title}</h3>
+                  {destinations.length ? <div className="customer-destination-bars" role="img" aria-label={`Destination booking counts for ${route.title}`}>
+                    {destinations.map((item) => <div className="customer-destination-bar-row" key={item.destination}>
+                      <span title={item.destination}>{item.destination}</span><div className="customer-destination-bar-track"><div className="customer-destination-bar" style={{ width: `${(item.count / maxCount) * 100}%` }} /></div><strong>{item.count}</strong>
+                    </div>)}
+                  </div> : <p className="daily-revenue-empty">No confirmed destination bookings in this period.</p>}
+                </section>
+              })}
+            </div>
+          </section>
           <section className="content-card">
             <div className="dashboard-section-heading">
               <div>
@@ -1494,7 +1677,7 @@ function App() {
                 <p>Customers are grouped by mobile number. Counts and rankings use confirmed trips in the selected period; multiple seats on one trip count once. “Months travelled” is the number of different calendar months in that period with a trip.</p>
               </div>
               <div className="revenue-filter-controls">
-                <label>Period<select value={customerPeriod} onChange={(event) => setCustomerPeriod(event.target.value)}><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option><option value="12">Last year</option><option value="all">All time</option></select></label>
+                <label>Period<select value={customerPeriod} onChange={(event) => setCustomerPeriod(event.target.value)}><option value="week">Last week</option><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option></select></label>
                 <strong>{sortedRegularCustomers.length} regular customer{sortedRegularCustomers.length === 1 ? '' : 's'}</strong>
               </div>
             </div>
@@ -1531,9 +1714,10 @@ function App() {
             <label><span>Bus No</span><input value={tripForm.bus_no} onChange={(event) => setTripForm((prev) => ({ ...prev, bus_no: event.target.value }))} /></label>
             <label><span>Departure time</span><input type="time" value={tripForm.departure_time} onChange={(event) => setTripForm((prev) => ({ ...prev, departure_time: event.target.value }))} /></label>
             <label><span>Journey status</span><select value={tripForm.status} onChange={(event) => setTripForm((prev) => ({ ...prev, status: event.target.value }))}><option value="scheduled">Scheduled</option><option value="boarding">Boarding</option><option value="departed">Departed</option><option value="completed">Completed</option></select></label>
-            <label><span>Driver name</span><input value={tripForm.driver_name} onChange={(event) => setTripForm((prev) => ({ ...prev, driver_name: event.target.value }))} /></label>
-            <label><span>Driver phone</span><input value={tripForm.driver_phone} onChange={(event) => setTripForm((prev) => ({ ...prev, driver_phone: event.target.value }))} /></label>
-            <label><span>Conductor name</span><input value={tripForm.conductor_name} onChange={(event) => setTripForm((prev) => ({ ...prev, conductor_name: event.target.value }))} /></label>
+            <label><span>Driver name</span><input list="crew-driver-names" value={tripForm.driver_name} onChange={(event) => setTripForm((prev) => ({ ...prev, driver_name: event.target.value }))} /></label>
+            <datalist id="crew-driver-names">{knownDriverNames.map((name) => <option key={name} value={name} />)}</datalist>
+            <label><span>Conductor name</span><input list="crew-conductor-names" value={tripForm.conductor_name} onChange={(event) => setTripForm((prev) => ({ ...prev, conductor_name: event.target.value }))} /></label>
+            <datalist id="crew-conductor-names">{knownConductorNames.map((name) => <option key={name} value={name} />)}</datalist>
             <label><span>Conductor phone</span><input value={tripForm.conductor_phone} onChange={(event) => setTripForm((prev) => ({ ...prev, conductor_phone: event.target.value }))} /></label>
             <div className="reservation-actions">
               <button type="button" className="ghost-button" onClick={() => { setShowCrewForm(false); setEditingTrip(null) }}>Close</button>
@@ -1588,9 +1772,11 @@ function App() {
             <h2>{editingBus ? 'Edit bus' : 'Register bus'}</h2>
             <label><span>Registration number</span><input value={busForm.registration_no} onChange={(event) => setBusForm((prev) => ({ ...prev, registration_no: event.target.value }))} /></label>
             <label><span>Display name</span><input value={busForm.display_name} onChange={(event) => setBusForm((prev) => ({ ...prev, display_name: event.target.value }))} /></label>
-            <label><span>Driver name</span><input value={busForm.driver_name} onChange={(event) => setBusForm((prev) => ({ ...prev, driver_name: event.target.value }))} /></label>
+            <label><span>Driver name</span><input list="bus-driver-names" value={busForm.driver_name} onChange={(event) => setBusForm((prev) => ({ ...prev, driver_name: event.target.value }))} /></label>
+            <datalist id="bus-driver-names">{knownDriverNames.map((name) => <option key={name} value={name} />)}</datalist>
             <label><span>Driver phone</span><input value={busForm.driver_phone} onChange={(event) => setBusForm((prev) => ({ ...prev, driver_phone: event.target.value }))} /></label>
-            <label><span>Conductor name</span><input value={busForm.conductor_name} onChange={(event) => setBusForm((prev) => ({ ...prev, conductor_name: event.target.value }))} /></label>
+            <label><span>Conductor name</span><input list="bus-conductor-names" value={busForm.conductor_name} onChange={(event) => setBusForm((prev) => ({ ...prev, conductor_name: event.target.value }))} /></label>
+            <datalist id="bus-conductor-names">{knownConductorNames.map((name) => <option key={name} value={name} />)}</datalist>
             <label><span>Conductor phone</span><input value={busForm.conductor_phone} onChange={(event) => setBusForm((prev) => ({ ...prev, conductor_phone: event.target.value }))} /></label>
             <div className="reservation-actions">
               <button type="button" className="ghost-button" onClick={() => setShowBusForm(false)}>Close</button>
@@ -1605,7 +1791,7 @@ function App() {
           <div className="modal">
             <h2>Cancel booking</h2>
             <p>Cancel {cancelTarget.passenger_name} on {cancelTarget.route_label} / {cancelTarget.travel_date} / {cancelTarget.registration_no} seat{cancelTarget.seat_numbers?.length === 1 ? '' : 's'} {(cancelTarget.seat_numbers || [cancelTarget.seat_number]).join(', ')}?</p>
-            <p>No cancellation SMS will be sent. The record is kept.</p>
+            <p>After cancelling, you can send a cancellation notice from the SMS column.</p>
             <div className="reservation-actions">
               <button type="button" className="ghost-button" onClick={() => setCancelTarget(null)}>Keep booking</button>
               <button type="button" className="primary-button" onClick={confirmCancel}>Confirm cancellation</button>

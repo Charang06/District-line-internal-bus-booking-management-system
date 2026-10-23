@@ -21,7 +21,7 @@ async function parse(response) {
     data = { message: raw || `Server returned an unreadable response (${response.status}).` }
   }
   if (!response.ok) {
-    const error = new Error(data.message || `Request failed (${response.status} ${response.statusText}).`)
+    const error = new Error(data.message || `Request failed (${response.status} ${response.statusText}) at ${response.url || 'the API endpoint'}.`)
     error.status = response.status
     error.data = data
     throw error
@@ -61,6 +61,7 @@ export const api = {
   cancelBooking: (token, id) => fetch(`${API_BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token), body: '{}' }).then(parse),
   setBookingConfirmation: (token, id, confirmation_status) => fetch(`${API_BASE}/bookings/${id}/confirmation`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ confirmation_status }) }).then(parse),
   sendSms: (token, id, retry = false) => fetch(`${API_BASE}/bookings/${id}/sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
+  sendCancellationSms: (token, id, retry = false) => fetch(`${API_BASE}/bookings/${id}/cancellation-sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
   cargo: (token, query = '') => fetch(`${API_BASE}/cargo${query}`, { headers: authHeaders(token) }).then(parse),
   createCargo: (token, body) => fetch(`${API_BASE}/cargo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   deleteCargo: (token, id) => fetch(`${API_BASE}/cargo/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
@@ -71,6 +72,8 @@ export const api = {
   adminDashboard: (token) => fetch(`${API_BASE}/admin/dashboard`, { headers: authHeaders(token) }).then(parse),
   adminRevenueEntries: (token) => request(`${API_BASE}/admin/revenue-entries`, { headers: authHeaders(token) }),
   createRevenueEntry: (token, body) => request(`${API_BASE}/admin/revenue-entries`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
+  adminExpenseSubmissions: (token) => request(`${API_BASE}/admin/expense-submissions`, { headers: authHeaders(token) }),
+  createAdminExpenseSubmission: (token, body) => request(`${API_BASE}/admin/expense-submissions`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   createAdminExpense: (token, body) => request(`${API_BASE}/admin/expenses`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   createBusDuty: (token, body) => request(`${API_BASE}/admin/duties`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   addDutyExpense: (token, id, body) => request(`${API_BASE}/admin/duties/${id}/expenses`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
@@ -79,6 +82,12 @@ export const api = {
   deleteDutyAdjustment: (token, dutyId, adjustmentId) => request(`${API_BASE}/admin/duties/${dutyId}/adjustments/${adjustmentId}`, { method: 'DELETE', headers: authHeaders(token) }),
   finalizeBusDuty: (token, id, acknowledge_no_expenses = false) => request(`${API_BASE}/admin/duties/${id}/finalize`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ acknowledge_no_expenses }) }),
   adminStaff: (token) => request(`${API_BASE}/admin/staff`, { headers: authHeaders(token) }),
+  adminCrew: (token) => request(`${API_BASE}/admin/crew`, { headers: authHeaders(token) }),
+  createCrewMember: (token, body) => request(`${API_BASE}/admin/crew`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
+  deleteCrewMember: (token, id) => request(`${API_BASE}/admin/crew/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
+  adminBusContacts: (token) => request(`${API_BASE}/admin/bus-contacts`, { headers: authHeaders(token) }),
+  createBusContact: (token, body) => request(`${API_BASE}/admin/bus-contacts`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
+  deleteBusContact: (token, id) => request(`${API_BASE}/admin/bus-contacts/${id}`, { method: 'DELETE', headers: authHeaders(token) }),
   createStaff: (token, body) => request(`${API_BASE}/admin/staff`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   updateStaff: (token, id, body) => request(`${API_BASE}/admin/staff/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }),
   resetStaffPassword: (token, id, password) => request(`${API_BASE}/admin/staff/${id}/reset-password`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ password }) }),

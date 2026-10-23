@@ -34,10 +34,11 @@ export const ROUTES = [
     label: 'Kattankudy to Colombo',
     short: 'KKY to CMB',
     via: 'Via Kalmunai • Batticaloa • Polonnaruwa • Kurunegala Express',
-    defaultFrom: 'Kattankudy Central',
+    defaultFrom: 'Kattankudy',
     defaultTo: 'Colombo',
-    boarding: ['Kattankudy Central', 'Kattankudy', 'Kalmunai', 'Batticaloa', 'Polonnaruwa', 'Kurunegala', 'Maradana'],
-    alighting: ['Colombo', 'Colombo Fort', 'Pettah Central', 'Dehiwala', 'Maradana'],
+    stops: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Colombo'],
+    boarding: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Colombo'],
+    alighting: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Colombo'],
   },
   {
     code: 'CMB_KTY',
@@ -45,9 +46,10 @@ export const ROUTES = [
     short: 'CMB to KKY',
     via: 'Via Maradana Terminal • Fort • Dambulla • Batticaloa',
     defaultFrom: 'Colombo',
-    defaultTo: 'Kattankudy Central',
-    boarding: ['Colombo', 'Colombo Fort', 'Pettah Central', 'Dehiwala', 'Maradana', 'Dambulla'],
-    alighting: ['Kattankudy Central', 'Kattankudy', 'Kalmunai', 'Batticaloa', 'Polonnaruwa', 'Kurunegala'],
+    defaultTo: 'Kattankudy',
+    stops: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Kattankudy'],
+    boarding: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Kattankudy'],
+    alighting: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Kattankudy'],
   },
 ]
 

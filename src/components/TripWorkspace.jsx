@@ -37,6 +37,15 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
       notes: saved.notes || '',
     }
   })
+  const routeStops = route.stops || route.boarding || []
+
+  useEffect(() => {
+    setBookingForm((current) => ({
+      ...current,
+      from: routeStops.includes(current.from) ? current.from : route.defaultFrom,
+      to: routeStops.includes(current.to) ? current.to : route.defaultTo,
+    }))
+  }, [route.code, route.defaultFrom, route.defaultTo, routeStops])
 
   const loadBookings = useCallback(async () => {
     const data = await api.trip(token, trip.id)
@@ -191,8 +200,8 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
               <label><span>Trip Direction</span><input value={route.short} readOnly /></label>
             </div>
             <div className="two-col grouped-fields">
-              <label><span>From</span><input value={bookingForm.from} onChange={(event) => setBookingForm((prev) => ({ ...prev, from: event.target.value }))} /></label>
-              <label><span>To</span><input value={bookingForm.to} onChange={(event) => setBookingForm((prev) => ({ ...prev, to: event.target.value }))} /></label>
+              <label><span>From</span><select value={bookingForm.from} onChange={(event) => setBookingForm((prev) => ({ ...prev, from: event.target.value }))}>{routeStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
+              <label><span>To</span><select value={bookingForm.to} onChange={(event) => setBookingForm((prev) => ({ ...prev, to: event.target.value }))}>{routeStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
             </div>
             <div className="two-col grouped-fields">
               <label><span>Passenger Name (optional)</span><input value={bookingForm.passengerName} onChange={(event) => setBookingForm((prev) => ({ ...prev, passengerName: event.target.value }))} /></label>

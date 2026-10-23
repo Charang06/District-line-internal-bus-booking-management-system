@@ -8,7 +8,7 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { AsyncLocalStorage } from 'async_hooks'
 import { loadEnv } from './env.js'
-import { sendSms, buildConfirmationMessage, smsConfig } from './sms.js'
+import { sendSms, buildConfirmationMessage, buildCancellationMessage, smsConfig } from './sms.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -22,7 +22,7 @@ app.use((req, res, next) => transactionContext.run({ client: null }, next))
 const IS_VERCEL = Boolean(process.env.VERCEL)
 const localUploadDir = path.join(__dirname, '..', 'public', 'uploads')
 if (!IS_VERCEL) fs.mkdirSync(path.join(localUploadDir, 'profiles'), { recursive: true })
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3002
 const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production'
 const JWT_SECRET = process.env.JWT_SECRET || (IS_PRODUCTION ? '' : 'district-line-dev-only-change-me')
 if (IS_PRODUCTION && JWT_SECRET.length < 32) {
@@ -660,6 +660,67 @@ app.post('/api/profile/password', authMiddleware, requireAdmin, async (req, res)
   res.json({ message: 'Password updated.' })
 })
 
+app.get('/api/admin/crew', authMiddleware, requireAdmin, async (req, res) => {
+  const crew = await all("SELECT id, full_name, role, status, created_at FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
+  res.json({ crew })
+})
+
+app.post('/api/admin/crew', authMiddleware, requireAdmin, async (req, res) => {
+  const fullName = String(req.body?.full_name || '').trim().replace(/\s+/g, ' ')
+  const role = String(req.body?.role || '').trim().toLowerCase()
+  if (fullName.length < 2 || fullName.length > 80) return res.status(400).json({ message: 'Enter a name between 2 and 80 characters.' })
+  if (!['driver', 'conductor'].includes(role)) return res.status(400).json({ message: 'Choose Driver or Conductor.' })
+  try {
+    const result = await run('INSERT INTO crew_members (full_name, role, created_by) VALUES (?, ?, ?)', [fullName, role, req.user.id])
+    const crewMember = await get('SELECT id, full_name, role, status, created_at FROM crew_members WHERE id = ?', [result.id])
+    await audit(req.user, 'crew.create', 'crew_member', crewMember.id, `${role}: ${fullName}`)
+    res.status(201).json({ crewMember })
+  } catch (error) {
+    if (isUniqueViolation(error)) return res.status(409).json({ message: `That ${role} name has already been added.` })
+    console.error(error)
+    res.status(500).json({ message: 'Failed to add crew member.' })
+  }
+})
+
+app.delete('/api/admin/crew/:id', authMiddleware, requireAdmin, async (req, res) => {
+  const crewMember = await get('SELECT id, full_name, role FROM crew_members WHERE id = ?', [req.params.id])
+  if (!crewMember) return res.status(404).json({ message: 'Crew member not found.' })
+  await run('DELETE FROM crew_members WHERE id = ?', [crewMember.id])
+  await audit(req.user, 'crew.delete', 'crew_member', crewMember.id, `${crewMember.role}: ${crewMember.full_name}`)
+  res.json({ message: `Removed ${crewMember.full_name}.`, id: crewMember.id })
+})
+
+app.get('/api/admin/bus-contacts', authMiddleware, requireAdmin, async (req, res) => {
+  const contacts = await all("SELECT id, bus_no, phone_number, created_at FROM bus_contacts WHERE status = 'active' ORDER BY bus_no")
+  res.json({ contacts })
+})
+
+app.post('/api/admin/bus-contacts', authMiddleware, requireAdmin, async (req, res) => {
+  const busNo = String(req.body?.bus_no || '').trim().replace(/\s+/g, ' ')
+  const phoneNumber = String(req.body?.phone_number || '').trim()
+  if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
+  if (!phoneNumber || phoneNumber.length > 30 || !/^[+\d\s()-]+$/.test(phoneNumber)) return res.status(400).json({ message: 'Enter a valid bus contact number.' })
+  try {
+    await run(`INSERT INTO bus_contacts (bus_no, phone_number, created_by) VALUES (?, ?, ?)
+      ON CONFLICT (bus_no) DO UPDATE SET phone_number = EXCLUDED.phone_number, status = 'active'`, [busNo, phoneNumber, req.user.id])
+    const contact = await get('SELECT id, bus_no, phone_number, created_at FROM bus_contacts WHERE bus_no = ?', [busNo])
+    await audit(req.user, 'bus_contact.create', 'bus_contact', contact.id, `${busNo}: ${phoneNumber}`)
+    res.status(201).json({ contact })
+  } catch (error) {
+    if (isUniqueViolation(error)) return res.status(409).json({ message: 'A contact entry for that bus already exists.' })
+    console.error(error)
+    res.status(500).json({ message: 'Failed to add bus contact.' })
+  }
+})
+
+app.delete('/api/admin/bus-contacts/:id', authMiddleware, requireAdmin, async (req, res) => {
+  const contact = await get("SELECT id, bus_no, phone_number FROM bus_contacts WHERE id = ? AND status = 'active'", [req.params.id])
+  if (!contact) return res.status(404).json({ message: 'Bus contact not found.' })
+  await run("UPDATE bus_contacts SET status = 'inactive' WHERE id = ?", [contact.id])
+  await audit(req.user, 'bus_contact.delete', 'bus_contact', contact.id, `${contact.bus_no}: ${contact.phone_number}`)
+  res.json({ message: `Removed contact for ${contact.bus_no}.`, id: contact.id })
+})
+
 app.get('/api/admin/staff', authMiddleware, requireAdmin, async (req, res, next) => {
   try {
   const staff = await all("SELECT id, username, full_name, role, permissions, status FROM users WHERE role = 'staff' ORDER BY full_name")
@@ -720,6 +781,104 @@ app.post('/api/admin/expenses', authMiddleware, requireAdmin, async (req, res) =
   const expense = await get('SELECT id, expense_date, category, description, amount FROM daily_expenses WHERE id = ?', [result.id])
   await audit(req.user, 'expense.create', 'daily_expense', expense.id, `${category}: Rs. ${amount}`)
   res.status(201).json({ expense })
+})
+
+app.get('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (req, res) => {
+  const rows = await all(`
+    SELECT id, submission_code, expense_date, bus_no, driver_name, conductor_name,
+      route_code, first_leg_date, return_leg_date, first_trip_id, return_trip_id, items_json, total_expense, gross_revenue,
+      first_leg_share, return_leg_share, status, created_at, locked_at
+    FROM expense_submissions
+    ORDER BY expense_date DESC, id DESC
+    LIMIT 100
+  `)
+  const submissions = rows.map((row) => {
+    let items = []
+    try { items = JSON.parse(row.items_json || '[]') } catch {}
+    return { ...row, items }
+  })
+  res.json({ submissions })
+})
+
+app.post('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (req, res) => {
+  const expenseDate = String(req.body?.expense_date || '').trim()
+  const firstLegDate = String(req.body?.first_leg_date || expenseDate).trim()
+  const returnLegDate = String(req.body?.return_leg_date || expenseDate).trim()
+  const busNo = String(req.body?.bus_no || '').trim()
+  const driverName = String(req.body?.driver_name || '').trim()
+  const conductorName = String(req.body?.conductor_name || '').trim()
+  const routeCode = String(req.body?.route_code || '').trim()
+  const firstTripId = req.body?.first_trip_id ? Number(req.body.first_trip_id) : null
+  const returnTripId = req.body?.return_trip_id ? Number(req.body.return_trip_id) : null
+  const inputItems = req.body?.items
+  const grossRevenue = Number(req.body?.gross_revenue || 0)
+
+  if (!isIsoCalendarDate(expenseDate)) return res.status(400).json({ message: 'Enter a valid operating date.' })
+  if (!isIsoCalendarDate(firstLegDate) || !isIsoCalendarDate(returnLegDate)) return res.status(400).json({ message: 'Enter valid dates for both route sectors.' })
+  if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
+  if (driverName.length > 80 || conductorName.length > 80) return res.status(400).json({ message: 'Driver and conductor names must be 80 characters or fewer.' })
+  if (!ROUTES[routeCode]) return res.status(400).json({ message: 'Choose a valid corridor.' })
+  if (!Array.isArray(inputItems) || inputItems.length < 1 || inputItems.length > 30) return res.status(400).json({ message: 'Add between 1 and 30 expense items.' })
+  if (!Number.isSafeInteger(grossRevenue) || grossRevenue < 0 || grossRevenue > 1000000000) return res.status(400).json({ message: 'Revenue total is invalid.' })
+
+  const pairedRouteCode = routeCode === 'KTY_CMB' ? 'CMB_KTY' : 'KTY_CMB'
+  for (const [tripId, expectedRoute, expectedDate] of [[firstTripId, routeCode, firstLegDate], [returnTripId, pairedRouteCode, returnLegDate]]) {
+    if (tripId === null) continue
+    if (!Number.isSafeInteger(tripId) || tripId < 1) return res.status(400).json({ message: 'Choose valid corridor trips.' })
+    const trip = await get(`SELECT t.id, t.travel_date, t.route_code, COALESCE(NULLIF(t.bus_no, ''), b.registration_no) as bus_no
+      FROM trips t LEFT JOIN buses b ON b.id = t.bus_id WHERE t.id = ?`, [tripId])
+    if (!trip || trip.travel_date !== expectedDate || trip.route_code !== expectedRoute || String(trip.bus_no || '').toLowerCase() !== busNo.toLowerCase()) {
+      return res.status(400).json({ message: 'The selected trips must match their sector date, bus, and corridor direction.' })
+    }
+  }
+
+  const items = []
+  for (const row of inputItems) {
+    const category = String(row?.category || '').trim()
+    const description = String(row?.description || '').trim()
+    const amount = Number(row?.amount)
+    if (!category || category.length > 80 || description.length > 200 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
+      return res.status(400).json({ message: 'Each expense needs a category and a whole-rupee amount.' })
+    }
+    items.push({ category, description, amount })
+  }
+  const totalExpense = items.reduce((sum, item) => sum + item.amount, 0)
+  if (!totalExpense) return res.status(400).json({ message: 'Enter an amount greater than zero before submitting expenses.' })
+  const firstLegShare = req.body?.divide_expense === false ? totalExpense : Math.floor(totalExpense / 2)
+  const returnLegShare = req.body?.divide_expense === false ? 0 : totalExpense - firstLegShare
+
+  try {
+    await exec('BEGIN IMMEDIATE')
+    const inserted = await run(`
+      INSERT INTO expense_submissions (
+        expense_date, bus_no, driver_name, conductor_name, route_code, first_leg_date, return_leg_date,
+        first_trip_id, return_trip_id, items_json, total_expense, gross_revenue,
+        first_leg_share, return_leg_share, created_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [expenseDate, busNo, driverName, conductorName, routeCode, firstLegDate, returnLegDate, firstTripId, returnTripId,
+      JSON.stringify(items), totalExpense, grossRevenue, firstLegShare, returnLegShare, req.user.id])
+    const submissionCode = `DL-EXP-${String(inserted.id).padStart(6, '0')}`
+    await run('UPDATE expense_submissions SET submission_code = ? WHERE id = ?', [submissionCode, inserted.id])
+    for (const item of items.filter((entry) => entry.amount > 0)) {
+      await run(`INSERT INTO daily_expenses (expense_date, category, description, amount, created_by, submission_id)
+        VALUES (?, ?, ?, ?, ?, ?)`, [expenseDate, item.category,
+        `${busNo} · ${ROUTES[routeCode].label} / return leg${item.description ? ` · ${item.description}` : ''}`,
+        item.amount, req.user.id, inserted.id])
+    }
+    await audit(req.user, 'expense_submission.lock', 'expense_submission', inserted.id, `${submissionCode}: Rs. ${totalExpense}`)
+    const rows = await get(`SELECT id, submission_code, expense_date, bus_no, driver_name, conductor_name,
+      route_code, first_leg_date, return_leg_date, first_trip_id, return_trip_id, items_json, total_expense, gross_revenue,
+      first_leg_share, return_leg_share, status, created_at, locked_at
+      FROM expense_submissions WHERE id = ?`, [inserted.id])
+    await exec('COMMIT')
+    let savedItems = []
+    try { savedItems = JSON.parse(rows.items_json || '[]') } catch {}
+    return res.status(201).json({ submission: { ...rows, items: savedItems } })
+  } catch (error) {
+    try { await exec('ROLLBACK') } catch {}
+    console.error('Expense submission save failed:', error)
+    return res.status(500).json({ message: 'Could not save and lock the expense submission.' })
+  }
 })
 
 app.get('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, res) => {
@@ -1543,7 +1702,8 @@ app.get('/api/bookings', authMiddleware, async (req, res) => {
   const bookings = await all(
     `SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, t.departure_time,
             COALESCE(t.bus_no, b.registration_no) as registration_no, b.display_name as bus_name,
-            (SELECT sa.created_at FROM sms_attempts sa WHERE sa.booking_id = bk.id ORDER BY sa.id DESC LIMIT 1) as sms_sent_at
+            (SELECT sa.created_at FROM sms_attempts sa WHERE sa.booking_id = bk.id ORDER BY sa.id DESC LIMIT 1) as sms_sent_at,
+            (SELECT sa.message_type FROM sms_attempts sa WHERE sa.booking_id = bk.id ORDER BY sa.id DESC LIMIT 1) as sms_message_type
      FROM bookings bk
      JOIN trips t ON t.id = bk.trip_id
      LEFT JOIN buses b ON b.id = t.bus_id
@@ -1716,7 +1876,7 @@ app.post('/api/bookings/:id/sms', authMiddleware, requireStaffPermission('passen
     message = buildConfirmationMessage(booking, group, smsConfig().hotline)
     for (const item of group) {
       await run(
-        `INSERT INTO sms_attempts (booking_id, idempotency_key, phone, message, status, created_by) VALUES (?, ?, ?, ?, 'queued', ?)`,
+        `INSERT INTO sms_attempts (booking_id, idempotency_key, phone, message, message_type, status, created_by) VALUES (?, ?, ?, ?, 'confirmation', 'queued', ?)`,
         [item.id, `${idempotencyKey}-booking-${item.id}`, booking.contact, message, req.user.id],
       )
       await run("UPDATE bookings SET sms_status = 'queued', sms_error = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [item.id])
@@ -1742,6 +1902,86 @@ app.post('/api/bookings/:id/sms', authMiddleware, requireStaffPermission('passen
     : result.error
   if (!result.ok) return res.status(502).json({ message: errorMessage || 'SMS send failed.', canRetry: result.providerStatus !== 'timeout_unknown' })
   res.json({ ok: true, status: result.status, message: 'SmsLenz accepted the confirmation SMS.', seatCount: group.length })
+})
+
+app.post('/api/bookings/:id/cancellation-sms', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+  const bookingId = Number(req.params.id)
+  if (!Number.isSafeInteger(bookingId) || bookingId < 1) return res.status(400).json({ message: 'Invalid booking ID.' })
+  let group = []
+  let message
+  let idempotencyKey
+  try {
+    await exec('BEGIN IMMEDIATE')
+    const selected = await get('SELECT * FROM bookings WHERE id = ?', [bookingId])
+    if (!selected) { await exec('ROLLBACK'); return res.status(404).json({ message: 'Booking not found.' }) }
+    if (selected.status !== 'cancelled') { await exec('ROLLBACK'); return res.status(400).json({ message: 'Cancel the booking before sending a cancellation SMS.' }) }
+    const groupWhere = selected.booking_group_id ? 'bk.booking_group_id = ?' : 'bk.id = ?'
+    const groupValue = selected.booking_group_id || selected.id
+    group = await all(
+      `SELECT bk.*, t.travel_date, t.route_label, t.trip_code,
+              COALESCE(t.bus_no, b.registration_no) as registration_no
+       FROM bookings bk JOIN trips t ON t.id = bk.trip_id
+       LEFT JOIN buses b ON b.id = t.bus_id
+       WHERE ${groupWhere} AND bk.trip_id = ? AND bk.status = 'cancelled'
+       ORDER BY bk.id`,
+      [groupValue, selected.trip_id],
+    )
+    if (!group.length) { await exec('ROLLBACK'); return res.status(400).json({ message: 'No cancelled seats are available to send.' }) }
+    if (group.some((item) => item.contact !== selected.contact)) {
+      await exec('ROLLBACK'); return res.status(400).json({ message: 'Seats in this booking group have different customer phone numbers.' })
+    }
+    const booking = group[0]
+    if (!isValidPhone(booking.contact)) { await exec('ROLLBACK'); return res.status(400).json({ message: 'The saved customer phone number is invalid.' }) }
+    const existingRows = await all(
+      `SELECT status, provider_status FROM sms_attempts
+       WHERE booking_id IN (${group.map(() => '?').join(',')}) AND message_type = 'cancellation'
+       ORDER BY id DESC`,
+      group.map((item) => item.id),
+    )
+    if (existingRows.some((row) => ['sent', 'delivered'].includes(row.status))) {
+      await exec('ROLLBACK'); return res.status(409).json({ message: 'A cancellation SMS was already accepted for these seats.' })
+    }
+    if (existingRows.some((row) => row.provider_status === 'timeout_unknown')) {
+      await exec('ROLLBACK'); return res.status(409).json({ message: 'The previous request timed out and may have been accepted. Check your SmsLenz account before sending again.' })
+    }
+    if (existingRows.some((row) => row.status === 'queued')) {
+      await exec('ROLLBACK'); return res.status(409).json({ message: 'A cancellation SMS is already sending for these seats.' })
+    }
+    const retry = req.body?.retry === true
+    if (existingRows.some((row) => row.status === 'failed') && !retry) {
+      await exec('ROLLBACK'); return res.status(409).json({ message: 'Previous cancellation SMS failed. Confirm retry to send again.', canRetry: true })
+    }
+    const attemptNoRow = await get(
+      "SELECT COUNT(*) as count FROM sms_attempts WHERE booking_id = ? AND message_type = 'cancellation'",
+      [selected.id],
+    )
+    idempotencyKey = `cancel-sms-group-${selected.booking_group_id || selected.id}-${Number(attemptNoRow.count || 0) + 1}`
+    message = buildCancellationMessage(booking, group, smsConfig().hotline)
+    for (const item of group) {
+      await run(
+        `INSERT INTO sms_attempts (booking_id, idempotency_key, phone, message, message_type, status, created_by) VALUES (?, ?, ?, ?, 'cancellation', 'queued', ?)`,
+        [item.id, `${idempotencyKey}-booking-${item.id}`, booking.contact, message, req.user.id],
+      )
+      await run("UPDATE bookings SET sms_status = 'queued', sms_error = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = ?", [item.id])
+    }
+    await exec('COMMIT')
+  } catch (error) {
+    try { await exec('ROLLBACK') } catch { /* ignore */ }
+    console.error(error)
+    return res.status(500).json({ message: 'Could not prepare the cancellation SMS.' })
+  }
+
+  const result = await sendSms({ to: group[0].contact, message, idempotencyKey })
+  for (const item of group) {
+    await run(
+      `UPDATE sms_attempts SET status = ?, provider_status = ?, provider_response = ?, error = ? WHERE idempotency_key = ?`,
+      [result.status, result.providerStatus || '', JSON.stringify(result.raw || {}), result.error || '', `${idempotencyKey}-booking-${item.id}`],
+    )
+    await run('UPDATE bookings SET sms_status = ?, sms_error = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [result.status, result.ok ? null : result.error, item.id])
+    await audit(req.user, result.ok ? 'sms.cancellation.sent' : 'sms.cancellation.failed', 'booking', item.id, idempotencyKey)
+  }
+  if (!result.ok) return res.status(502).json({ message: result.error || 'Cancellation SMS send failed.', canRetry: result.providerStatus !== 'timeout_unknown' })
+  res.json({ ok: true, status: result.status, message: 'SmsLenz accepted the cancellation SMS.', seatCount: group.length })
 })
 
 app.get('/api/cargo', authMiddleware, async (req, res) => {
@@ -1813,6 +2053,7 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
   const trips = await all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`)
   const dutyData = await getAdminDutyData()
   const buses = await all('SELECT * FROM buses ORDER BY id')
+  const crewMembers = await all("SELECT id, full_name, role, status FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
   const expenses = await all('SELECT id, expense_date, category, description, amount, duty_id, trip_id FROM daily_expenses ORDER BY expense_date DESC, id DESC')
   const passengerRecords = await all(`SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id ORDER BY t.travel_date DESC, bk.created_at DESC LIMIT 200`)
   const recentCustomerBookings = await all(`
@@ -1919,6 +2160,7 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
     ...dutyData,
     trips: await Promise.all(trips.map(hydrateTrip)),
     buses,
+    crewMembers,
     expenses,
     passengerRecords,
     regularCustomers,
