@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+﻿import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { api, assetUrl } from './api'
 import TripWorkspace from './components/TripWorkspace'
@@ -87,6 +87,7 @@ function App() {
   const [showCrewForm, setShowCrewForm] = useState(false)
   const [editingTrip, setEditingTrip] = useState(null)
   const [showBusForm, setShowBusForm] = useState(false)
+  const [busSaving, setBusSaving] = useState(false)
   const [editingBus, setEditingBus] = useState(null)
   const [adminStats, setAdminStats] = useState(null)
   const [adminDataLoading, setAdminDataLoading] = useState(false)
@@ -283,12 +284,41 @@ function App() {
       if (!row.conductor_name) row.conductor_name = submission.conductor_name
       groups.set(key, row)
     }
+    const monthlyExpenseRows = profitPeriod === 'month'
+      ? (adminStats?.expenses || []).filter((expense) => !expense.duty_id && (expense.expense_source === 'monthly' || expense.category === 'Monthly Expense') && String(expense.expense_date || '').slice(0, 7) === month)
+      : []
+    const monthlyExpenseTotal = monthlyExpenseRows.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
+    const monthlyHighwayExpenseTotal = profitPeriod === 'month'
+      ? (profitLedger.expenseSubmissions || []).filter((submission) => submission.status === 'locked' && String(submission.expense_date || '').slice(0, 7) === month).reduce((sum, submission) => sum + Number(submission.total_expense || 0), 0)
+      : 0
+    if (profitPeriod === 'month') {
+      for (const row of groups.values()) row.total_expenses = 0
+      for (const submission of profitLedger.expenseSubmissions || []) {
+        if (submission.status !== 'locked' || String(submission.expense_date || '').slice(0, 7) !== month) continue
+        const route = submission.route_code || ''
+        const key = keyFor(submission.expense_date, submission.bus_no, route)
+        const row = groups.get(key) || { id: key, report_date: submission.expense_date, bus_no: submission.bus_no, route_label: ROUTES.find((item) => item.code === route)?.label || route, route_code: route, driver_name: submission.driver_name, conductor_name: submission.conductor_name, total_revenue: Number(submission.gross_revenue || 0), total_expenses: 0 }
+        row.total_expenses += Number(submission.total_expense || 0)
+        groups.set(key, row)
+      }
+      const key = `${month}-01|monthly-expenses|`
+      if (monthlyExpenseTotal > 0) {
+        const row = groups.get(key) || { id: key, report_date: `${month}-01`, bus_no: '', route_label: '', route_code: '', driver_name: '', conductor_name: '', total_revenue: 0, total_expenses: 0 }
+        row.total_expenses += monthlyExpenseTotal
+        groups.set(key, row)
+      }
+    }
     const rows = [...groups.values()]
-      .filter((row) => (!profitRoute || row.route_code === profitRoute) && (!profitTrip || String(row.trip_id || '') === profitTrip || String(row.bus_no || '').toLowerCase() === String((adminStats?.trips || []).find((trip) => String(trip.id) === profitTrip)?.registration_no || '').toLowerCase()))
+      .filter((row) => !profitRoute || row.route_code === profitRoute)
       .map((row) => ({ ...row, net_profit: row.total_revenue - row.total_expenses }))
       .sort((a, b) => String(b.report_date).localeCompare(String(a.report_date)))
-    return { rows, totals: rows.reduce((sum, row) => ({ revenue: sum.revenue + Number(row.total_revenue || 0), expenses: sum.expenses + Number(row.total_expenses || 0), profit: sum.profit + Number(row.net_profit || 0) }), { revenue: 0, expenses: 0, profit: 0 }) }
-  }, [profitLedger, profitDate, profitPeriod, profitRoute, profitTrip, adminStats])
+    const totals = rows.reduce((sum, row) => ({ revenue: sum.revenue + Number(row.total_revenue || 0), expenses: sum.expenses + Number(row.total_expenses || 0), profit: sum.profit + Number(row.net_profit || 0) }), { revenue: 0, expenses: 0, profit: 0 })
+    if (profitPeriod === 'month') {
+      totals.expenses = monthlyExpenseTotal + monthlyHighwayExpenseTotal
+      totals.profit = totals.revenue - totals.expenses
+    }
+    return { rows, monthlyExpenseTotal, totals }
+  }, [profitLedger, profitDate, profitPeriod, profitRoute, adminStats])
   const profitChartRows = useMemo(() => {
     const byDate = new Map()
     for (const row of profitReport.rows) {
@@ -771,12 +801,18 @@ function App() {
   }
 
   const handleSaveBus = async () => {
+    const registrationNo = String(busForm.registration_no || '').trim()
+    if (!registrationNo) {
+      showMessage('Enter a bus registration number.', true)
+      return
+    }
+    setBusSaving(true)
     try {
       if (editingBus) {
-        await api.updateBus(token, editingBus.id, busForm)
+        await api.updateBus(token, editingBus.id, { ...busForm, registration_no: registrationNo })
         showMessage('Bus details updated.')
       } else {
-        await api.createBus(token, busForm)
+        await api.createBus(token, { ...busForm, registration_no: registrationNo })
         showMessage('Bus registered.')
       }
       setShowBusForm(false)
@@ -785,6 +821,8 @@ function App() {
       if (activeTab === 'Dashboard') await openAdminDashboard()
     } catch (err) {
       showMessage(err.message, true)
+    } finally {
+      setBusSaving(false)
     }
   }
 
@@ -845,12 +883,14 @@ function App() {
     setExpenseSaving(true)
     try {
       const expenseDate = `${expenseForm.expense_month}-01`
-      await api.createAdminExpense(token, { ...expenseForm, expense_date: expenseDate, amount: Number(expenseForm.amount) })
+      await api.createAdminExpense(token, { ...expenseForm, category: 'Monthly Expense', expense_date: expenseDate, amount: Number(expenseForm.amount), expense_source: 'monthly' })
       setMonthlyExpenseMonth(expenseForm.expense_month)
       setRevenueDate(expenseDate)
       setRevenuePeriod('monthly')
-      const data = await api.adminDashboard(token)
+      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
       setAdminStats(data)
+      setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+      setProfitLedger((current) => ({ ...current, monthlyExpenses: data.expenses || [] }))
       setExpenseForm((current) => ({ ...current, description: '', amount: '' }))
       showMessage('Monthly expense saved.')
     } catch (err) {
@@ -961,10 +1001,10 @@ function App() {
       return
     }
     try {
-      const [staffData, crewData, contactsData] = await Promise.all([api.adminStaff(token), api.adminCrew(token), api.adminBusContacts(token)])
+      const [staffData, crewData, fleetData] = await Promise.all([api.adminStaff(token), api.adminCrew(token), api.buses(token, true)])
       setStaffList(staffData.staff || [])
       setCrewList(crewData.crew || [])
-      setBusContactList(contactsData.contacts || [])
+      setBuses(fleetData.buses || [])
     } catch (err) {
       showMessage(err.message, true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
@@ -1510,7 +1550,7 @@ function App() {
       )}
 
       {activeTab === 'Staff' && isAdmin && (
-        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} busContactList={busContactList} setBusContactList={setBusContactList} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
+        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} onRegisterBus={() => { setEditingBus(null); setBusForm({ registration_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
           if (result.id === user?.id && result.permissions?.home === false && activeTab === 'Home') {
             const nextTab = result.permissions?.log !== false ? 'Log' : 'Info'
             setActiveTab(nextTab)
@@ -1534,28 +1574,15 @@ function App() {
           <section className="content-card daily-revenue-card profit-report-card">
             <div className="dashboard-section-heading">
               <div><h2>Profit report</h2><p>Finalized bus duties with accounting totals from Accounts.</p></div>
-              <div className="profit-report-filters">
+      <div className="profit-report-filters">
                 <label>Period<select value={profitPeriod} onChange={(event) => setProfitPeriod(event.target.value)}><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option></select></label>
                 <label>{profitPeriod === 'month' ? 'Month' : profitPeriod === 'week' ? 'Week containing' : 'Date'}<input type={profitPeriod === 'month' ? 'month' : 'date'} value={profitPeriod === 'month' ? profitDate.slice(0, 7) : profitDate} onChange={(event) => setProfitDate(profitPeriod === 'month' ? `${event.target.value}-01` : event.target.value)} /></label>
-                <label>Route<select value={profitRoute} onChange={(event) => { setProfitRoute(event.target.value); setProfitTrip('') }}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
-                <label>Trip<select value={profitTrip} onChange={(event) => setProfitTrip(event.target.value)}><option value="">All trips</option>{(adminStats.trips || []).filter((trip) => {
-                  if (profitRoute && trip.route_code !== profitRoute) return false
-                  if (profitPeriod === 'month') return trip.travel_date?.startsWith(profitDate.slice(0, 7))
-                  if (profitPeriod === 'week') {
-                    const chosen = new Date(`${profitDate}T00:00:00`)
-                    const start = new Date(chosen)
-                    start.setDate(start.getDate() - ((start.getDay() + 6) % 7))
-                    const end = new Date(start)
-                    end.setDate(end.getDate() + 6)
-                    const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-                    return trip.travel_date >= iso(start) && trip.travel_date <= iso(end)
-                  }
-                  return trip.travel_date === profitDate
-                }).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || trip.bus_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
+                <label>Route<select value={profitRoute} onChange={(event) => setProfitRoute(event.target.value)}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
               </div>
             </div>
             <div className="stats-grid profit-report-totals">
               <div className="metric-card"><span>Total revenue</span><strong>Rs. {profitReport.totals.revenue.toLocaleString('en-US')}</strong></div>
+              {profitPeriod === 'month' && <div className="metric-card"><span>Monthly expenses</span><strong>Rs. {Number(profitReport.monthlyExpenseTotal || 0).toLocaleString('en-US')}</strong></div>}
               <div className="metric-card"><span>Total expense</span><strong>Rs. {profitReport.totals.expenses.toLocaleString('en-US')}</strong></div>
               <div className="metric-card"><span>Profit amount</span><strong>Rs. {profitReport.totals.profit.toLocaleString('en-US')}</strong></div>
             </div>
@@ -1664,7 +1691,7 @@ function App() {
         </main>
       )}
 
-      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue data={{ ...adminStats, crewMembers: crewList }} token={token} showMessage={showMessage} onRefresh={refreshAccountsData} onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }} />}
+      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue data={{ ...adminStats, crewMembers: crewList }} token={token} showMessage={showMessage} onRefresh={refreshAccountsData} monthlyExpenseForm={expenseForm} setMonthlyExpenseForm={setExpenseForm} monthlyExpenseSaving={expenseSaving} onAddMonthlyExpense={handleAddExpense} onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }} />}
 
       {activeTab === 'Customers' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">
@@ -1788,17 +1815,11 @@ function App() {
         <div className="modal-backdrop no-print">
           <div className="modal">
             <h2>{editingBus ? 'Edit bus' : 'Register bus'}</h2>
-            <label><span>Registration number</span><input value={busForm.registration_no} onChange={(event) => setBusForm((prev) => ({ ...prev, registration_no: event.target.value }))} /></label>
+            <label><span>Registration number</span><input required maxLength={40} value={busForm.registration_no} onChange={(event) => setBusForm((prev) => ({ ...prev, registration_no: event.target.value }))} /></label>
             <label><span>Display name</span><input value={busForm.display_name} onChange={(event) => setBusForm((prev) => ({ ...prev, display_name: event.target.value }))} /></label>
-            <label><span>Driver name</span><input list="bus-driver-names" value={busForm.driver_name} onChange={(event) => setBusForm((prev) => ({ ...prev, driver_name: event.target.value }))} /></label>
-            <datalist id="bus-driver-names">{knownDriverNames.map((name) => <option key={name} value={name} />)}</datalist>
-            <label><span>Driver phone</span><input value={busForm.driver_phone} onChange={(event) => setBusForm((prev) => ({ ...prev, driver_phone: event.target.value }))} /></label>
-            <label><span>Conductor name</span><input list="bus-conductor-names" value={busForm.conductor_name} onChange={(event) => setBusForm((prev) => ({ ...prev, conductor_name: event.target.value }))} /></label>
-            <datalist id="bus-conductor-names">{knownConductorNames.map((name) => <option key={name} value={name} />)}</datalist>
-            <label><span>Conductor phone</span><input value={busForm.conductor_phone} onChange={(event) => setBusForm((prev) => ({ ...prev, conductor_phone: event.target.value }))} /></label>
             <div className="reservation-actions">
               <button type="button" className="ghost-button" onClick={() => setShowBusForm(false)}>Close</button>
-              <button type="button" className="primary-button" onClick={handleSaveBus}>Save bus</button>
+              <button type="button" className="primary-button" disabled={busSaving} onClick={handleSaveBus}>{busSaving ? 'Saving...' : 'Save bus'}</button>
             </div>
           </div>
         </div>

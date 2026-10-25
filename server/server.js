@@ -661,18 +661,20 @@ app.post('/api/profile/password', authMiddleware, requireAdmin, async (req, res)
 })
 
 app.get('/api/admin/crew', authMiddleware, requireAdmin, async (req, res) => {
-  const crew = await all("SELECT id, full_name, role, status, created_at FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
+  const crew = await all("SELECT id, full_name, mobile_number, role, status, created_at FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
   res.json({ crew })
 })
 
 app.post('/api/admin/crew', authMiddleware, requireAdmin, async (req, res) => {
   const fullName = String(req.body?.full_name || '').trim().replace(/\s+/g, ' ')
+  const mobileNumber = String(req.body?.mobile_number || '').trim()
   const role = String(req.body?.role || '').trim().toLowerCase()
   if (fullName.length < 2 || fullName.length > 80) return res.status(400).json({ message: 'Enter a name between 2 and 80 characters.' })
+  if (mobileNumber.length > 30 || (mobileNumber && !/^[+\d\s()-]+$/.test(mobileNumber))) return res.status(400).json({ message: 'Enter a valid mobile number (up to 30 characters).' })
   if (!['driver', 'conductor'].includes(role)) return res.status(400).json({ message: 'Choose Driver or Conductor.' })
   try {
-    const result = await run('INSERT INTO crew_members (full_name, role, created_by) VALUES (?, ?, ?)', [fullName, role, req.user.id])
-    const crewMember = await get('SELECT id, full_name, role, status, created_at FROM crew_members WHERE id = ?', [result.id])
+    const result = await run('INSERT INTO crew_members (full_name, mobile_number, role, created_by) VALUES (?, ?, ?, ?)', [fullName, mobileNumber, role, req.user.id])
+    const crewMember = await get('SELECT id, full_name, mobile_number, role, status, created_at FROM crew_members WHERE id = ?', [result.id])
     await audit(req.user, 'crew.create', 'crew_member', crewMember.id, `${role}: ${fullName}`)
     res.status(201).json({ crewMember })
   } catch (error) {
@@ -774,12 +776,13 @@ app.post('/api/admin/expenses', authMiddleware, requireAdmin, async (req, res) =
   if (!category || category.length > 60) return res.status(400).json({ message: 'Enter an expense category (up to 60 characters).' })
   if (!description || description.length > 240) return res.status(400).json({ message: 'Enter a description (up to 240 characters).' })
   if (!Number.isSafeInteger(amount) || amount <= 0) return res.status(400).json({ message: 'Enter an amount greater than zero in whole rupees.' })
+  const expenseSource = String(req.body?.expense_source || 'general') === 'monthly' ? 'monthly' : 'general'
   const result = await run(
-    'INSERT INTO daily_expenses (expense_date, category, description, amount, created_by) VALUES (?, ?, ?, ?, ?)',
-    [expense_date, category, description, amount, req.user.id],
+    'INSERT INTO daily_expenses (expense_date, category, description, amount, created_by, expense_source) VALUES (?, ?, ?, ?, ?, ?)',
+    [expense_date, category, description, amount, req.user.id, expenseSource],
   )
-  const expense = await get('SELECT id, expense_date, category, description, amount FROM daily_expenses WHERE id = ?', [result.id])
-  await audit(req.user, 'expense.create', 'daily_expense', expense.id, `${category}: Rs. ${amount}`)
+  const expense = await get('SELECT id, expense_date, category, description, amount, expense_source FROM daily_expenses WHERE id = ?', [result.id])
+  await audit(req.user, 'expense.create', 'daily_expense', expense.id, `${expenseSource}: ${category}: Rs. ${amount}`)
   res.status(201).json({ expense })
 })
 
@@ -2053,8 +2056,8 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
   const trips = await all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`)
   const dutyData = await getAdminDutyData()
   const buses = await all('SELECT * FROM buses ORDER BY id')
-  const crewMembers = await all("SELECT id, full_name, role, status FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
-  const expenses = await all('SELECT id, expense_date, category, description, amount, duty_id, trip_id FROM daily_expenses ORDER BY expense_date DESC, id DESC')
+  const crewMembers = await all("SELECT id, full_name, mobile_number, role, status FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
+  const expenses = await all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source FROM daily_expenses ORDER BY expense_date DESC, id DESC')
   const passengerRecords = await all(`SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id ORDER BY t.travel_date DESC, bk.created_at DESC LIMIT 200`)
   const recentCustomerBookings = await all(`
     SELECT bk.passenger_name, bk.contact, bk.trip_id, t.travel_date

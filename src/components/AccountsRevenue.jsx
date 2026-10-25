@@ -8,9 +8,8 @@ const DEFAULT_CARGO_ROWS = [
   { description: 'Pending Cash', tag: '', amount: '0' },
 ]
 
-function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint }) {
+function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, knownBusNumbers }) {
   const [date, setDate] = useState(todayIso)
-  const [tripId, setTripId] = useState('')
   const [busNo, setBusNo] = useState('')
   const [driverName, setDriverName] = useState('')
   const [conductorName, setConductorName] = useState('')
@@ -19,9 +18,9 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint })
   const [cargoRows, setCargoRows] = useState(() => DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
   const [saving, setSaving] = useState(false)
   const trips = (data.trips || []).filter((trip) => trip.travel_date === date && trip.route_code === route.code)
-  const staffNames = [...new Set([...(data.crewMembers || []).filter((member) => member.role === 'driver').map((member) => member.full_name), ...(data.trips || []).map((item) => item.driver_name), ...(data.buses || []).map((item) => item.driver_name)].map((name) => String(name || '').trim()).filter(Boolean))]
-  const conductorNames = [...new Set([...(data.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => member.full_name), ...(data.trips || []).map((item) => item.conductor_name), ...(data.buses || []).map((item) => item.conductor_name)].map((name) => String(name || '').trim()).filter(Boolean))]
-  const selectedTrip = trips.find((trip) => String(trip.id) === String(tripId))
+  const staffNames = [...new Set((data.crewMembers || []).filter((member) => member.role === 'driver').map((member) => String(member.full_name || '').trim()).filter(Boolean))]
+  const conductorNames = [...new Set((data.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => String(member.full_name || '').trim()).filter(Boolean))]
+  const selectedTrip = trips.find((trip) => String(trip.registration_no || trip.bus_no || '') === String(busNo))
   const seatCount = seatRows.reduce((sum, row) => sum + (Number(row.count) || 0), 0)
   const seatTotals = seatRows.map((row) => (Number(row.count) || 0) * (Number(row.amount) || 0))
   const seatSubtotal = seatTotals.reduce((sum, value) => sum + value, 0)
@@ -29,7 +28,6 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint })
   const totalRevenue = seatSubtotal + cargoSubtotal
   const resetRouteForm = () => {
     setDate(todayIso())
-    setTripId('')
     setBusNo('')
     setDriverName('')
     setConductorName('')
@@ -51,7 +49,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint })
     setSaving(true)
     try {
       const result = await api.createRevenueEntry(token, {
-        travel_date: date, route_code: route.code, trip_id: tripId || null, bus_no: busNo,
+        travel_date: date, route_code: route.code, trip_id: selectedTrip?.id || null, bus_no: busNo,
         driver_name: driverName, conductor_name: conductorName,
         seat_rows: seatRows.map((row) => ({ count: Number(row.count) || 0, amount: Number(row.amount) || 0 })),
         cargo_rows: cargoRows.map((row) => ({ description: row.description, tag: row.tag, amount: Number(row.amount) || 0 })),
@@ -78,10 +76,10 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint })
   return <form onSubmit={submit} className="accounts-route-revenue-form">
     <section className="content-card accounts-trip-details">
       <h2>{route.label}</h2>
-      <label>Trip date<input required type="date" value={date} onChange={(event) => { setDate(event.target.value); setTripId(''); setBusNo(''); setDriverName(''); setConductorName('') }} /></label>
-      <label>Bus number<select value={tripId} onChange={(event) => { setTripId(event.target.value); if (!event.target.value) { setBusNo(''); setDriverName(''); setConductorName('') } }}><option value="">Select a trip bus</option>{trips.map((trip) => <option key={trip.id} value={trip.id}>{trip.registration_no || trip.bus_no || trip.trip_code}{trip.display_name ? ` (${trip.display_name})` : ''}</option>)}</select><input aria-label={`${route.label} bus number`} required maxLength="40" value={busNo} onChange={(event) => { setBusNo(event.target.value); if (tripId) setTripId('') }} placeholder="Bus registration number" /></label>
-      <label>Driver<input list={`revenue-drivers-${route.code}`} maxLength="80" value={driverName} onChange={(event) => setDriverName(event.target.value)} placeholder="Driver name" /><datalist id={`revenue-drivers-${route.code}`}>{staffNames.map((name) => <option key={name} value={name} />)}</datalist></label>
-      <label>Conductor<input list={`revenue-conductors-${route.code}`} maxLength="80" value={conductorName} onChange={(event) => setConductorName(event.target.value)} placeholder="Conductor name" /><datalist id={`revenue-conductors-${route.code}`}>{conductorNames.map((name) => <option key={name} value={name} />)}</datalist></label>
+      <label>Trip date<input required type="date" value={date} onChange={(event) => { setDate(event.target.value); setBusNo(''); setDriverName(''); setConductorName('') }} /></label>
+      <label>Bus number<select required value={busNo} onChange={(event) => setBusNo(event.target.value)}><option value="">Select a registered bus</option>{knownBusNumbers.map((number) => <option key={number} value={number}>{number}</option>)}</select></label>
+      <label>Driver<select value={driverName} onChange={(event) => setDriverName(event.target.value)}><option value="">Select a registered driver</option>{staffNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
+      <label>Conductor<select value={conductorName} onChange={(event) => setConductorName(event.target.value)}><option value="">Select a registered conductor</option>{conductorNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
       <label>Number of seats<input type="number" min="1" max={SEAT_LAYOUT.totalSeats} step="1" value={seatCapacity} onChange={(event) => setSeatCapacity(event.target.value)} /><small>{seatCount} entered / {Math.max(0, Number(seatCapacity || 0) - seatCount)} remaining</small></label>
     </section>
     <div className="accounts-revenue-columns">
@@ -105,7 +103,7 @@ const EXPENSE_CATEGORIES = ['Fuel (Diesel)', 'Driver Salary', 'Conductor Salary'
 const DEFAULT_EXPENSE_ITEMS = EXPENSE_CATEGORIES.map((category) => ({ category, description: '', amount: '0' }))
 const EXPENSE_DRAFT_KEY = 'district-line-expense-form-draft'
 
-export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh }) {
+export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense }) {
   const [activeSection, setActiveSection] = useState('revenue')
   const [date, setDate] = useState(todayIso)
   const [routeCode, setRouteCode] = useState(ROUTES[0].code)
@@ -141,6 +139,9 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
   const [expenseDateSearch, setExpenseDateSearch] = useState('')
   const [expenseBusSearch, setExpenseBusSearch] = useState('')
   const [expensePeriod, setExpensePeriod] = useState('all')
+  const [monthlyExpensesFilter, setMonthlyExpensesFilter] = useState('')
+
+  const knownBusNumbers = [...new Set((data.buses || []).map((bus) => String(bus.registration_no || '').trim()).filter(Boolean))]
 
   const trips = useMemo(
     () => (data.trips || []).filter((trip) => trip.travel_date === date && trip.route_code === routeCode),
@@ -216,6 +217,10 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
     }
     return true
   })
+  const monthlyExpenseEntries = (data.expenses || []).filter((expense) => !expense.duty_id && (expense.expense_source === 'monthly' || expense.category === 'Monthly Expense')).sort((a, b) => String(b.expense_date || '').localeCompare(String(a.expense_date || '')) || Number(b.id) - Number(a.id))
+  const selectedMonthlyExpensesFilter = monthlyExpensesFilter || String(monthlyExpenseEntries[0]?.expense_date || todayIso()).slice(0, 7)
+  const filteredMonthlyExpenseEntries = monthlyExpenseEntries.filter((expense) => String(expense.expense_date || '').slice(0, 7) === selectedMonthlyExpensesFilter)
+  const filteredMonthlyExpenseTotal = filteredMonthlyExpenseEntries.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
   const filteredRevenueEntries = entries.filter((entry) => {
     const entryDate = String(entry.travel_date || '').slice(0, 10)
     if (revenueDateSearch && entryDate !== revenueDateSearch) return false
@@ -440,13 +445,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
         <p>Complete the forms for each route below.</p>
       </section>
 
-      <section className="content-card accounts-total-card accounts-overall-revenue-total">
-        <div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>COMBINED REVENUE</span><h2>Total Revenue</h2></div><strong>{money(entries.reduce((sum, entry) => sum + Number(entry.total_revenue || 0), 0))}</strong></div>
-        <p>Combined total from saved revenue entries.</p>
-      </section>
-
       <div className="accounts-route-revenue-stack">
-        {ROUTES.map((route) => <RevenueRouteForm key={route.code} route={route} data={data} token={token} showMessage={showMessage} onSaved={(entry) => setEntries((current) => [entry, ...current].slice(0, 100))} onPrint={onPrint} />)}
+        {ROUTES.map((route) => <RevenueRouteForm key={route.code} route={route} data={data} token={token} showMessage={showMessage} onSaved={(entry) => setEntries((current) => [entry, ...current].slice(0, 100))} onPrint={onPrint} knownBusNumbers={knownBusNumbers} />)}
       </div>
 
       <section className="content-card accounts-recent-card">
@@ -479,22 +479,25 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
         <section className="content-card accounts-expense-details">
           <label>Operating date<input required type="date" value={expenseDate} onChange={(event) => { setExpenseDate(event.target.value); setFirstLegDate(event.target.value); setExpenseTripId(''); setExpenseRevenueEntryId(''); setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); setExpenseBusNo('') }} /></label>
-          <label>Bus number<select value={expenseTripId ? `trip:first:${expenseTripId}` : expenseRevenueEntryId ? `revenue:first:${expenseRevenueEntryId}` : expenseReturnTripId ? `trip:return:${expenseReturnTripId}` : expenseReturnRevenueEntryId ? `revenue:return:${expenseReturnRevenueEntryId}` : ''} onChange={(event) => {
-            const [type, leg, id] = event.target.value.split(':')
-            setExpenseTripId(type === 'trip' && leg === 'first' ? id : '')
-            setExpenseRevenueEntryId(type === 'revenue' && leg === 'first' ? id : '')
-            setExpenseReturnTripId(type === 'trip' && leg === 'return' ? id : '')
-            setExpenseReturnRevenueEntryId(type === 'revenue' && leg === 'return' ? id : '')
-            if (!event.target.value) { setExpenseBusNo(''); setExpenseDriverName(''); setExpenseConductorName('') }
-          }}>
-            <option value="">Select a bus for this date</option>
-            {expenseTrips.map((trip) => <option key={`trip-first-${trip.id}`} value={`trip:first:${trip.id}`}>{trip.registration_no || trip.bus_no || trip.trip_code} · KKY to CMB</option>)}
-            {expenseRevenueBusOptions.map((entry) => <option key={`revenue-first-${entry.id}`} value={`revenue:first:${entry.id}`}>{entry.bus_no} · KKY to CMB revenue</option>)}
-            {returnExpenseTrips.map((trip) => <option key={`trip-return-${trip.id}`} value={`trip:return:${trip.id}`}>{trip.registration_no || trip.bus_no || trip.trip_code} · CMB to KKY</option>)}
-            {returnExpenseRevenueBusOptions.map((entry) => <option key={`revenue-return-${entry.id}`} value={`revenue:return:${entry.id}`}>{entry.bus_no} · CMB to KKY revenue</option>)}
-          </select><input required maxLength="40" value={expenseBusNo} onChange={(event) => { setExpenseBusNo(event.target.value); setExpenseTripId(''); setExpenseRevenueEntryId(''); setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId('') }} placeholder="Bus registration number" /></label>
-          <label>Lead driver<input list="accounts-expense-drivers" maxLength="80" value={expenseDriverName} onChange={(event) => setExpenseDriverName(event.target.value)} placeholder="Driver name" /><datalist id="accounts-expense-drivers">{(data.crewMembers || []).filter((member) => member.role === 'driver').map((member) => <option key={member.id} value={member.full_name} />)}</datalist></label>
-          <label>Trip conductor<input list="accounts-expense-conductors" maxLength="80" value={expenseConductorName} onChange={(event) => setExpenseConductorName(event.target.value)} placeholder="Conductor name" /><datalist id="accounts-expense-conductors">{(data.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => <option key={member.id} value={member.full_name} />)}</datalist></label>
+          <label>Bus number<select required value={expenseBusNo} onChange={(event) => {
+            const busNo = event.target.value
+            setExpenseBusNo(busNo)
+            const normalizedBusNo = busNo.trim().toLowerCase()
+            const firstTrip = expenseTrips.find((trip) => String(trip.registration_no || trip.bus_no || '').trim().toLowerCase() === normalizedBusNo)
+            const returnTrip = returnExpenseTrips.find((trip) => String(trip.registration_no || trip.bus_no || '').trim().toLowerCase() === normalizedBusNo)
+            const firstRevenue = expenseRevenueBusOptions.find((entry) => String(entry.bus_no || '').trim().toLowerCase() === normalizedBusNo)
+            const returnRevenue = returnExpenseRevenueBusOptions.find((entry) => String(entry.bus_no || '').trim().toLowerCase() === normalizedBusNo)
+            setExpenseTripId(firstTrip ? String(firstTrip.id) : '')
+            setExpenseRevenueEntryId(!firstTrip && firstRevenue ? String(firstRevenue.id) : '')
+            setExpenseReturnTripId(returnTrip ? String(returnTrip.id) : '')
+            setExpenseReturnRevenueEntryId(!returnTrip && returnRevenue ? String(returnRevenue.id) : '')
+            const crewSource = firstTrip || returnTrip || firstRevenue || returnRevenue
+            setExpenseDriverName(crewSource?.driver_name || '')
+            setExpenseConductorName(crewSource?.conductor_name || '')
+            if (!busNo) { setExpenseDriverName(''); setExpenseConductorName('') }
+          }}><option value="">Select a registered bus</option>{knownBusNumbers.map((number) => <option key={number} value={number}>{number}</option>)}</select></label>
+          <label>Lead driver<select value={expenseDriverName} onChange={(event) => setExpenseDriverName(event.target.value)}><option value="">Select a registered driver</option>{(data.crewMembers || []).filter((member) => member.role === 'driver').map((member) => <option key={member.id} value={member.full_name}>{member.full_name}</option>)}</select></label>
+          <label>Trip conductor<select value={expenseConductorName} onChange={(event) => setExpenseConductorName(event.target.value)}><option value="">Select a registered conductor</option>{(data.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => <option key={member.id} value={member.full_name}>{member.full_name}</option>)}</select></label>
         </section>
 
         <section className="accounts-expense-sector-grid">
@@ -586,6 +589,25 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
               </tbody>
             </>}
           </table></div>
+        </section>
+
+        <section className="content-card accounts-monthly-expenses-card">
+          <div className="accounts-panel-heading"><div><h2>Monthly expenses</h2><p>Monthly expenses entered here appear in the dashboard Profit report when its period is set to Month.</p></div></div>
+          <form className="accounts-monthly-expenses-form" onSubmit={onAddMonthlyExpense}>
+            <label>Month<input required type="month" value={monthlyExpenseForm.expense_month} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, expense_month: event.target.value }))} /></label>
+            <label>Description<input required maxLength={240} value={monthlyExpenseForm.description} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, description: event.target.value }))} /></label>
+            <label>Amount (Rs.)<input required type="number" min="1" step="1" value={monthlyExpenseForm.amount} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, amount: event.target.value }))} /></label>
+            <button type="submit" className="primary-button" disabled={monthlyExpenseSaving}>{monthlyExpenseSaving ? 'Saving...' : 'Add monthly expense'}</button>
+          </form>
+        </section>
+
+        <section className="content-card accounts-monthly-expenses-card">
+          <div className="accounts-panel-heading"><div><h2>Monthly expenses table</h2><p>Monthly expenses entered through the form above.</p></div><label>Month<input type="month" aria-label="Filter monthly expenses by month" value={selectedMonthlyExpensesFilter} onChange={(event) => setMonthlyExpensesFilter(event.target.value)} /></label></div>
+          <div className="daily-revenue-table-wrap"><table><thead><tr><th>Month</th><th>Description</th><th>Amount</th></tr></thead><tbody>
+            {filteredMonthlyExpenseEntries.map((expense) => <tr key={expense.id}><td>{String(expense.expense_date || '').slice(0, 7)}</td><td>{expense.description}</td><td><strong>{money(expense.amount)}</strong></td></tr>)}
+            {!filteredMonthlyExpenseEntries.length && <tr><td colSpan="3" className="daily-revenue-empty">No monthly expenses for this month.</td></tr>}
+            <tr><th colSpan="2">Monthly total</th><th>{money(filteredMonthlyExpenseTotal)}</th></tr>
+          </tbody></table></div>
         </section>
       </>}
     </main>

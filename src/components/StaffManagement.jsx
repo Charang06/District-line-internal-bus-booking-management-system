@@ -31,7 +31,7 @@ function permissionSummary(permissions = {}) {
   return STAFF_PERMISSION_OPTIONS.filter((item) => permissions[item.key]).map((item) => item.label.replace(' page', '')).join(' · ') || 'No access assigned'
 }
 
-export default function StaffManagement({ token, staffList, setStaffList, crewList, setCrewList, busContactList, setBusContactList, showMessage, onSaved, requestConfirmation }) {
+export default function StaffManagement({ token, staffList, setStaffList, crewList, setCrewList, buses, onRegisterBus, onDeleteBus, showMessage, onSaved, requestConfirmation }) {
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -40,8 +40,7 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
   const [resetPassword, setResetPassword] = useState('')
   const [showResetPassword, setShowResetPassword] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [crewForm, setCrewForm] = useState({ full_name: '', role: 'driver' })
-  const [busContactForm, setBusContactForm] = useState({ bus_no: '', phone_number: '' })
+  const [crewForm, setCrewForm] = useState({ full_name: '', mobile_number: '', role: 'driver' })
 
   const visibleStaff = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase()
@@ -182,12 +181,13 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
   const handleAddCrew = async (event) => {
     event.preventDefault()
     const full_name = crewForm.full_name.trim()
+    const mobile_number = crewForm.mobile_number.trim()
     if (full_name.length < 2) return showMessage('Enter a crew member name.', true)
     setBusy(true)
     try {
-      const result = await api.createCrewMember(token, { full_name, role: crewForm.role })
+      const result = await api.createCrewMember(token, { full_name, mobile_number, role: crewForm.role })
       setCrewList((current) => [...current, result.crewMember].sort((a, b) => a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name)))
-      setCrewForm((current) => ({ ...current, full_name: '' }))
+      setCrewForm((current) => ({ ...current, full_name: '', mobile_number: '' }))
       showMessage(`Added ${result.crewMember.full_name} as ${result.crewMember.role}.`)
     } catch (err) {
       showMessage(err.message, true)
@@ -205,37 +205,6 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
         await api.deleteCrewMember(token, member.id)
         setCrewList((current) => current.filter((person) => person.id !== member.id))
         showMessage(`Removed ${member.full_name} from the crew list.`)
-      } catch (err) {
-        showMessage(err.message, true)
-      }
-    },
-  })
-
-  const handleAddBusContact = async (event) => {
-    event.preventDefault()
-    if (!busContactForm.bus_no.trim() || !busContactForm.phone_number.trim()) return showMessage('Enter both the bus number and contact number.', true)
-    setBusy(true)
-    try {
-      const result = await api.createBusContact(token, busContactForm)
-      setBusContactList((current) => [...current, result.contact].sort((a, b) => a.bus_no.localeCompare(b.bus_no)))
-      setBusContactForm({ bus_no: '', phone_number: '' })
-      showMessage(`Added contact number for ${result.contact.bus_no}.`)
-    } catch (err) {
-      showMessage(err.message, true)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const handleRemoveBusContact = (contact) => requestConfirmation({
-    title: `Remove contact for ${contact.bus_no}?`,
-    message: `The saved bus contact number ${contact.phone_number} will be deleted.`,
-    confirmLabel: 'Remove contact',
-    onConfirm: async () => {
-      try {
-        await api.deleteBusContact(token, contact.id)
-        setBusContactList((current) => current.filter((entry) => entry.id !== contact.id))
-        showMessage(`Removed contact for ${contact.bus_no}.`)
       } catch (err) {
         showMessage(err.message, true)
       }
@@ -309,17 +278,18 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
 
       <section className="content-card staff-crew-management-card">
         <div className="dashboard-section-heading">
-          <div><span className="staff-eyebrow">Crew directory</span><h2>Drivers and conductors</h2><p>Add names once to make them available as suggestions in trip and revenue forms.</p></div>
+          <div><span className="staff-eyebrow">Crew directory</span><h2>Drivers and conductors</h2><p>Add names and mobile numbers once to make them available as suggestions in trip and revenue forms.</p></div>
         </div>
         <form className="staff-crew-add-form" onSubmit={handleAddCrew}>
           <label><span>Name</span><input required minLength={2} maxLength={80} value={crewForm.full_name} onChange={(event) => setCrewForm((current) => ({ ...current, full_name: event.target.value }))} placeholder="Enter driver or conductor name" /></label>
+          <label><span>Mobile No.</span><input type="tel" maxLength={30} value={crewForm.mobile_number} onChange={(event) => setCrewForm((current) => ({ ...current, mobile_number: event.target.value }))} placeholder="Enter mobile number" /></label>
           <label><span>Role</span><select value={crewForm.role} onChange={(event) => setCrewForm((current) => ({ ...current, role: event.target.value }))}><option value="driver">Driver</option><option value="conductor">Conductor</option></select></label>
           <button type="submit" className="primary-button" disabled={busy}>Add crew member</button>
         </form>
         <div className="staff-crew-list">
           {['driver', 'conductor'].map((role) => <div className="staff-crew-group" key={role}>
             <h3>{role === 'driver' ? 'Drivers' : 'Conductors'}</h3>
-            <div>{(crewList || []).filter((member) => member.role === role).map((member) => <span className="staff-crew-chip" key={member.id}>{member.full_name}<button type="button" aria-label={`Remove ${member.full_name}`} onClick={() => handleRemoveCrew(member)}>×</button></span>)}
+            <div>{(crewList || []).filter((member) => member.role === role).map((member) => <span className="staff-crew-chip" key={member.id}>{member.full_name}{member.mobile_number ? <small>{member.mobile_number}</small> : null}<button type="button" aria-label={`Remove ${member.full_name}`} onClick={() => handleRemoveCrew(member)}>×</button></span>)}
               {!(crewList || []).some((member) => member.role === role) && <small>No names added.</small>}
             </div>
           </div>)}
@@ -327,14 +297,9 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
       </section>
 
       <section className="content-card staff-bus-contacts-card">
-        <div className="dashboard-section-heading"><div><span className="staff-eyebrow">Bus contacts</span><h2>Bus contact numbers</h2><p>Add or remove a contact number associated with a bus.</p></div></div>
-        <form className="staff-crew-add-form" onSubmit={handleAddBusContact}>
-          <label><span>Bus No</span><input required maxLength={40} value={busContactForm.bus_no} onChange={(event) => setBusContactForm((current) => ({ ...current, bus_no: event.target.value }))} placeholder="e.g. NE 3456" /></label>
-          <label><span>Contact number</span><input required type="tel" maxLength={30} value={busContactForm.phone_number} onChange={(event) => setBusContactForm((current) => ({ ...current, phone_number: event.target.value }))} placeholder="e.g. 0776777464" /></label>
-          <button type="submit" className="primary-button" disabled={busy}>Add bus contact</button>
-        </form>
-        <div className="staff-bus-contact-list">{(busContactList || []).map((contact) => <p key={contact.id}><strong>{contact.bus_no}</strong><a href={`tel:${contact.phone_number.replace(/[^+\d]/g, '')}`}>{contact.phone_number}</a><button type="button" className="staff-bus-contact-remove" onClick={() => handleRemoveBusContact(contact)}>Remove</button></p>)}
-          {!(busContactList || []).length && <span className="staff-bus-contact-empty">No bus contact numbers added.</span>}
+        <div className="dashboard-section-heading"><div><span className="staff-eyebrow">Bus contacts</span><h2>Buses</h2><p>Register buses here. Saved registration numbers will be available as suggestions wherever a bus number is entered.</p></div><button type="button" className="primary-button" onClick={onRegisterBus}>Add bus</button></div>
+        <div className="staff-bus-contact-list">{(buses || []).map((bus) => <p key={bus.id}><strong>{bus.registration_no}</strong>{bus.display_name ? <span>{bus.display_name}</span> : null}<button type="button" className="staff-bus-contact-remove" onClick={() => onDeleteBus(bus)}>Delete</button></p>)}
+          {!(buses || []).length && <span className="staff-bus-contact-empty">No buses registered yet.</span>}
         </div>
       </section>
 

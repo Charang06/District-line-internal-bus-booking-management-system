@@ -7015,6 +7015,44 @@ button,
   background: #f0f3f7;
 }
 
+.accounts-monthly-expenses-card {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.accounts-monthly-expenses-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 12px;
+}
+
+.accounts-monthly-expenses-form label {
+  display: grid;
+  gap: 6px;
+  color: #344154;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.accounts-monthly-expenses-form input {
+  min-height: 40px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #dce3eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #17253a;
+  font: inherit;
+}
+
+@media (max-width: 900px) {
+  .accounts-monthly-expenses-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .accounts-expense-ledger-switch button {
   min-width: 90px;
   min-height: 36px;
@@ -7896,6 +7934,11 @@ button,
   background: #fff;
   color: #344154;
   font-size: 0.8rem;
+}
+
+.staff-crew-chip small {
+  color: #778395;
+  font-size: 0.75rem;
 }
 
 .staff-crew-chip button {
