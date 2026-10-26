@@ -692,7 +692,7 @@ app.delete('/api/admin/crew/:id', authMiddleware, requireAdmin, async (req, res)
   res.json({ message: `Removed ${crewMember.full_name}.`, id: crewMember.id })
 })
 
-app.get('/api/admin/bus-contacts', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/bus-contacts', authMiddleware, requireStaffPermission('trips'), async (req, res) => {
   const contacts = await all("SELECT id, bus_no, phone_number, created_at FROM bus_contacts WHERE status = 'active' ORDER BY bus_no")
   res.json({ contacts })
 })
@@ -769,19 +769,21 @@ app.post('/api/admin/expenses', authMiddleware, requireAdmin, async (req, res) =
   const expense_date = String(req.body?.expense_date || '').trim()
   const category = String(req.body?.category || '').trim()
   const description = String(req.body?.description || '').trim()
+  const busNo = String(req.body?.bus_no || '').trim()
   const amount = Number(req.body?.amount)
   if (!isIsoCalendarDate(expense_date)) {
     return res.status(400).json({ message: 'Enter a valid expense date.' })
   }
   if (!category || category.length > 60) return res.status(400).json({ message: 'Enter an expense category (up to 60 characters).' })
   if (!description || description.length > 240) return res.status(400).json({ message: 'Enter a description (up to 240 characters).' })
+  if (busNo.length > 40) return res.status(400).json({ message: 'Bus number must be 40 characters or fewer.' })
   if (!Number.isSafeInteger(amount) || amount <= 0) return res.status(400).json({ message: 'Enter an amount greater than zero in whole rupees.' })
   const expenseSource = String(req.body?.expense_source || 'general') === 'monthly' ? 'monthly' : 'general'
   const result = await run(
-    'INSERT INTO daily_expenses (expense_date, category, description, amount, created_by, expense_source) VALUES (?, ?, ?, ?, ?, ?)',
-    [expense_date, category, description, amount, req.user.id, expenseSource],
+    'INSERT INTO daily_expenses (expense_date, category, description, amount, created_by, expense_source, bus_no) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [expense_date, category, description, amount, req.user.id, expenseSource, busNo],
   )
-  const expense = await get('SELECT id, expense_date, category, description, amount, expense_source FROM daily_expenses WHERE id = ?', [result.id])
+  const expense = await get('SELECT id, expense_date, category, description, amount, expense_source, bus_no FROM daily_expenses WHERE id = ?', [result.id])
   await audit(req.user, 'expense.create', 'daily_expense', expense.id, `${expenseSource}: ${category}: Rs. ${amount}`)
   res.status(201).json({ expense })
 })
@@ -1470,10 +1472,12 @@ app.delete('/api/buses/:id', authMiddleware, requireAdmin, async (req, res) => {
   const trips = await get('SELECT COUNT(*) as count FROM trips WHERE bus_id = ?', [bus.id])
   if (Number(trips.count) > 0) {
     await run("UPDATE buses SET status = 'inactive', updated_at = CURRENT_TIMESTAMP WHERE id = ?", [bus.id])
+    await run("UPDATE bus_contacts SET status = 'inactive' WHERE LOWER(TRIM(bus_no)) = LOWER(TRIM(?))", [bus.registration_no])
     await audit(req.user, 'bus.deactivate', 'bus', bus.id, 'historical trips exist')
     return res.json({ deactivated: true, message: 'Bus has trip history and was deactivated instead of deleted.' })
   }
   await run('DELETE FROM buses WHERE id = ?', [bus.id])
+  await run("UPDATE bus_contacts SET status = 'inactive' WHERE LOWER(TRIM(bus_no)) = LOWER(TRIM(?))", [bus.registration_no])
   await audit(req.user, 'bus.delete', 'bus', bus.id, bus.registration_no)
   res.json({ deleted: true })
 })
@@ -1724,7 +1728,10 @@ app.post('/api/bookings', authMiddleware, requireStaffPermission('passengers'), 
   } = req.body || {}
   const seat = padSeat(seat_number)
   if (!trip_id || !VALID_SEATS.has(seat)) return res.status(400).json({ message: 'Valid trip and seat number are required' })
-  if (!isValidPhone(contact)) return res.status(400).json({ message: 'Enter a valid customer contact number' })
+  const passengerName = String(passenger_name || '').trim()
+  const contactNumber = String(contact || '').trim()
+  if (!passengerName && !contactNumber) return res.status(400).json({ message: 'Enter a passenger name or mobile number.' })
+  if (contactNumber && !isValidPhone(contactNumber)) return res.status(400).json({ message: 'Enter a valid customer contact number' })
   if (fare === undefined || fare === null || Number(fare) < 0 || Number.isNaN(Number(fare))) {
     return res.status(400).json({ message: 'Staff must enter a valid fare' })
   }
@@ -1751,7 +1758,7 @@ app.post('/api/bookings', authMiddleware, requireStaffPermission('passengers'), 
       `INSERT INTO bookings (booking_ref, booking_group_id, trip_id, seat_number, passenger_name, contact, gender, boarding_point, destination, fare, payment_status, notes, status, confirmation_status, sms_status, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', 'unconfirmed', 'pending', ?)`,
       [
-        booking_ref, booking_group_id || null, trip_id, seat, String(passenger_name || '').trim(), normalizePhone(contact), gender || 'Male',
+        booking_ref, booking_group_id || null, trip_id, seat, passengerName, normalizePhone(contactNumber), gender || 'Male',
         boarding_point || '', destination || '', Number(fare), payment_status || 'unpaid', notes || '', req.user.id,
       ],
     )
@@ -1823,6 +1830,21 @@ app.patch('/api/bookings/:id/confirmation', authMiddleware, requireStaffPermissi
   const updated = await get('SELECT * FROM bookings WHERE id = ?', [booking.id])
   await audit(req.user, 'booking.confirmation.update', 'booking', booking.id, confirmationStatus)
   res.json({ booking: updated })
+})
+
+app.patch('/api/bookings/:id/contact', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+  const contact = String(req.body?.contact || '').trim()
+  if (!isValidPhone(contact) || contact.length > 30) return res.status(400).json({ message: 'Enter a valid customer mobile number (up to 30 characters).' })
+  const booking = await get('SELECT * FROM bookings WHERE id = ?', [req.params.id])
+  if (!booking) return res.status(404).json({ message: 'Passenger booking not found.' })
+  const finalizedDuty = await get(`SELECT d.duty_code FROM bus_duties d WHERE d.status = 'finalized' AND (d.first_trip_id = ? OR d.return_trip_id = ?) LIMIT 1`, [booking.trip_id, booking.trip_id])
+  if (finalizedDuty) return res.status(409).json({ message: `Booking is part of finalized duty ${finalizedDuty.duty_code} and cannot be changed.` })
+  const groupWhere = booking.booking_group_id ? 'booking_group_id = ?' : 'id = ?'
+  const groupValue = booking.booking_group_id || booking.id
+  await run(`UPDATE bookings SET contact = ?, updated_at = CURRENT_TIMESTAMP WHERE ${groupWhere}`, [normalizePhone(contact), groupValue])
+  const bookings = await all(`SELECT * FROM bookings WHERE ${groupWhere}`, [groupValue])
+  await audit(req.user, 'booking.contact.update', 'booking', booking.id, `${booking.booking_ref}: ${normalizePhone(contact)}`)
+  res.json({ bookings })
 })
 
 app.post('/api/bookings/:id/sms', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
@@ -2057,7 +2079,7 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
   const dutyData = await getAdminDutyData()
   const buses = await all('SELECT * FROM buses ORDER BY id')
   const crewMembers = await all("SELECT id, full_name, mobile_number, role, status FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
-  const expenses = await all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source FROM daily_expenses ORDER BY expense_date DESC, id DESC')
+  const expenses = await all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source, bus_no FROM daily_expenses ORDER BY expense_date DESC, id DESC')
   const passengerRecords = await all(`SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id ORDER BY t.travel_date DESC, bk.created_at DESC LIMIT 200`)
   const recentCustomerBookings = await all(`
     SELECT bk.passenger_name, bk.contact, bk.trip_id, t.travel_date

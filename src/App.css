@@ -8255,3 +8255,108 @@ button,
     padding-top: 12px;
   }
 }
+.profit-ledger-chart { padding: 16px; border: 1px solid #e5e9ef; border-radius: 12px; background: #fbfcfd; }
+.profit-ledger-chart-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.profit-ledger-chart-heading h3 { margin: 0; color: #344154; font-size: .95rem; }
+.profit-ledger-chart-legend { display: flex; flex-wrap: wrap; gap: 14px; color: #536174; font-size: .75rem; }
+.profit-ledger-chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.profit-ledger-chart-legend i { width: 10px; height: 10px; border-radius: 2px; background: #2878c7; }
+.profit-ledger-chart-legend i.expenses { background: #e88b2e; }
+.profit-ledger-chart-legend i.net-profit { background: #22875f; }
+.profit-ledger-chart-scroll { width: 100%; overflow-x: auto; }
+.profit-ledger-chart-svg { display: block; width: 100%; min-width: 720px; height: 282px; }
+.profit-ledger-gridline { stroke: #e3e8ee; stroke-width: 1; }
+.profit-ledger-axis-label { fill: #748092; font-size: 10px; }
+.profit-ledger-entry-label { fill: #536174; font-size: 10px; }
+.profit-ledger-bar.revenue { fill: #2878c7; }
+.profit-ledger-bar.expenses { fill: #e88b2e; }
+.profit-ledger-bar.net-profit { fill: #22875f; }
+.profit-ledger-bar.net-profit.negative { fill: #bd5555; }
+.trip-overview { display: grid; gap: 14px; margin: 4px 0 18px; padding: 18px; border: 1px solid #e1e6ed; border-radius: 12px; background: #f9fbfd; }
+.trip-overview-heading h3 { margin: 0; color: #29384b; font-size: 1.05rem; }
+.trip-overview-heading p { margin: 4px 0 0; color: #69778a; font-size: .82rem; }
+.trip-overview-grid { display: grid; grid-template-columns: minmax(270px, .85fr) minmax(0, 1.5fr); align-items: start; gap: 16px; }
+.trip-overview-seats, .trip-overview-trip-card { padding: 16px; border: 1px solid #e1e6ed; border-radius: 10px; background: #fff; }
+.trip-overview-seats h4, .trip-overview-trip-heading h4 { margin: 0; color: #29384b; font-size: .9rem; }
+.trip-overview-seat-content { display: grid; grid-template-columns: minmax(125px, .8fr) minmax(130px, 1fr); align-items: center; gap: 12px; margin-top: 14px; }
+.trip-overview-pie-wrap { display: grid; justify-items: center; gap: 12px; }
+.trip-overview-pie { display: grid; width: 148px; aspect-ratio: 1; place-items: center; border-radius: 50%; }
+.trip-overview-pie > div { display: grid; width: 66%; aspect-ratio: 1; align-content: center; justify-items: center; border-radius: 50%; background: #fff; }
+.trip-overview-pie strong { color: #233247; font-size: 1.35rem; line-height: 1.15; }
+.trip-overview-pie span { color: #748092; font-size: .68rem; }
+.trip-overview-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; color: #58677a; font-size: .73rem; }
+.trip-overview-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.trip-overview-legend i { width: 9px; height: 9px; border-radius: 50%; background: #3b82f6; }
+.trip-overview-legend i.available { background: #16a34a; }
+.trip-overview-seat-stats { display: grid; gap: 8px; }
+.trip-overview-seat-stats > div { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 9px 10px; border: 1px solid #edf0f4; border-radius: 8px; }
+.trip-overview-seat-stats span, .trip-overview-trip-details span, .trip-overview-revenue span { color: #6b7889; font-size: .72rem; }
+.trip-overview-seat-stats strong { color: #26364a; font-size: .95rem; font-variant-numeric: tabular-nums; }
+.trip-overview-seat-stats small { grid-column: 1 / -1; color: #8490a0; font-size: .68rem; }
+.trip-overview-trip-list { display: grid; gap: 10px; min-width: 0; }
+.trip-overview-trip-card { padding: 14px; }
+.trip-overview-trip-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid #edf0f4; }
+.trip-overview-trip-heading > span { color: #768397; font-size: .72rem; }
+.trip-overview-trip-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; padding: 12px 0; }
+.trip-overview-trip-details > div, .trip-overview-revenue > div { display: grid; gap: 3px; min-width: 0; }
+.trip-overview-trip-details strong { overflow-wrap: anywhere; color: #29384b; font-size: .78rem; font-weight: 650; }
+.trip-overview-revenue { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 11px; border-top: 1px solid #edf0f4; }
+.trip-overview-revenue strong { color: #29384b; font-size: .83rem; font-variant-numeric: tabular-nums; }
+.trip-overview-revenue .total strong { color: #247751; }
+.trip-overview-note { margin: 0; color: #758295; font-size: .7rem; line-height: 1.45; }
+.accounts-expense-ledger { display: grid; gap: 16px; padding: 20px; border: 1px solid #e1e6ed; border-radius: 12px; box-shadow: 0 2px 8px rgb(20 34 52 / 4%); }
+.accounts-expense-ledger .accounts-panel-heading { margin: 0; align-items: center; }
+.accounts-expense-ledger .accounts-panel-heading h2 { margin-bottom: 4px; font-size: 1.2rem; }
+.accounts-expense-ledger .accounts-panel-heading p { margin: 0; color: #647286; font-size: .85rem; }
+.accounts-expense-ledger-switch { margin: 0; }
+.accounts-expense-ledger-switch button { min-width: 92px; }
+.accounts-expense-ledger .accounts-revenue-ledger-filters { display: flex; align-items: end; gap: 12px; margin: 0; }
+.accounts-expense-ledger .accounts-revenue-ledger-filters > label { flex: 1 1 170px; min-width: 150px; }
+.accounts-expense-ledger .accounts-revenue-ledger-filters input,
+.accounts-expense-ledger .accounts-revenue-ledger-filters select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #d9e0e8; border-radius: 8px; background: #fff; color: #1d2b3d; font: inherit; }
+.profit-ledger-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.profit-ledger-summary.with-monthly { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.profit-ledger-summary .metric-card { display: flex; min-height: 104px; flex-direction: column; justify-content: center; padding: 16px 18px; border: 1px solid #dce3eb; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgb(20 34 52 / 4%); }
+.profit-ledger-summary .metric-card span { margin-bottom: 8px; color: #667487; font-size: .8rem; }
+.profit-ledger-summary .metric-card strong { color: #1c2d40; font-size: clamp(1.25rem, 2vw, 1.65rem); font-variant-numeric: tabular-nums; line-height: 1.2; overflow-wrap: anywhere; }
+.profit-ledger-summary .profit-ledger-profit-card strong.positive { color: #247751; }
+.profit-ledger-summary .profit-ledger-profit-card strong.negative { color: #b54747; }
+.profit-ledger-chart { padding: 14px 16px 10px; border-color: #e1e6ed; border-radius: 10px; background: #fff; }
+.profit-ledger-chart-heading { justify-content: flex-start; gap: 18px; margin-bottom: 5px; }
+.profit-ledger-chart-heading h3 { color: #29384b; font-size: .92rem; }
+.profit-ledger-chart-legend { gap: 12px; font-size: .74rem; }
+.profit-ledger-chart-scroll { max-width: 100%; overflow-x: auto; overflow-y: hidden; }
+.profit-ledger-chart-svg { display: block; height: 300px; min-width: 720px; }
+.profit-ledger-axis-label { font-size: 11px; }
+.profit-ledger-entry-label { font-size: 11px; }
+.accounts-expense-ledger .daily-revenue-table-wrap { max-width: 100%; overflow-x: auto; border: 1px solid #e1e6ed; border-radius: 9px; }
+.accounts-expense-ledger .daily-revenue-table-wrap table { min-width: 900px; }
+@media (max-width: 960px) {
+  .trip-overview-grid { grid-template-columns: minmax(0, 1fr); }
+  .trip-overview-seats { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; }
+  .trip-overview-seats h4 { grid-column: 1 / -1; }
+  .trip-overview-seat-content { grid-column: 1 / -1; grid-template-columns: minmax(150px, .7fr) minmax(0, 1.3fr); }
+  .accounts-expense-ledger .accounts-revenue-ledger-filters { flex-wrap: wrap; }
+  .profit-ledger-summary,
+  .profit-ledger-summary.with-monthly { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profit-ledger-chart { padding: 12px; }
+}
+@media (max-width: 600px) {
+  .trip-overview { padding: 12px; }
+  .trip-overview-seat-content { grid-template-columns: 1fr; justify-items: center; }
+  .trip-overview-seat-stats { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .trip-overview-seat-stats > div { grid-template-columns: 1fr; gap: 4px; padding: 8px; }
+  .trip-overview-seat-stats span { min-height: 2em; }
+  .trip-overview-trip-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trip-overview-revenue { grid-template-columns: 1fr; }
+  .trip-overview-revenue > div { grid-template-columns: 1fr auto; align-items: center; }
+  .accounts-expense-ledger { gap: 12px; padding: 14px; }
+  .accounts-expense-ledger .accounts-revenue-ledger-filters > label { flex-basis: calc(50% - 6px); min-width: 0; }
+  .profit-ledger-summary,
+  .profit-ledger-summary.with-monthly { grid-template-columns: 1fr; }
+  .profit-ledger-summary .metric-card { min-height: 82px; }
+  .profit-ledger-chart { padding: 12px; }
+  .profit-ledger-chart-heading { align-items: flex-start; flex-direction: column; }
+  .profit-ledger-chart-legend { gap: 10px; }
+  .profit-ledger-chart-svg { height: 280px; }
+}

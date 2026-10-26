@@ -582,10 +582,22 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
                 {!loadingExpenseSubmissions && !filteredExpenseSubmissions.length && <tr><td colSpan="10" className="daily-revenue-empty">{expenseSubmissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}
               </tbody>
             </> : <>
-              <thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver / Conductor</th><th>Total Expense</th><th>Net Return</th><th>Status</th></tr></thead>
+              <thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver / Conductor</th><th>Route Revenue</th><th>Route Expense</th><th>Net Return</th><th>Status</th></tr></thead>
               <tbody>
-                {filteredExpenseSubmissions.slice(0, 100).map((submission) => <tr key={submission.id}><td>{submission.expense_date}</td><td>{submission.bus_no}</td><td>{ROUTES.find((route) => route.code === submission.route_code)?.label || submission.route_code}</td><td>{submission.driver_name || '-'} / {submission.conductor_name || '-'}</td><td><strong>{money(submission.total_expense)}</strong></td><td>{money(Number(submission.gross_revenue || 0) - Number(submission.total_expense || 0))}</td><td><span className="accounts-entry-locked">{String(submission.status || 'locked').toUpperCase()} · {submission.submission_code}</span></td></tr>)}
-                {!loadingExpenseSubmissions && !filteredExpenseSubmissions.length && <tr><td colSpan="7" className="daily-revenue-empty">{expenseSubmissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}
+                {filteredExpenseSubmissions.slice(0, 100).flatMap((submission) => {
+                  const legs = [
+                    { routeCode: submission.route_code, date: submission.first_leg_date || submission.expense_date, expense: Number(submission.first_leg_share ?? Math.floor(Number(submission.total_expense || 0) / 2)) },
+                    { routeCode: submission.route_code === 'KTY_CMB' ? 'CMB_KTY' : 'KTY_CMB', date: submission.return_leg_date || submission.expense_date, expense: Number(submission.return_leg_share ?? (Number(submission.total_expense || 0) - Math.floor(Number(submission.total_expense || 0) / 2))) },
+                  ]
+                  return legs.map((leg, index) => {
+                    const matches = (row) => String(row.bus_no || row.registration_no || '').trim().toLowerCase() === String(submission.bus_no || '').trim().toLowerCase()
+                    const manualRevenue = entries.filter((entry) => entry.travel_date === leg.date && entry.route_code === leg.routeCode && matches(entry))
+                    const dailyRevenue = (data.dailyRevenue || []).filter((row) => row.travel_date === leg.date && row.route_code === leg.routeCode && matches(row))
+                    const routeRevenue = (manualRevenue.length ? manualRevenue : dailyRevenue).reduce((sum, row) => sum + Number(row.total_revenue || 0), 0)
+                    return <tr key={`${submission.id}-${index}`}><td>{leg.date}</td><td>{submission.bus_no}</td><td>{ROUTES.find((route) => route.code === leg.routeCode)?.label || leg.routeCode}</td><td>{submission.driver_name || '-'} / {submission.conductor_name || '-'}</td><td>{money(routeRevenue)}</td><td><strong>{money(leg.expense)}</strong></td><td>{money(routeRevenue - leg.expense)}</td><td><span className="accounts-entry-locked">{String(submission.status || 'locked').toUpperCase()} · {submission.submission_code}</span></td></tr>
+                  })
+                })}
+                {!loadingExpenseSubmissions && !filteredExpenseSubmissions.length && <tr><td colSpan="8" className="daily-revenue-empty">{expenseSubmissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}
               </tbody>
             </>}
           </table></div>
@@ -594,7 +606,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
         <section className="content-card accounts-monthly-expenses-card">
           <div className="accounts-panel-heading"><div><h2>Monthly expenses</h2><p>Monthly expenses entered here appear in the dashboard Profit report when its period is set to Month.</p></div></div>
           <form className="accounts-monthly-expenses-form" onSubmit={onAddMonthlyExpense}>
-            <label>Month<input required type="month" value={monthlyExpenseForm.expense_month} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, expense_month: event.target.value }))} /></label>
+            <label>Exact date<input required type="date" value={monthlyExpenseForm.expense_date} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, expense_date: event.target.value }))} /></label>
+            <label>Bus No<select required value={monthlyExpenseForm.bus_no} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, bus_no: event.target.value }))}><option value="">Select bus</option>{(data.buses || []).filter((bus) => bus.status !== 'inactive').map((bus) => <option key={bus.id} value={bus.registration_no}>{bus.registration_no}</option>)}</select></label>
             <label>Description<input required maxLength={240} value={monthlyExpenseForm.description} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, description: event.target.value }))} /></label>
             <label>Amount (Rs.)<input required type="number" min="1" step="1" value={monthlyExpenseForm.amount} onChange={(event) => setMonthlyExpenseForm((current) => ({ ...current, amount: event.target.value }))} /></label>
             <button type="submit" className="primary-button" disabled={monthlyExpenseSaving}>{monthlyExpenseSaving ? 'Saving...' : 'Add monthly expense'}</button>
@@ -603,10 +616,10 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
         <section className="content-card accounts-monthly-expenses-card">
           <div className="accounts-panel-heading"><div><h2>Monthly expenses table</h2><p>Monthly expenses entered through the form above.</p></div><label>Month<input type="month" aria-label="Filter monthly expenses by month" value={selectedMonthlyExpensesFilter} onChange={(event) => setMonthlyExpensesFilter(event.target.value)} /></label></div>
-          <div className="daily-revenue-table-wrap"><table><thead><tr><th>Month</th><th>Description</th><th>Amount</th></tr></thead><tbody>
-            {filteredMonthlyExpenseEntries.map((expense) => <tr key={expense.id}><td>{String(expense.expense_date || '').slice(0, 7)}</td><td>{expense.description}</td><td><strong>{money(expense.amount)}</strong></td></tr>)}
+          <div className="daily-revenue-table-wrap"><table><thead><tr><th>Date</th><th>Bus No</th><th>Description</th><th>Amount</th></tr></thead><tbody>
+            {filteredMonthlyExpenseEntries.map((expense) => <tr key={expense.id}><td>{String(expense.expense_date || '').slice(0, 10)}</td><td>{expense.bus_no || '—'}</td><td>{expense.description}</td><td><strong>{money(expense.amount)}</strong></td></tr>)}
             {!filteredMonthlyExpenseEntries.length && <tr><td colSpan="3" className="daily-revenue-empty">No monthly expenses for this month.</td></tr>}
-            <tr><th colSpan="2">Monthly total</th><th>{money(filteredMonthlyExpenseTotal)}</th></tr>
+            <tr><th colSpan="3">Monthly total</th><th>{money(filteredMonthlyExpenseTotal)}</th></tr>
           </tbody></table></div>
         </section>
       </>}

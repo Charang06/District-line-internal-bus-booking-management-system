@@ -40,7 +40,7 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
   const [resetPassword, setResetPassword] = useState('')
   const [showResetPassword, setShowResetPassword] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [crewForm, setCrewForm] = useState({ full_name: '', mobile_number: '', role: 'driver' })
+  const [crewForm, setCrewForm] = useState({ full_name: '', role: 'driver' })
 
   const visibleStaff = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase()
@@ -181,13 +181,12 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
   const handleAddCrew = async (event) => {
     event.preventDefault()
     const full_name = crewForm.full_name.trim()
-    const mobile_number = crewForm.mobile_number.trim()
     if (full_name.length < 2) return showMessage('Enter a crew member name.', true)
     setBusy(true)
     try {
-      const result = await api.createCrewMember(token, { full_name, mobile_number, role: crewForm.role })
+      const result = await api.createCrewMember(token, { full_name, role: crewForm.role })
       setCrewList((current) => [...current, result.crewMember].sort((a, b) => a.role.localeCompare(b.role) || a.full_name.localeCompare(b.full_name)))
-      setCrewForm((current) => ({ ...current, full_name: '', mobile_number: '' }))
+      setCrewForm((current) => ({ ...current, full_name: '' }))
       showMessage(`Added ${result.crewMember.full_name} as ${result.crewMember.role}.`)
     } catch (err) {
       showMessage(err.message, true)
@@ -278,18 +277,17 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
 
       <section className="content-card staff-crew-management-card">
         <div className="dashboard-section-heading">
-          <div><span className="staff-eyebrow">Crew directory</span><h2>Drivers and conductors</h2><p>Add names and mobile numbers once to make them available as suggestions in trip and revenue forms.</p></div>
+          <div><span className="staff-eyebrow">Crew directory</span><h2>Drivers and conductors</h2><p>Add names once to make them available as suggestions in trip and revenue forms.</p></div>
         </div>
         <form className="staff-crew-add-form" onSubmit={handleAddCrew}>
           <label><span>Name</span><input required minLength={2} maxLength={80} value={crewForm.full_name} onChange={(event) => setCrewForm((current) => ({ ...current, full_name: event.target.value }))} placeholder="Enter driver or conductor name" /></label>
-          <label><span>Mobile No.</span><input type="tel" maxLength={30} value={crewForm.mobile_number} onChange={(event) => setCrewForm((current) => ({ ...current, mobile_number: event.target.value }))} placeholder="Enter mobile number" /></label>
           <label><span>Role</span><select value={crewForm.role} onChange={(event) => setCrewForm((current) => ({ ...current, role: event.target.value }))}><option value="driver">Driver</option><option value="conductor">Conductor</option></select></label>
           <button type="submit" className="primary-button" disabled={busy}>Add crew member</button>
         </form>
         <div className="staff-crew-list">
           {['driver', 'conductor'].map((role) => <div className="staff-crew-group" key={role}>
             <h3>{role === 'driver' ? 'Drivers' : 'Conductors'}</h3>
-            <div>{(crewList || []).filter((member) => member.role === role).map((member) => <span className="staff-crew-chip" key={member.id}>{member.full_name}{member.mobile_number ? <small>{member.mobile_number}</small> : null}<button type="button" aria-label={`Remove ${member.full_name}`} onClick={() => handleRemoveCrew(member)}>×</button></span>)}
+            <div>{(crewList || []).filter((member) => member.role === role).map((member) => <span className="staff-crew-chip" key={member.id}>{member.full_name}<button type="button" aria-label={`Remove ${member.full_name}`} onClick={() => handleRemoveCrew(member)}>×</button></span>)}
               {!(crewList || []).some((member) => member.role === role) && <small>No names added.</small>}
             </div>
           </div>)}
@@ -298,8 +296,8 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
 
       <section className="content-card staff-bus-contacts-card">
         <div className="dashboard-section-heading"><div><span className="staff-eyebrow">Bus contacts</span><h2>Buses</h2><p>Register buses here. Saved registration numbers will be available as suggestions wherever a bus number is entered.</p></div><button type="button" className="primary-button" onClick={onRegisterBus}>Add bus</button></div>
-        <div className="staff-bus-contact-list">{(buses || []).map((bus) => <p key={bus.id}><strong>{bus.registration_no}</strong>{bus.display_name ? <span>{bus.display_name}</span> : null}<button type="button" className="staff-bus-contact-remove" onClick={() => onDeleteBus(bus)}>Delete</button></p>)}
-          {!(buses || []).length && <span className="staff-bus-contact-empty">No buses registered yet.</span>}
+        <div className="staff-bus-contact-list">{(buses || []).filter((bus) => bus.status !== 'inactive').map((bus) => <p key={bus.id}><strong>{bus.registration_no}</strong>{bus.display_name ? <span>{bus.display_name}</span> : null}<button type="button" className="staff-bus-contact-remove" onClick={() => onDeleteBus(bus)}>Delete</button></p>)}
+          {!(buses || []).some((bus) => bus.status !== 'inactive') && <span className="staff-bus-contact-empty">No buses registered yet.</span>}
         </div>
       </section>
 

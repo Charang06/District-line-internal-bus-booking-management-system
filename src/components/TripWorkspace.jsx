@@ -96,9 +96,12 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   }
 
   const handleSaveBooking = async () => {
-    const phone = bookingForm.contact.trim().replace(/\s+/g, '').replace(/^\+/, '')
+    const passengerName = bookingForm.passengerName.trim()
+    const contact = bookingForm.contact.trim()
+    const phone = contact.replace(/\s+/g, '').replace(/^\+/, '')
     if (!selectedSeats.length) return setBookingError('Select at least one available seat.')
-    if (!/^(0?7\d{8}|94?7\d{8})$/.test(phone)) return setBookingError('Enter a valid Sri Lankan contact number.')
+    if (!passengerName && !contact) return setBookingError('Enter a passenger name or mobile number.')
+    if (contact && !/^(0?7\d{8}|94?7\d{8})$/.test(phone)) return setBookingError('Enter a valid Sri Lankan contact number.')
     if (bookingForm.fare === '' || !Number.isFinite(Number(bookingForm.fare)) || Number(bookingForm.fare) < 0) return setBookingError('Enter a valid fare of Rs. 0 or more.')
     setBookingError('')
     try {
@@ -109,8 +112,8 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
           booking_group_id,
           trip_id: trip.id,
           seat_number: seatNumber,
-          passenger_name: bookingForm.passengerName.trim(),
-          contact: bookingForm.contact,
+          passenger_name: passengerName,
+          contact,
           gender: bookingForm.gender,
           boarding_point: bookingForm.from,
           destination: bookingForm.to,
@@ -204,8 +207,8 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
               <label><span>To</span><select value={bookingForm.to} onChange={(event) => setBookingForm((prev) => ({ ...prev, to: event.target.value }))}>{routeStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
             </div>
             <div className="two-col grouped-fields">
-              <label><span>Passenger Name (optional)</span><input value={bookingForm.passengerName} onChange={(event) => setBookingForm((prev) => ({ ...prev, passengerName: event.target.value }))} /></label>
-              <label><span>Contact No</span><input value={bookingForm.contact} onChange={(event) => setBookingForm((prev) => ({ ...prev, contact: event.target.value }))} /></label>
+              <label><span>Passenger Name</span><input value={bookingForm.passengerName} onChange={(event) => setBookingForm((prev) => ({ ...prev, passengerName: event.target.value }))} /></label>
+              <label><span>Mobile No (optional)</span><input type="tel" value={bookingForm.contact} onChange={(event) => setBookingForm((prev) => ({ ...prev, contact: event.target.value }))} /></label>
             </div>
             <div className="gender-row">
               {['Male', 'Female', 'Other'].map((gender) => (
