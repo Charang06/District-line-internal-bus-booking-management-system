@@ -72,8 +72,13 @@ const ROUTES = {
 
 const pool = new Pool({
   connectionString: databaseUrl,
-  max: IS_VERCEL ? 1 : 10,
-  connectionTimeoutMillis: 5000,
+  // Vercel can serve several API requests concurrently from one function
+  // instance. A single client caused requests to queue behind dashboard
+  // queries, while a short connection timeout made transient DB latency fatal.
+  max: IS_VERCEL ? 5 : 10,
+  connectionTimeoutMillis: IS_VERCEL ? 10000 : 5000,
+  idleTimeoutMillis: IS_VERCEL ? 5000 : 30000,
+  keepAlive: true,
   ssl: process.env.DATABASE_SSL === 'disable' ? false : { rejectUnauthorized: false },
 })
 let databaseIsReady = false
