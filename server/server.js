@@ -2242,6 +2242,16 @@ app.get('/api/dashboard', authMiddleware, async (req, res) => {
   res.json({ buses, bookings, cargo, totals: { buses: buses.length, bookings: bookings.length, cargo: cargo.length } })
 })
 
+app.use((error, req, res, next) => {
+  if (res.headersSent) return next(error)
+  const status = Number(error?.status || error?.statusCode)
+  const statusCode = status >= 400 && status < 600 ? status : 500
+  console.error(`API request failed (${req.method} ${req.originalUrl}):`, error)
+  res.status(statusCode).json({
+    message: statusCode === 500 ? 'Internal server error. Check the API server log for details.' : error.message,
+  })
+})
+
 function isTransientDatabaseError(error) {
   const code = String(error?.code || '')
   if (code.startsWith('08') || ['ECONNRESET', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH', 'EAI_AGAIN', 'ECONNREFUSED'].includes(code)) return true
