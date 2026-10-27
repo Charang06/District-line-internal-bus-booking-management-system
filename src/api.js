@@ -5,15 +5,17 @@ export function assetUrl(url) {
   return ASSET_BASE && String(url || '').startsWith('/uploads/') ? `${ASSET_BASE}${url}` : url
 }
 
-function authHeaders(token) {
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  }
+function apiFetch(url, options = {}) {
+  return fetch(url, { ...options, credentials: 'include' })
 }
 
-async function parse(response) {
+function authHeaders(_token) {
+  return { 'Content-Type': 'application/json' }
+}
+
+async function parse(response, onRead) {
   const raw = await response.text().catch(() => '')
+  onRead?.(raw.length)
   let data = {}
   try {
     data = raw ? JSON.parse(raw) : {}
@@ -21,6 +23,9 @@ async function parse(response) {
     data = { message: raw || `Server returned an unreadable response (${response.status}).` }
   }
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('app:session-expired'))
+    }
     const error = new Error(data.message || `Request failed (${response.status} ${response.statusText}) at ${response.url || 'the API endpoint'}.`)
     error.status = response.status
     error.data = data
@@ -32,11 +37,35 @@ async function parse(response) {
 async function request(url, options) {
   let response
   try {
-    response = await fetch(url, options)
+    response = await apiFetch(url, options)
   } catch {
     throw new Error('Could not reach the API server. Start the project with npm run dev so the staff request can connect.')
   }
   return parse(response)
+}
+
+async function timedRequest(name, url, options) {
+  const startedAt = performance.now()
+  let status = 0
+  let responseChars = 0
+  try {
+    let response
+    try {
+      response = await apiFetch(url, options)
+    } catch {
+      throw new Error('Could not reach the API server. Start the project with npm run dev so the staff request can connect.')
+    }
+    status = response.status
+    return await parse(response, (length) => { responseChars = length })
+  } finally {
+    console.info(JSON.stringify({
+      kind: 'frontend_api_perf',
+      request: name,
+      duration_ms: Number((performance.now() - startedAt).toFixed(1)),
+      status,
+      response_chars: responseChars,
+    }))
+  }
 }
 
 export const api = {
@@ -45,35 +74,40 @@ export const api = {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   }),
+  logout: () => request(`${API_BASE}/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }),
   buses: (token, includeInactive = false) =>
-    fetch(`${API_BASE}/buses${includeInactive ? '?includeInactive=1' : ''}`, { headers: authHeaders(token) }).then(parse),
-  createBus: (token, body) => fetch(`${API_BASE}/buses`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  updateBus: (token, id, body) => fetch(`${API_BASE}/buses/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  deleteBus: (token, id) => fetch(`${API_BASE}/buses/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
-  uploadBusImage: (token, id, image) => fetch(`${API_BASE}/buses/${id}/image`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
-  trips: (token, query = '') => fetch(`${API_BASE}/trips${query}`, { headers: authHeaders(token) }).then(parse),
-  trip: (token, id) => fetch(`${API_BASE}/trips/${id}`, { headers: authHeaders(token) }).then(parse),
-  createTrip: (token, body) => fetch(`${API_BASE}/trips`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  updateTrip: (token, id, body) => fetch(`${API_BASE}/trips/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  deleteTrip: (token, id) => fetch(`${API_BASE}/trips/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
-  bookings: (token, query = '') => fetch(`${API_BASE}/bookings${query}`, { headers: authHeaders(token) }).then(parse),
+    apiFetch(`${API_BASE}/buses${includeInactive ? '?includeInactive=1' : ''}`, { headers: authHeaders(token) }).then(parse),
+  createBus: (token, body) => apiFetch(`${API_BASE}/buses`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  updateBus: (token, id, body) => apiFetch(`${API_BASE}/buses/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  deleteBus: (token, id) => apiFetch(`${API_BASE}/buses/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
+  uploadBusImage: (token, id, image) => apiFetch(`${API_BASE}/buses/${id}/image`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
+  trips: (token, query = '') => apiFetch(`${API_BASE}/trips${query}`, { headers: authHeaders(token) }).then(parse),
+  trip: (token, id) => apiFetch(`${API_BASE}/trips/${id}`, { headers: authHeaders(token) }).then(parse),
+  createTrip: (token, body) => apiFetch(`${API_BASE}/trips`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  updateTrip: (token, id, body) => apiFetch(`${API_BASE}/trips/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  deleteTrip: (token, id) => apiFetch(`${API_BASE}/trips/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
+  bookings: (token, query = '') => apiFetch(`${API_BASE}/bookings${query}`, { headers: authHeaders(token) }).then(parse),
   createBooking: (token, body) => request(`${API_BASE}/bookings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
-  cancelBooking: (token, id) => fetch(`${API_BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token), body: '{}' }).then(parse),
-  setBookingConfirmation: (token, id, confirmation_status) => fetch(`${API_BASE}/bookings/${id}/confirmation`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ confirmation_status }) }).then(parse),
+  cancelBooking: (token, id) => apiFetch(`${API_BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token), body: '{}' }).then(parse),
+  setBookingConfirmation: (token, id, confirmation_status) => apiFetch(`${API_BASE}/bookings/${id}/confirmation`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ confirmation_status }) }).then(parse),
   updateBookingContact: (token, id, contact) => request(`${API_BASE}/bookings/${id}/contact`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ contact }) }),
-  sendSms: (token, id, retry = false) => fetch(`${API_BASE}/bookings/${id}/sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
-  sendCancellationSms: (token, id, retry = false) => fetch(`${API_BASE}/bookings/${id}/cancellation-sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
-  cargo: (token, query = '') => fetch(`${API_BASE}/cargo${query}`, { headers: authHeaders(token) }).then(parse),
-  createCargo: (token, body) => fetch(`${API_BASE}/cargo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  deleteCargo: (token, id) => fetch(`${API_BASE}/cargo/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
-  me: (token) => fetch(`${API_BASE}/me`, { headers: authHeaders(token) }).then(parse),
-  updateProfile: (token, body) => fetch(`${API_BASE}/profile`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  uploadProfilePhoto: (token, image) => fetch(`${API_BASE}/profile/photo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
-  changePassword: (token, body) => fetch(`${API_BASE}/profile/password`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  adminDashboard: (token) => fetch(`${API_BASE}/admin/dashboard`, { headers: authHeaders(token) }).then(parse),
-  adminRevenueEntries: (token) => request(`${API_BASE}/admin/revenue-entries`, { headers: authHeaders(token) }),
+  sendSms: (token, id, retry = false) => apiFetch(`${API_BASE}/bookings/${id}/sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
+  sendCancellationSms: (token, id, retry = false) => apiFetch(`${API_BASE}/bookings/${id}/cancellation-sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
+  cargo: (token, query = '') => apiFetch(`${API_BASE}/cargo${query}`, { headers: authHeaders(token) }).then(parse),
+  createCargo: (token, body) => apiFetch(`${API_BASE}/cargo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  deleteCargo: (token, id) => apiFetch(`${API_BASE}/cargo/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
+  me: (token) => apiFetch(`${API_BASE}/me`, { headers: authHeaders(token) }).then(parse),
+  updateProfile: (token, body) => apiFetch(`${API_BASE}/profile`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  uploadProfilePhoto: (token, image) => apiFetch(`${API_BASE}/profile/photo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
+  changePassword: (token, body) => apiFetch(`${API_BASE}/profile/password`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  adminDashboard: (token) => timedRequest('admin_dashboard', `${API_BASE}/admin/dashboard`, { headers: authHeaders(token) }),
+  adminRevenueEntries: (token, { summary = false } = {}) => timedRequest(
+    'admin_revenue_entries',
+    `${API_BASE}/admin/revenue-entries${summary ? '?summary=1' : ''}`,
+    { headers: authHeaders(token) },
+  ),
   createRevenueEntry: (token, body) => request(`${API_BASE}/admin/revenue-entries`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
-  adminExpenseSubmissions: (token) => request(`${API_BASE}/admin/expense-submissions`, { headers: authHeaders(token) }),
+  adminExpenseSubmissions: (token) => timedRequest('admin_expense_submissions', `${API_BASE}/admin/expense-submissions`, { headers: authHeaders(token) }),
   createAdminExpenseSubmission: (token, body) => request(`${API_BASE}/admin/expense-submissions`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   createAdminExpense: (token, body) => request(`${API_BASE}/admin/expenses`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   createBusDuty: (token, body) => request(`${API_BASE}/admin/duties`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),

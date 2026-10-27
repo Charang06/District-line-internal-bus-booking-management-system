@@ -121,7 +121,7 @@ const EXPENSE_CATEGORIES = ['Fuel (Diesel)', 'Driver Salary', 'Conductor Salary'
 const DEFAULT_EXPENSE_ITEMS = EXPENSE_CATEGORIES.map((category) => ({ category, description: '', amount: '0' }))
 const EXPENSE_DRAFT_KEY = 'district-line-expense-form-draft'
 
-export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense }) {
+export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense, revenueEntries = [], expenseSubmissionEntries = [], ledgerLoading = false, onRevenueEntrySaved, onExpenseSubmissionSaved }) {
   const [activeSection, setActiveSection] = useState('revenue')
   const [date, setDate] = useState(todayIso)
   const [routeCode, setRouteCode] = useState(ROUTES[0].code)
@@ -131,8 +131,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
   const [conductorName, setConductorName] = useState('')
   const [seatRows, setSeatRows] = useState(SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
   const [cargoRows, setCargoRows] = useState(() => DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
-  const [entries, setEntries] = useState([])
-  const [loadingEntries, setLoadingEntries] = useState(true)
+  const [entries, setEntries] = useState(revenueEntries)
+  const loadingEntries = ledgerLoading
   const [revenueDateSearch, setRevenueDateSearch] = useState('')
   const [revenueBusSearch, setRevenueBusSearch] = useState('')
   const [revenuePeriod, setRevenuePeriod] = useState('all')
@@ -151,8 +151,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
   const [expenseItems, setExpenseItems] = useState(() => DEFAULT_EXPENSE_ITEMS.map((item) => ({ ...item })))
   const [divideExpenses, setDivideExpenses] = useState(true)
   const [savingExpense, setSavingExpense] = useState(false)
-  const [expenseSubmissions, setExpenseSubmissions] = useState([])
-  const [loadingExpenseSubmissions, setLoadingExpenseSubmissions] = useState(true)
+  const [expenseSubmissions, setExpenseSubmissions] = useState(expenseSubmissionEntries)
+  const loadingExpenseSubmissions = ledgerLoading
   const [expenseLedgerView, setExpenseLedgerView] = useState('trip')
   const [expenseDateSearch, setExpenseDateSearch] = useState('')
   const [expenseBusSearch, setExpenseBusSearch] = useState('')
@@ -160,6 +160,9 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
   const [monthlyExpensesFilter, setMonthlyExpensesFilter] = useState('')
 
   const knownBusNumbers = [...new Set((data.buses || []).map((bus) => String(bus.registration_no || '').trim()).filter(Boolean))]
+
+  useEffect(() => setEntries(revenueEntries), [revenueEntries])
+  useEffect(() => setExpenseSubmissions(expenseSubmissionEntries), [expenseSubmissionEntries])
 
   const trips = useMemo(
     () => (data.trips || []).filter((trip) => trip.travel_date === date && trip.route_code === routeCode),
@@ -273,25 +276,6 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-    setLoadingEntries(true)
-    api.adminRevenueEntries(token)
-      .then((result) => { if (!cancelled) setEntries(result.entries || []) })
-      .catch((error) => { if (!cancelled) showMessage(error.message, true) })
-      .finally(() => { if (!cancelled) setLoadingEntries(false) })
-    return () => { cancelled = true }
-  }, [token, showMessage])
-
-  useEffect(() => {
-    let cancelled = false
-    api.adminExpenseSubmissions(token)
-      .then((result) => { if (!cancelled) setExpenseSubmissions(result.submissions || []) })
-      .catch((error) => { if (!cancelled) showMessage(error.message, true) })
-      .finally(() => { if (!cancelled) setLoadingExpenseSubmissions(false) })
-    return () => { cancelled = true }
-  }, [token, showMessage])
-
-  useEffect(() => {
     const selectedBus = selectedExpenseTrip || selectedExpenseReturnTrip || selectedExpenseRevenueEntry
     if (!selectedBus) return
     setExpenseBusNo(selectedBus.registration_no || selectedBus.bus_no || '')
@@ -352,7 +336,9 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
         seat_rows: seatRows.map((row) => ({ count: Number(row.count) || 0, amount: Number(row.amount) || 0 })),
         cargo_rows: cargoRows.map((row) => ({ description: row.description, tag: row.tag, amount: Number(row.amount) || 0 })),
       })
-      setEntries((current) => [result.entry, ...current].slice(0, 100))
+      const nextEntries = [result.entry, ...entries].slice(0, 100)
+      setEntries(nextEntries)
+      onRevenueEntrySaved?.(result.entry)
       showMessage(`${result.entry.entry_code} saved and locked.`)
       setSeatRows(SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
       setCargoRows(DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
@@ -389,7 +375,9 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
         gross_revenue: roundRevenue,
         divide_expense: divideExpenses,
       })
-      setExpenseSubmissions((current) => [result.submission, ...current].slice(0, 100))
+      const nextSubmissions = [result.submission, ...expenseSubmissions].slice(0, 100)
+      setExpenseSubmissions(nextSubmissions)
+      onExpenseSubmissionSaved?.(result.submission)
       setExpenseItems(DEFAULT_EXPENSE_ITEMS.map((item) => ({ ...item })))
       localStorage.removeItem(EXPENSE_DRAFT_KEY)
       showMessage(`${result.submission.submission_code} saved and locked.`)
@@ -464,7 +452,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
       </section>
 
       <div className="accounts-route-revenue-stack">
-        {ROUTES.map((route) => <RevenueRouteForm key={route.code} route={route} data={data} token={token} showMessage={showMessage} onSaved={(entry) => setEntries((current) => [entry, ...current].slice(0, 100))} onPrint={onPrint} knownBusNumbers={knownBusNumbers} />)}
+        {ROUTES.map((route) => <RevenueRouteForm key={route.code} route={route} data={data} token={token} showMessage={showMessage} onSaved={(entry) => { setEntries((current) => [entry, ...current].slice(0, 100)); onRevenueEntrySaved?.(entry) }} onPrint={onPrint} knownBusNumbers={knownBusNumbers} />)}
       </div>
 
       <section className="content-card accounts-recent-card">

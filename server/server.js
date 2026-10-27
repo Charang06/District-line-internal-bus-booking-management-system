@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
+import { createHash, randomBytes } from 'crypto'
 import pg from 'pg'
 import path from 'path'
 import fs from 'fs'
@@ -18,16 +18,43 @@ loadEnv(rootDir)
 const { Pool } = pg
 const app = express()
 const transactionContext = new AsyncLocalStorage()
-app.use((req, res, next) => transactionContext.run({ client: null }, next))
+const monotonicMs = () => Number(process.hrtime.bigint()) / 1e6
+app.use((req, res, next) => {
+  const context = {
+    client: null,
+    startedAt: monotonicMs(),
+    db: { queries: 0, acquireMs: 0, queryMs: 0, byStatement: {} },
+  }
+  transactionContext.run(context, () => {
+    res.once('finish', () => {
+      if (!req.path.startsWith('/api/')) return
+      console.info(JSON.stringify({
+        kind: 'api_perf',
+        method: req.method,
+        path: req.path,
+        status: res.statusCode,
+        total_ms: Number((monotonicMs() - context.startedAt).toFixed(1)),
+        db_queries: context.db.queries,
+        db_acquire_ms: Number(context.db.acquireMs.toFixed(1)),
+        db_query_ms: Number(context.db.queryMs.toFixed(1)),
+        db_query_breakdown: Object.entries(context.db.byStatement).map(([statement, metric]) => ({
+          statement,
+          count: metric.count,
+          total_ms: Number(metric.totalMs.toFixed(1)),
+        })),
+        pool_waiting: pool.waitingCount,
+        pool_total: pool.totalCount,
+        pool_idle: pool.idleCount,
+      }))
+    })
+    next()
+  })
+})
 const IS_VERCEL = Boolean(process.env.VERCEL)
 const localUploadDir = path.join(__dirname, '..', 'public', 'uploads')
 if (!IS_VERCEL) fs.mkdirSync(path.join(localUploadDir, 'profiles'), { recursive: true })
 const PORT = process.env.PORT || 3002
 const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production'
-const JWT_SECRET = process.env.JWT_SECRET || (IS_PRODUCTION ? '' : 'district-line-dev-only-change-me')
-if (IS_PRODUCTION && JWT_SECRET.length < 32) {
-  throw new Error('Set JWT_SECRET to a random value with at least 32 characters before starting in production.')
-}
 const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl) {
   throw new Error('Set DATABASE_URL to the Supabase PostgreSQL connection string before starting the server.')
@@ -88,28 +115,77 @@ if (IS_VERCEL) {
   attachDatabasePool(pool)
 }
 
-function currentClient() {
-  return transactionContext.getStore()?.client || pool
-}
-
 function postgresSql(sql) {
   let index = 0
   return sql.replace(/\?/g, () => `$${++index}`)
 }
 
+function addDatabaseMetric(name, duration) {
+  const metrics = transactionContext.getStore()?.db
+  if (metrics) metrics[name] += duration
+}
+
+function databaseQueryLabel(sql) {
+  const operation = String(sql).trim().match(/^(SELECT|INSERT|UPDATE|DELETE|WITH|BEGIN|COMMIT|ROLLBACK)\b/i)?.[1]?.toUpperCase() || 'QUERY'
+  const table = String(sql).match(/\b(?:FROM|INTO|UPDATE|JOIN)\s+([a-z_][a-z0-9_]*)/i)?.[1]?.toLowerCase() || 'statement'
+  return `${operation} ${table}`
+}
+
+function addDatabaseQueryMetric(sql, duration) {
+  const metrics = transactionContext.getStore()?.db
+  if (!metrics) return
+  const label = databaseQueryLabel(sql)
+  const current = metrics.byStatement[label] || { count: 0, totalMs: 0 }
+  current.count += 1
+  current.totalMs += duration
+  metrics.byStatement[label] = current
+}
+
+async function queryDatabase(client, sql, params = []) {
+  const startedAt = monotonicMs()
+  let activeClient = client || transactionContext.getStore()?.client || null
+  let acquiredFromPool = false
+  let acquireMs = 0
+  let queryStartedAt = 0
+  try {
+    if (!activeClient) {
+      const acquireStartedAt = monotonicMs()
+      activeClient = await pool.connect()
+      acquireMs = monotonicMs() - acquireStartedAt
+      acquiredFromPool = true
+      addDatabaseMetric('acquireMs', acquireMs)
+    }
+    queryStartedAt = monotonicMs()
+    addDatabaseMetric('queries', 1)
+    return await activeClient.query(postgresSql(sql), params)
+  } catch (error) {
+    if (!acquiredFromPool && !activeClient) {
+      acquireMs = monotonicMs() - startedAt
+      addDatabaseMetric('acquireMs', acquireMs)
+    }
+    throw error
+  } finally {
+    if (queryStartedAt) {
+      const queryDuration = monotonicMs() - queryStartedAt
+      addDatabaseMetric('queryMs', queryDuration)
+      addDatabaseQueryMetric(sql, queryDuration)
+    }
+    if (acquiredFromPool) activeClient.release()
+  }
+}
+
 function run(sql, params = []) {
   const isInsert = /^\s*INSERT\b/i.test(sql)
-  const statement = postgresSql(sql)
-  return currentClient().query(isInsert ? `${statement} RETURNING id` : statement, params)
+  return queryDatabase(null, isInsert ? `${sql} RETURNING id` : sql, params)
     .then((result) => ({ id: result.rows[0]?.id, changes: result.rowCount }))
 }
 
 function get(sql, params = []) {
-  return currentClient().query(postgresSql(sql), params).then((result) => result.rows[0])
+  return queryDatabase(null, sql, params).then((result) => result.rows[0])
 }
 
 function all(sql, params = []) {
-  return currentClient().query(postgresSql(sql), params).then((result) => result.rows)
+  return queryDatabase(null, sql, params).then((result) => result.rows)
 }
 
 function isUniqueViolation(error) {
@@ -121,14 +197,27 @@ function exec(sql) {
     const context = transactionContext.getStore()
     if (!context) throw new Error('Database transaction requested outside an API request context.')
     if (context.client) throw new Error('Nested database transactions are not supported.')
+    const acquireStartedAt = monotonicMs()
+    let acquired = false
     return pool.connect().then(async (client) => {
+      acquired = true
+      addDatabaseMetric('acquireMs', monotonicMs() - acquireStartedAt)
+      addDatabaseMetric('queries', 1)
+      const queryStartedAt = monotonicMs()
       try {
         await client.query('BEGIN')
         context.client = client
       } catch (error) {
         client.release()
         throw error
+      } finally {
+        const queryDuration = monotonicMs() - queryStartedAt
+        addDatabaseMetric('queryMs', queryDuration)
+        addDatabaseQueryMetric('BEGIN', queryDuration)
       }
+    }).catch((error) => {
+      if (!acquired) addDatabaseMetric('acquireMs', monotonicMs() - acquireStartedAt)
+      throw error
     })
   }
   if (sql === 'COMMIT' || sql === 'ROLLBACK') {
@@ -136,9 +225,9 @@ function exec(sql) {
     if (!context?.client) throw new Error('No active database transaction.')
     const client = context.client
     context.client = null
-    return client.query(sql).finally(() => client.release())
+    return queryDatabase(client, sql).finally(() => client.release())
   }
-  return currentClient().query(sql).then(() => undefined)
+  return queryDatabase(null, sql).then(() => undefined)
 }
 
 function padSeat(value) {
@@ -330,24 +419,99 @@ async function removeStoredUpload(fileUrl) {
   }
 }
 
+const SESSION_COOKIE_NAME = 'district_line_session'
+const SESSION_IDLE_MINUTES = 30
+const SESSION_MAX_HOURS = 8
+const SESSION_TOUCH_MINUTES = 5
+const allowedCorsOrigins = String(process.env.CORS_ORIGIN || '').split(',').map((origin) => origin.trim()).filter(Boolean)
+const configuredSameSite = String(process.env.SESSION_COOKIE_SAME_SITE || 'lax').trim().toLowerCase()
+if (!['lax', 'strict', 'none'].includes(configuredSameSite)) {
+  throw new Error('SESSION_COOKIE_SAME_SITE must be Lax, Strict, or None.')
+}
+if (configuredSameSite === 'none' && (!IS_PRODUCTION || !allowedCorsOrigins.length)) {
+  throw new Error('SameSite=None sessions require production HTTPS and an explicit CORS_ORIGIN allowlist.')
+}
+
+function sessionCookieOptions() {
+  return {
+    sameSite: configuredSameSite[0].toUpperCase() + configuredSameSite.slice(1),
+    secure: IS_PRODUCTION || configuredSameSite === 'none',
+  }
+}
+
+function sessionCookieValue(sessionId, maxAgeSeconds = SESSION_MAX_HOURS * 60 * 60) {
+  const options = sessionCookieOptions()
+  const expiry = new Date(Date.now() + maxAgeSeconds * 1000).toUTCString()
+  return `${SESSION_COOKIE_NAME}=${encodeURIComponent(sessionId)}; Path=/; HttpOnly; SameSite=${options.sameSite}; Max-Age=${maxAgeSeconds}; Expires=${expiry}${options.secure ? '; Secure' : ''}`
+}
+
+function clearSessionCookie(res) {
+  res.setHeader('Set-Cookie', sessionCookieValue('', 0))
+}
+
+function readSessionCookie(req) {
+  const prefix = `${SESSION_COOKIE_NAME}=`
+  for (const item of String(req.headers.cookie || '').split(';')) {
+    const cookie = item.trim()
+    if (!cookie.startsWith(prefix)) continue
+    try { return decodeURIComponent(cookie.slice(prefix.length)) } catch { return '' }
+  }
+  return ''
+}
+
+function hashSessionId(sessionId) {
+  return createHash('sha256').update(sessionId).digest('hex')
+}
+
+async function createSessionRecord(userId) {
+  const sessionId = randomBytes(32).toString('base64url')
+  const tokenHash = hashSessionId(sessionId)
+  await run(`
+    INSERT INTO auth_sessions (user_id, token_hash, created_at, last_seen_at, idle_expires_at, expires_at)
+    VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '${SESSION_IDLE_MINUTES} minutes', CURRENT_TIMESTAMP + INTERVAL '${SESSION_MAX_HOURS} hours')
+  `, [userId, tokenHash])
+  return sessionId
+}
+
+async function issueSession(userId, res) {
+  const sessionId = await createSessionRecord(userId)
+  res.setHeader('Set-Cookie', sessionCookieValue(sessionId))
+}
+
 function authMiddleware(req, res, next) {
-  const header = req.headers.authorization || ''
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null
-  if (!token) return res.status(401).json({ message: 'Unauthorized' })
-  jwt.verify(token, JWT_SECRET, async (err, decoded) => {
-    if (err) return res.status(401).json({ message: 'Invalid token' })
-    try {
-      const user = await get('SELECT * FROM users WHERE id = ?', [decoded.id])
-      if (!user) return res.status(401).json({ message: 'Invalid token' })
-      if ((user.status || 'active') === 'inactive') {
-        return res.status(403).json({ message: 'This account has been deactivated.' })
-      }
-      req.user = publicUser(user)
-      next()
-    } catch (error) {
-      next(error)
+  const sessionId = readSessionCookie(req)
+  if (!sessionId) return res.status(401).json({ message: 'Your session has expired. Please sign in again.' })
+  const tokenHash = hashSessionId(sessionId)
+  all(`
+    WITH session_to_touch AS (
+      SELECT id FROM auth_sessions
+      WHERE token_hash = ?
+        AND idle_expires_at > CURRENT_TIMESTAMP
+        AND expires_at > CURRENT_TIMESTAMP
+        AND last_seen_at <= CURRENT_TIMESTAMP - INTERVAL '${SESSION_TOUCH_MINUTES} minutes'
+    ), touched AS (
+      UPDATE auth_sessions AS current_session
+      SET last_seen_at = CURRENT_TIMESTAMP,
+          idle_expires_at = LEAST(current_session.expires_at, CURRENT_TIMESTAMP + INTERVAL '${SESSION_IDLE_MINUTES} minutes')
+      FROM session_to_touch
+      WHERE current_session.id = session_to_touch.id
+      RETURNING current_session.id
+    )
+    SELECT users.*, sessions.id AS session_id
+    FROM auth_sessions AS sessions
+    JOIN users ON users.id = sessions.user_id
+    WHERE sessions.token_hash = ?
+      AND sessions.idle_expires_at > CURRENT_TIMESTAMP
+      AND sessions.expires_at > CURRENT_TIMESTAMP
+  `, [tokenHash, tokenHash]).then((rows) => {
+    const user = rows[0]
+    if (!user || (user.status || 'active') === 'inactive') {
+      return res.status(401).json({ message: 'Your session is invalid or expired. Please sign in again.' })
     }
-  })
+    req.sessionId = user.session_id
+    req.user = publicUser(user)
+    next()
+  }).catch(next)
 }
 
 function requireAdmin(req, res, next) {
@@ -389,9 +553,66 @@ async function audit(user, action, entityType, entityId, details) {
   )
 }
 
+const DATABASE_MIGRATIONS = [
+  { version: 1, file: '001_initial_postgres.sql' },
+  { version: 2, file: '002_auth_sessions.sql' },
+]
+
+async function migrateDatabaseIfNeeded() {
+  const migrationStartedAt = monotonicMs()
+  const acquireStartedAt = monotonicMs()
+  let client
+  try {
+    client = await pool.connect()
+  } catch (error) {
+    console.error(JSON.stringify({
+      kind: 'db_connect_error',
+      stage: 'schema_init',
+      acquire_ms: Number((monotonicMs() - acquireStartedAt).toFixed(1)),
+      code: error.code || error.name,
+    }))
+    throw error
+  }
+  const acquireMs = monotonicMs() - acquireStartedAt
+  const queryStartedAt = monotonicMs()
+  const appliedVersions = []
+  try {
+    await client.query('BEGIN')
+    // A transaction-scoped lock is compatible with Supabase's transaction pooler.
+    await client.query('SELECT pg_advisory_xact_lock(8216042, 1)')
+    for (const migration of DATABASE_MIGRATIONS) {
+      const meta = await client.query("SELECT to_regclass('schema_meta') IS NOT NULL AS found")
+      let applied = false
+      if (meta.rows[0]?.found) {
+        const version = await client.query('SELECT EXISTS (SELECT 1 FROM schema_meta WHERE version = $1) AS applied', [migration.version])
+        applied = version.rows[0]?.applied === true
+      }
+      if (applied) continue
+      const migrationSql = fs.readFileSync(path.join(__dirname, 'migrations', migration.file), 'utf8')
+        .replace(/\bBEGIN\s*;/i, '')
+        .replace(/\bCOMMIT\s*;\s*$/i, '')
+      await client.query(migrationSql)
+      await client.query('INSERT INTO schema_meta (version) VALUES ($1) ON CONFLICT (version) DO NOTHING', [migration.version])
+      appliedVersions.push(migration.version)
+    }
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    throw error
+  } finally {
+    client.release()
+  }
+  console.info(JSON.stringify({
+    kind: 'db_migration_check',
+    applied_versions: appliedVersions,
+    acquire_ms: Number(acquireMs.toFixed(1)),
+    sql_ms: Number((monotonicMs() - queryStartedAt).toFixed(1)),
+    duration_ms: Number((monotonicMs() - migrationStartedAt).toFixed(1)),
+  }))
+}
+
 async function seedDatabase() {
-  const migrationSql = fs.readFileSync(path.join(__dirname, 'migrations', '001_initial_postgres.sql'), 'utf8')
-  await pool.query(migrationSql)
+  await migrateDatabaseIfNeeded()
 
   const configuredAdminUsername = String(process.env.ADMIN_USERNAME || 'admin_kt').trim()
   const configuredAdminPassword = process.env.ADMIN_PASSWORD || ''
@@ -489,35 +710,26 @@ async function tripRevenue(tripId) {
   return { total, collected, outstanding: total - collected }
 }
 
-async function refreshDutyStatus(duty, firstTrip, returnTrip) {
-  if (duty.status === 'finalized') return duty
-  const status = firstTrip.status === 'completed' && returnTrip.status === 'completed'
-    ? 'awaiting_financial_review'
-    : firstTrip.status === 'completed' ? 'awaiting_return' : 'in_progress'
-  const completionDate = status === 'awaiting_financial_review' ? returnTrip.travel_date : null
-  await run('UPDATE bus_duties SET status = ?, completion_date = ? WHERE id = ? AND status != \'finalized\'', [status, completionDate, duty.id])
-  return { ...duty, status, completion_date: completionDate }
-}
-
-async function serializeDuty(duty) {
+async function serializeDuty(duty, preloaded = null) {
   let snapshot = null
   if (duty.status === 'finalized' && duty.snapshot_json) {
     try { snapshot = JSON.parse(duty.snapshot_json) } catch { snapshot = null }
   }
-  const firstTrip = await dutyTrip(duty.first_trip_id)
-  const returnTrip = await dutyTrip(duty.return_trip_id)
+  const firstTrip = preloaded ? preloaded.tripsById.get(Number(duty.first_trip_id)) : await dutyTrip(duty.first_trip_id)
+  const returnTrip = preloaded ? preloaded.tripsById.get(Number(duty.return_trip_id)) : await dutyTrip(duty.return_trip_id)
   if (!firstTrip || !returnTrip) return null
+  const emptyRevenue = { total: 0, collected: 0, outstanding: 0 }
   const [firstRevenue, returnRevenue] = snapshot
     ? [snapshot.first_journey.revenue, snapshot.return_journey.revenue]
-    : await Promise.all([tripRevenue(firstTrip.id), tripRevenue(returnTrip.id)])
-  const expenses = snapshot?.expenses || await all(
-    'SELECT id, expense_date, category, description, amount, trip_id FROM daily_expenses WHERE duty_id = ? ORDER BY expense_date, id',
-    [duty.id],
-  )
-  const adjustments = snapshot?.adjustments || await all(
-    'SELECT id, adjustment_date, type, description, amount, trip_id, seat_number FROM duty_adjustments WHERE duty_id = ? ORDER BY adjustment_date, id',
-    [duty.id],
-  )
+    : preloaded
+      ? [preloaded.revenueByTripId.get(Number(firstTrip.id)) || emptyRevenue, preloaded.revenueByTripId.get(Number(returnTrip.id)) || emptyRevenue]
+      : await Promise.all([tripRevenue(firstTrip.id), tripRevenue(returnTrip.id)])
+  const expenses = snapshot?.expenses || (preloaded
+    ? preloaded.expensesByDutyId.get(Number(duty.id)) || []
+    : await all('SELECT id, expense_date, category, description, amount, trip_id FROM daily_expenses WHERE duty_id = ? ORDER BY expense_date, id', [duty.id]))
+  const adjustments = snapshot?.adjustments || (preloaded
+    ? preloaded.adjustmentsByDutyId.get(Number(duty.id)) || []
+    : await all('SELECT id, adjustment_date, type, description, amount, trip_id, seat_number FROM duty_adjustments WHERE duty_id = ? ORDER BY adjustment_date, id', [duty.id]))
   const adjustmentTotals = snapshot?.adjustment_totals || adjustments.reduce((totals, adjustment) => {
     const amount = Number(adjustment.amount || 0)
     if (adjustment.type === 'refund') totals.refunds += amount
@@ -529,7 +741,9 @@ async function serializeDuty(duty) {
   const totalCollected = snapshot?.total_collected ?? firstRevenue.collected + returnRevenue.collected
   const totalOutstanding = snapshot?.total_outstanding ?? firstRevenue.outstanding + returnRevenue.outstanding
   const totalExpenses = snapshot?.total_expenses ?? expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
-  const bus = await get('SELECT id, registration_no FROM buses WHERE id = ?', [duty.bus_id])
+  const bus = preloaded
+    ? preloaded.busesById.get(Number(duty.bus_id))
+    : await get('SELECT id, registration_no FROM buses WHERE id = ?', [duty.bus_id])
   const tripView = (trip, revenue) => ({
     id: trip.id,
     trip_code: trip.trip_code,
@@ -567,31 +781,111 @@ async function serializeDuty(duty) {
 }
 
 async function getAdminDutyData() {
-  const duties = await all('SELECT * FROM bus_duties ORDER BY start_date DESC, id DESC')
-  const serializedDuties = []
-  for (const originalDuty of duties) {
-    const firstTrip = await dutyTrip(originalDuty.first_trip_id)
-    const returnTrip = await dutyTrip(originalDuty.return_trip_id)
-    if (!firstTrip || !returnTrip) continue
-    const duty = await refreshDutyStatus(originalDuty, firstTrip, returnTrip)
-    const serialized = await serializeDuty(duty)
-    if (serialized) serializedDuties.push(serialized)
-  }
-  const eligibleTrips = await all(`
+  const [duties, eligibleTrips] = await Promise.all([
+    all('SELECT * FROM bus_duties ORDER BY start_date DESC, id DESC'),
+    all(`
     SELECT t.*, COALESCE(t.bus_no, b.registration_no) as registration_no,
       COALESCE(t.bus_id, (SELECT fallback_bus.id FROM buses fallback_bus WHERE lower(fallback_bus.registration_no) = lower(t.bus_no) LIMIT 1)) as resolved_bus_id
     FROM trips t LEFT JOIN buses b ON b.id = t.bus_id
     WHERE t.status != 'cancelled'
       AND NOT EXISTS (SELECT 1 FROM bus_duties d WHERE d.first_trip_id = t.id OR d.return_trip_id = t.id)
     ORDER BY t.travel_date, t.id
-  `)
+    `),
+  ])
+  if (!duties.length) return { duties: [], dutyTrips: eligibleTrips }
+
+  const dutyIds = duties.map((duty) => Number(duty.id))
+  const tripIds = [...new Set(duties.flatMap((duty) => [Number(duty.first_trip_id), Number(duty.return_trip_id)]).filter(Number.isInteger))]
+  const busIds = [...new Set(duties.map((duty) => Number(duty.bus_id)).filter(Number.isInteger))]
+  if (!tripIds.length) return { duties: [], dutyTrips: eligibleTrips }
+  const dutyPlaceholders = dutyIds.map(() => '?').join(', ')
+  const tripPlaceholders = tripIds.map(() => '?').join(', ')
+  const busPlaceholders = busIds.map(() => '?').join(', ')
+  const [tripRows, revenueRows, expenseRows, adjustmentRows, buses] = await Promise.all([
+    all(`
+      SELECT t.*, COALESCE(t.bus_no, b.registration_no) as registration_no,
+        COALESCE(t.bus_id, (SELECT fallback_bus.id FROM buses fallback_bus WHERE lower(fallback_bus.registration_no) = lower(t.bus_no) LIMIT 1)) as resolved_bus_id
+      FROM trips t LEFT JOIN buses b ON b.id = t.bus_id
+      WHERE t.id IN (${tripPlaceholders})
+    `, tripIds),
+    all(`
+      SELECT bk.trip_id,
+        COALESCE(SUM(CASE WHEN bk.status = 'confirmed' AND bk.confirmation_status = 'confirmed' THEN bk.fare ELSE 0 END), 0) as total,
+        COALESCE(SUM(CASE WHEN bk.status = 'confirmed' AND bk.confirmation_status = 'confirmed' AND lower(COALESCE(bk.payment_status, '')) = 'paid' THEN bk.fare ELSE 0 END), 0) as collected
+      FROM bookings bk WHERE bk.trip_id IN (${tripPlaceholders}) GROUP BY bk.trip_id
+    `, tripIds),
+    all(`SELECT id, duty_id, expense_date, category, description, amount, trip_id FROM daily_expenses WHERE duty_id IN (${dutyPlaceholders}) ORDER BY expense_date, id`, dutyIds),
+    all(`SELECT id, duty_id, adjustment_date, type, description, amount, trip_id, seat_number FROM duty_adjustments WHERE duty_id IN (${dutyPlaceholders}) ORDER BY adjustment_date, id`, dutyIds),
+    busIds.length ? all(`SELECT id, registration_no FROM buses WHERE id IN (${busPlaceholders})`, busIds) : Promise.resolve([]),
+  ])
+  const groupById = (rows, key) => rows.reduce((groups, row) => {
+    const id = Number(row[key])
+    const group = groups.get(id) || []
+    group.push(row)
+    groups.set(id, group)
+    return groups
+  }, new Map())
+  const tripsById = new Map(tripRows.map((trip) => [Number(trip.id), trip]))
+  const revenueByTripId = new Map(revenueRows.map((row) => {
+    const total = Number(row.total || 0)
+    const collected = Number(row.collected || 0)
+    return [Number(row.trip_id), { total, collected, outstanding: total - collected }]
+  }))
+  const expensesByDutyId = groupById(expenseRows, 'duty_id')
+  const adjustmentsByDutyId = groupById(adjustmentRows, 'duty_id')
+  const busesById = new Map(buses.map((bus) => [Number(bus.id), bus]))
+  const preloaded = { tripsById, revenueByTripId, expensesByDutyId, adjustmentsByDutyId, busesById }
+
+  const statusUpdates = []
+  const currentDuties = duties.map((duty) => {
+    const firstTrip = tripsById.get(Number(duty.first_trip_id))
+    const returnTrip = tripsById.get(Number(duty.return_trip_id))
+    if (!firstTrip || !returnTrip || duty.status === 'finalized') return duty
+    const nextStatus = firstTrip.status === 'completed' && returnTrip.status === 'completed'
+      ? 'awaiting_financial_review'
+      : firstTrip.status === 'completed' ? 'awaiting_return' : 'in_progress'
+    const completionDate = nextStatus === 'awaiting_financial_review' ? returnTrip.travel_date : null
+    if (duty.status !== nextStatus || duty.completion_date !== completionDate) {
+      statusUpdates.push({ id: Number(duty.id), status: nextStatus, completionDate })
+    }
+    return { ...duty, status: nextStatus, completion_date: completionDate }
+  })
+  if (statusUpdates.length) {
+    const valuesSql = statusUpdates.map(() => '(?, ?, ?)').join(', ')
+    const values = statusUpdates.flatMap((update) => [update.id, update.status, update.completionDate])
+    await run(`
+      UPDATE bus_duties AS duty SET status = changes.status, completion_date = changes.completion_date
+      FROM (VALUES ${valuesSql}) AS changes(id, status, completion_date)
+      WHERE duty.id = changes.id AND duty.status != 'finalized'
+    `, values)
+  }
+  const serializedDuties = (await Promise.all(currentDuties.map((duty) => serializeDuty(duty, preloaded)))).filter(Boolean)
   return { duties: serializedDuties, dutyTrips: eligibleTrips }
 }
 
-const allowedCorsOrigins = String(process.env.CORS_ORIGIN || '').split(',').map((origin) => origin.trim()).filter(Boolean)
-app.use(cors({ origin: IS_PRODUCTION ? allowedCorsOrigins : true }))
+app.use(cors({ origin: IS_PRODUCTION ? allowedCorsOrigins : true, credentials: true }))
+app.use('/api', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store')
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next()
+  const origin = req.get('Origin')
+  if (IS_PRODUCTION && origin && allowedCorsOrigins.length && !allowedCorsOrigins.includes(origin)) {
+    return res.status(403).json({ message: 'This request origin is not allowed.' })
+  }
+  next()
+})
 app.use(express.json({ limit: '8mb' }))
 if (!IS_VERCEL) app.use('/uploads', express.static(localUploadDir))
+app.post('/api/logout', async (req, res, next) => {
+  const sessionId = readSessionCookie(req)
+  clearSessionCookie(res)
+  if (!sessionId) return res.json({ ok: true })
+  try {
+    await run('DELETE FROM auth_sessions WHERE token_hash = ?', [hashSessionId(sessionId)])
+    res.json({ ok: true })
+  } catch (error) {
+    next(error)
+  }
+})
 app.use((req, res, next) => {
   if (databaseIsReady) return next()
   if (!IS_VERCEL) return res.status(503).json({ message: 'The database is reconnecting. Please retry shortly.' })
@@ -615,12 +909,9 @@ app.post('/api/login', async (req, res) => {
     const ok = await bcrypt.compare(password, user.password_hash)
     if (!ok) return res.status(401).json({ message: 'Invalid username or password' })
     const safeUser = publicUser(user)
-    const token = jwt.sign(
-      { id: safeUser.id, username: safeUser.username, role: safeUser.role },
-      JWT_SECRET,
-      { expiresIn: '8h' },
-    )
-    return res.json({ token, user: safeUser })
+    await run('DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP OR idle_expires_at <= CURRENT_TIMESTAMP')
+    await issueSession(user.id, res)
+    return res.json({ user: safeUser })
   } catch (error) {
     console.error('Login error:', error)
     return res.status(500).json({ message: 'Login failed' })
@@ -666,8 +957,19 @@ app.post('/api/profile/password', authMiddleware, requireAdmin, async (req, res)
   const ok = await bcrypt.compare(String(currentPassword), user.password_hash)
   if (!ok) return res.status(401).json({ message: 'Current password is incorrect.' })
   const hash = await bcrypt.hash(String(newPassword), 10)
-  await run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, user.id])
-  await audit(req.user, 'profile.password', 'user', user.id, 'password changed')
+  let nextSessionId
+  await exec('BEGIN IMMEDIATE')
+  try {
+    await run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, user.id])
+    await run('DELETE FROM auth_sessions WHERE user_id = ?', [user.id])
+    nextSessionId = await createSessionRecord(user.id)
+    await audit(req.user, 'profile.password', 'user', user.id, 'password changed')
+    await exec('COMMIT')
+  } catch (error) {
+    try { await exec('ROLLBACK') } catch { /* preserve the original error */ }
+    throw error
+  }
+  res.setHeader('Set-Cookie', sessionCookieValue(nextSessionId))
   res.json({ message: 'Password updated.' })
 })
 
@@ -898,9 +1200,10 @@ app.post('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (
 })
 
 app.get('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, res) => {
+  const detailColumns = req.query.summary === '1' ? '' : ', seat_rows_json, cargo_rows_json'
   const entries = await all(`
     SELECT id, entry_code, trip_id, travel_date, route_code, route_label, bus_no,
-      driver_name, conductor_name, seat_rows_json, cargo_rows_json,
+      driver_name, conductor_name${detailColumns},
       seat_subtotal, cargo_subtotal, total_revenue, status, created_at, locked_at
     FROM revenue_entries
     ORDER BY travel_date DESC, id DESC
@@ -1325,6 +1628,7 @@ app.patch('/api/admin/staff/:id', authMiddleware, requireAdmin, async (req, res,
   params.push(person.id)
   try {
     await run(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`, params)
+    if (req.body.status === 'inactive') await run('DELETE FROM auth_sessions WHERE user_id = ?', [person.id])
     const next = await get('SELECT id, username, full_name, role, permissions, status FROM users WHERE id = ?', [person.id])
     await audit(req.user, 'staff.update', 'user', person.id, JSON.stringify(req.body))
     res.json({ staff: serializeStaff(next) })
@@ -1348,6 +1652,7 @@ app.post('/api/admin/staff/:id/reset-password', authMiddleware, requireAdmin, as
   if (passwordError) return res.status(400).json({ message: passwordError })
   const hash = await bcrypt.hash(String(req.body.password), 10)
   await run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, person.id])
+  await run('DELETE FROM auth_sessions WHERE user_id = ?', [person.id])
   await audit(req.user, 'staff.password.reset', 'user', person.id, person.username)
   res.json({ message: `Password reset for ${person.username}.` })
   } catch (error) {
@@ -2111,52 +2416,55 @@ app.delete('/api/cargo/:id', authMiddleware, requireStaffPermission('cargo'), as
 })
 
 app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) => {
-  const trips = await all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`)
-  const dutyData = await getAdminDutyData()
-  const buses = await all('SELECT * FROM buses ORDER BY id')
-  const crewMembers = await all("SELECT id, full_name, mobile_number, role, status FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
-  const expenses = await all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source, bus_no FROM daily_expenses ORDER BY expense_date DESC, id DESC')
-  const passengerRecords = await all(`SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id ORDER BY t.travel_date DESC, bk.created_at DESC LIMIT 200`)
-  const recentCustomerBookings = await all(`
-    SELECT bk.passenger_name, bk.contact, bk.trip_id, t.travel_date
-    FROM bookings bk JOIN trips t ON t.id = bk.trip_id
-    WHERE bk.status = 'confirmed'
-      AND bk.confirmation_status = 'confirmed'
-      AND TRIM(COALESCE(bk.contact, '')) != ''
-    ORDER BY t.travel_date DESC
-  `)
-  const customerGroups = new Map()
-  for (const booking of recentCustomerBookings) {
-    let mobile = String(booking.contact || '').replace(/\D/g, '')
-    if (mobile.startsWith('00')) mobile = mobile.slice(2)
-    if (mobile.startsWith('0') && mobile.length === 10) mobile = `94${mobile.slice(1)}`
-    else if (mobile.length === 9) mobile = `94${mobile}`
-    const group = customerGroups.get(mobile) || {
-      passenger_name: booking.passenger_name,
-      contact: booking.contact,
-      trips: new Map(),
-      last_trip_date: booking.travel_date,
-    }
-    if (booking.trip_id != null) group.trips.set(String(booking.trip_id), booking.travel_date)
-    customerGroups.set(mobile, group)
-  }
-  const regularCustomers = [...customerGroups.entries()]
-    .filter(([mobile, group]) => mobile && group.trips.size >= 2)
-    .map(([mobile, group]) => ({
-      passenger_name: group.passenger_name,
-      contact: mobile.startsWith('94') && mobile.length === 11 ? `+${mobile}` : group.contact,
-      trip_dates: [...group.trips.values()].filter(Boolean),
-      trip_count: group.trips.size,
-      month_count: new Set([...group.trips.values()].filter(Boolean).map((date) => String(date).slice(0, 7))).size,
-      last_trip_date: group.last_trip_date,
-    }))
-    .sort((a, b) => b.trip_count - a.trip_count || b.month_count - a.month_count || String(b.last_trip_date).localeCompare(String(a.last_trip_date)))
-  const cargoRecords = await all(`SELECT c.*, t.trip_code, COALESCE(t.bus_no, b.registration_no, c.bus_registration) as registration_no, COALESCE(t.route_label, c.route_label) as route_label
-    FROM cargo c LEFT JOIN trips t ON t.id = c.trip_id LEFT JOIN buses b ON b.id = t.bus_id
-    ORDER BY c.travel_date DESC, c.created_at DESC LIMIT 200`)
-  const passengerTotals = await get("SELECT COUNT(*) as count, COALESCE(SUM(fare),0) as revenue FROM bookings WHERE status = 'confirmed' AND confirmation_status = 'confirmed'")
-  const cargoTotals = await get('SELECT COUNT(*) as count, COALESCE(SUM(charge),0) as revenue FROM cargo')
-  const passengerDaily = await all(`
+  const [trips, dutyData, buses, crewMembers, expenses, passengerRecords, regularCustomers, cargoRecords,
+    passengerTotals, cargoTotals, passengerDaily, cargoDaily, smsTotals] = await Promise.all([
+    all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`),
+    getAdminDutyData(),
+    all('SELECT * FROM buses ORDER BY id'),
+    all("SELECT id, full_name, mobile_number, role, status FROM crew_members WHERE status = 'active' ORDER BY role, full_name"),
+    all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source, bus_no FROM daily_expenses ORDER BY expense_date DESC, id DESC'),
+    all(`SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id ORDER BY t.travel_date DESC, bk.created_at DESC LIMIT 200`),
+    all(`
+      WITH normalized_bookings AS (
+        SELECT bk.passenger_name, bk.contact, bk.trip_id, t.travel_date, bk.created_at,
+          CASE
+            WHEN digits.value LIKE '00%' THEN SUBSTRING(digits.value FROM 3)
+            WHEN digits.value LIKE '0%' AND LENGTH(digits.value) = 10 THEN '94' || SUBSTRING(digits.value FROM 2)
+            WHEN LENGTH(digits.value) = 9 THEN '94' || digits.value
+            ELSE digits.value
+          END AS mobile
+        FROM bookings bk
+        JOIN trips t ON t.id = bk.trip_id
+        CROSS JOIN LATERAL (SELECT REGEXP_REPLACE(COALESCE(bk.contact, ''), '[^0-9]', '', 'g') AS value) digits
+        WHERE bk.status = 'confirmed'
+          AND bk.confirmation_status = 'confirmed'
+          AND TRIM(COALESCE(bk.contact, '')) != ''
+      ), per_trip AS (
+        SELECT mobile, trip_id, MAX(travel_date) AS travel_date
+        FROM normalized_bookings WHERE mobile != ''
+        GROUP BY mobile, trip_id
+      ), customer_stats AS (
+        SELECT mobile, ARRAY_AGG(travel_date ORDER BY travel_date DESC) AS trip_dates,
+          COUNT(*) AS trip_count, COUNT(DISTINCT LEFT(travel_date, 7)) AS month_count,
+          MAX(travel_date) AS last_trip_date
+        FROM per_trip GROUP BY mobile HAVING COUNT(*) >= 2
+      ), customer_profiles AS (
+        SELECT DISTINCT ON (mobile) mobile, passenger_name, contact
+        FROM normalized_bookings WHERE mobile != ''
+        ORDER BY mobile, travel_date DESC, created_at DESC
+      )
+      SELECT profile.passenger_name,
+        CASE WHEN LENGTH(stats.mobile) = 11 AND LEFT(stats.mobile, 2) = '94' THEN '+' || stats.mobile ELSE profile.contact END AS contact,
+        stats.trip_dates, stats.trip_count, stats.month_count, stats.last_trip_date
+      FROM customer_stats stats JOIN customer_profiles profile ON profile.mobile = stats.mobile
+      ORDER BY stats.trip_count DESC, stats.month_count DESC, stats.last_trip_date DESC
+    `),
+    all(`SELECT c.*, t.trip_code, COALESCE(t.bus_no, b.registration_no, c.bus_registration) as registration_no, COALESCE(t.route_label, c.route_label) as route_label
+      FROM cargo c LEFT JOIN trips t ON t.id = c.trip_id LEFT JOIN buses b ON b.id = t.bus_id
+      ORDER BY c.travel_date DESC, c.created_at DESC LIMIT 200`),
+    get("SELECT COUNT(*) as count, COALESCE(SUM(fare),0) as revenue FROM bookings WHERE status = 'confirmed' AND confirmation_status = 'confirmed'"),
+    get('SELECT COUNT(*) as count, COALESCE(SUM(charge),0) as revenue FROM cargo'),
+    all(`
     SELECT t.id as trip_id, t.trip_code, t.travel_date, t.route_code, t.route_label,
       COALESCE(t.bus_no, b.registration_no) as registration_no,
       COUNT(*) as passenger_count, COALESCE(SUM(bk.fare), 0) as passenger_revenue
@@ -2164,14 +2472,23 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
     LEFT JOIN buses b ON b.id = t.bus_id
     WHERE bk.status = 'confirmed' AND bk.confirmation_status = 'confirmed'
     GROUP BY t.id, t.trip_code, t.travel_date, t.route_code, t.route_label, t.bus_no, b.registration_no
-  `)
-  const cargoDaily = await all(`
+    `),
+    all(`
     SELECT trip_id, travel_date, route_code, route_label, bus_registration,
       COUNT(*) as cargo_count, COALESCE(SUM(charge), 0) as cargo_revenue
     FROM cargo
     WHERE travel_date IS NOT NULL AND TRIM(travel_date) != ''
     GROUP BY trip_id, travel_date, route_code, route_label, bus_registration
-  `)
+    `),
+    get(`
+      SELECT
+        SUM(CASE WHEN sms_status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN sms_status = 'sent' THEN 1 ELSE 0 END) as sent,
+        SUM(CASE WHEN sms_status = 'delivered' THEN 1 ELSE 0 END) as delivered,
+        SUM(CASE WHEN sms_status = 'failed' THEN 1 ELSE 0 END) as failed
+      FROM bookings WHERE status = 'confirmed' AND confirmation_status = 'confirmed'
+    `),
+  ])
   const dailyRevenueMap = new Map()
   for (const row of passengerDaily) {
     const key = row.trip_id ? `trip:${row.trip_id}` : `${row.travel_date}|${row.route_code || ''}|${row.registration_no || ''}`
@@ -2209,14 +2526,6 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
   const dailyRevenue = [...dailyRevenueMap.values()]
     .map((row) => ({ ...row, total_revenue: row.passenger_revenue + row.cargo_revenue }))
     .sort((a, b) => b.travel_date.localeCompare(a.travel_date) || String(a.trip_code || '').localeCompare(String(b.trip_code || '')))
-  const smsTotals = await get(`
-    SELECT
-      SUM(CASE WHEN sms_status = 'pending' THEN 1 ELSE 0 END) as pending,
-      SUM(CASE WHEN sms_status = 'sent' THEN 1 ELSE 0 END) as sent,
-      SUM(CASE WHEN sms_status = 'delivered' THEN 1 ELSE 0 END) as delivered,
-      SUM(CASE WHEN sms_status = 'failed' THEN 1 ELSE 0 END) as failed
-    FROM bookings WHERE status = 'confirmed' AND confirmation_status = 'confirmed'
-  `)
   res.json({
     ...dutyData,
     trips: await Promise.all(trips.map(hydrateTrip)),
@@ -2268,11 +2577,17 @@ async function initializeDatabaseWithRetry() {
   const delays = [1000, 2000, 4000, 8000, 15000]
   for (let attempt = 0; ; attempt += 1) {
     try {
+      const initializationStartedAt = monotonicMs()
       await seedDatabase()
       databaseIsReady = true
+      console.info(JSON.stringify({
+        kind: 'database_init',
+        duration_ms: Number((monotonicMs() - initializationStartedAt).toFixed(1)),
+        attempt: attempt + 1,
+      }))
       return
     } catch (error) {
-      if (!isTransientDatabaseError(error) || (IS_VERCEL && attempt >= 2)) throw error
+      if (!isTransientDatabaseError(error) || (IS_VERCEL && attempt >= 1)) throw error
       const delay = delays[Math.min(attempt, delays.length - 1)]
       console.error(`Database setup attempt ${attempt + 1} failed; retrying in ${delay / 1000}s.`, error.code || error.name)
       await new Promise((resolve) => setTimeout(resolve, delay))

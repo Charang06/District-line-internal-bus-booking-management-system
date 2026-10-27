@@ -288,4 +288,6 @@ CREATE TRIGGER prevent_duplicate_duty_trip_update
   BEFORE UPDATE OF first_trip_id, return_trip_id ON bus_duties
   FOR EACH ROW EXECUTE FUNCTION prevent_duplicate_duty_trip();
 
+INSERT INTO schema_meta (version) VALUES (1) ON CONFLICT (version) DO NOTHING;
+
 COMMIT;

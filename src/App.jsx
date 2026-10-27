@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { api, assetUrl } from './api'
 import TripWorkspace from './components/TripWorkspace'
@@ -31,6 +31,17 @@ function lkr(value) {
   return `Rs. ${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
+function measureDashboardChart(name, calculate) {
+  const startedAt = performance.now()
+  const result = calculate()
+  console.info(JSON.stringify({
+    kind: 'dashboard_chart_calc_perf',
+    chart: name,
+    duration_ms: Number((performance.now() - startedAt).toFixed(1)),
+  }))
+  return result
+}
+
 function formatSmsDateTime(value) {
   if (!value) return ''
   const raw = String(value).trim()
@@ -44,10 +55,6 @@ function defaultDepartureTime(routeCode) {
   return routeCode === 'KTY_CMB' ? '22:30' : '20:30'
 }
 
-function persistUser(nextUser) {
-  if (nextUser) localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
-}
-
 function queryString(params) {
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
@@ -58,14 +65,12 @@ function queryString(params) {
 }
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem(TOKEN_KEY) || '')
-  const [user, setUser] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(USER_KEY) || 'null')
-    } catch {
-      return null
-    }
-  })
+  const adminDashboardRequestRef = useRef(null)
+  const sessionCheckStartedRef = useRef(false)
+  const [token, setToken] = useState('')
+  const [user, setUser] = useState(null)
+  const [authStatus, setAuthStatus] = useState('checking')
+  const [authError, setAuthError] = useState('')
   const [activeTab, setActiveTab] = useState('Home')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: 'admin_kt', password: '' })
@@ -100,6 +105,7 @@ function App() {
   const [adminStats, setAdminStats] = useState(null)
   const [adminDataLoading, setAdminDataLoading] = useState(false)
   const [profitLedgerError, setProfitLedgerError] = useState('')
+  const [profitLedgerLoaded, setProfitLedgerLoaded] = useState(false)
   const [staffList, setStaffList] = useState([])
   const [crewList, setCrewList] = useState([])
   const [busContactList, setBusContactList] = useState([])
@@ -189,22 +195,24 @@ function App() {
   const matchesDashboardTrip = (row) => !dashboardTrip || String(row.trip_id ?? row.id ?? '') === dashboardTrip
   const filteredRevenue = useMemo(() => (adminStats?.dailyRevenue || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const seatBookingCharts = useMemo(() => {
-    const anchor = new Date(`${revenueDate}T00:00:00`)
-    if (Number.isNaN(anchor.getTime())) return []
-    const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
-    const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
-    const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    const dates = []
-    for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) dates.push(iso(cursor))
-    const routes = ['KTY_CMB', 'CMB_KTY']
-    return routes.map((code) => {
-      const counts = new Map(dates.map((date) => [date, 0]))
-      ;(adminStats?.dailyRevenue || []).forEach((row) => {
-        if (row.route_code !== code || !counts.has(row.travel_date)) return
-        if (dashboardTrip && String(row.trip_id || '') !== dashboardTrip) return
-        counts.set(row.travel_date, counts.get(row.travel_date) + Number(row.passenger_count || 0))
+    return measureDashboardChart('seat_bookings', () => {
+      const anchor = new Date(`${revenueDate}T00:00:00`)
+      if (Number.isNaN(anchor.getTime())) return []
+      const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
+      const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
+      const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+      const dates = []
+      for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) dates.push(iso(cursor))
+      const routes = ['KTY_CMB', 'CMB_KTY']
+      return routes.map((code) => {
+        const counts = new Map(dates.map((date) => [date, 0]))
+        ;(adminStats?.dailyRevenue || []).forEach((row) => {
+          if (row.route_code !== code || !counts.has(row.travel_date)) return
+          if (dashboardTrip && String(row.trip_id || '') !== dashboardTrip) return
+          counts.set(row.travel_date, counts.get(row.travel_date) + Number(row.passenger_count || 0))
+        })
+        return { code, dates, counts: dates.map((date) => counts.get(date) || 0) }
       })
-      return { code, dates, counts: dates.map((date) => counts.get(date) || 0) }
     })
   }, [adminStats, revenueDate, dashboardTrip])
   const filteredTrips = useMemo(() => dashboardRange ? filterTripOverviewTrips(adminStats?.trips || [], { start: dashboardRange.start, end: dashboardRange.end, route: dashboardRoute, bus: dashboardBus, tripId: dashboardTrip }) : [], [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
@@ -331,19 +339,21 @@ function App() {
     return { rows, monthlyExpenseTotal, totals }
   }, [profitLedger, profitDate, profitPeriod, profitRoute, adminStats])
   const profitChartRows = useMemo(() => {
-    const byDate = new Map()
-    for (const row of profitReport.rows) {
-      const date = String(row.report_date || '').slice(0, 10)
-      if (!date) continue
-      const total = byDate.get(date) || { revenue: 0, profit: 0 }
-      total.revenue += Number(row.total_revenue || 0)
-      total.profit += Number(row.net_profit || 0)
-      byDate.set(date, total)
-    }
-    return [...byDate.entries()].map(([date, total]) => ({
-      date,
-      percentage: total.revenue > 0 ? total.profit / total.revenue * 100 : 0,
-    })).sort((a, b) => a.date.localeCompare(b.date))
+    return measureDashboardChart('profit_report', () => {
+      const byDate = new Map()
+      for (const row of profitReport.rows) {
+        const date = String(row.report_date || '').slice(0, 10)
+        if (!date) continue
+        const total = byDate.get(date) || { revenue: 0, profit: 0 }
+        total.revenue += Number(row.total_revenue || 0)
+        total.profit += Number(row.net_profit || 0)
+        byDate.set(date, total)
+      }
+      return [...byDate.entries()].map(([date, total]) => ({
+        date,
+        percentage: total.revenue > 0 ? total.profit / total.revenue * 100 : 0,
+      })).sort((a, b) => a.date.localeCompare(b.date))
+    })
   }, [profitReport.rows])
   const profitChartMin = Math.min(0, ...profitChartRows.map((row) => row.percentage))
   const profitChartMax = Math.max(0, ...profitChartRows.map((row) => row.percentage))
@@ -537,46 +547,77 @@ function App() {
   }, [logFilters])
 
   const persistSessionUser = useCallback((nextUser) => {
-    persistUser(nextUser)
     setUser(nextUser)
   }, [])
 
-  const bootstrap = useCallback(async (authToken) => {
+  const clearAuthState = useCallback(() => {
+    setToken('')
+    setUser(null)
+    setAuthStatus('unauthenticated')
+    setAuthError('')
+    setAdminStats(null)
+    setProfitLedger({ revenueEntries: [], expenseSubmissions: [] })
+    setProfitLedgerLoaded(false)
+  }, [])
+
+  const verifySession = useCallback(async () => {
+    setAuthStatus('checking')
+    setAuthError('')
     try {
-      await loadFleet(authToken)
-      const nextTrips = await loadTrips(authToken)
-      const current = nextTrips.find((trip) => trip.id === activeTripId) || nextTrips[0]
-      setActiveTripId(current?.id || null)
-      if (current) await loadLogs(authToken, current)
+      const data = await api.me()
+      if (!data?.user) {
+        clearAuthState()
+        return
+      }
+      setUser(data.user)
+      setToken('cookie-session')
+      setAuthStatus('authenticated')
     } catch (err) {
       if (err.status === 401 || err.status === 403) {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(USER_KEY)
-        setToken('')
-        setUser(null)
+        clearAuthState()
+      } else {
+        setAuthError(err.message || 'Could not verify the saved session.')
+        setAuthStatus('error')
       }
+    }
+  }, [clearAuthState])
+
+  useEffect(() => {
+    if (sessionCheckStartedRef.current) return
+    sessionCheckStartedRef.current = true
+    try {
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
+    } catch { /* storage may be unavailable; authentication uses the HttpOnly cookie */ }
+    verifySession()
+  }, [verifySession])
+
+  useEffect(() => {
+    const handleSessionExpired = () => clearAuthState()
+    window.addEventListener('app:session-expired', handleSessionExpired)
+    return () => window.removeEventListener('app:session-expired', handleSessionExpired)
+  }, [clearAuthState])
+
+  const bootstrap = useCallback(async (authToken) => {
+    try {
+      const nextTrips = await loadTrips(authToken)
+      setActiveTripId((previousId) => nextTrips.find((trip) => trip.id === previousId)?.id || nextTrips[0]?.id || null)
+    } catch (err) {
+      if (err.status === 401) clearAuthState()
       showMessage(err.message, true)
     }
-  }, [activeTripId, loadFleet, loadLogs, loadTrips, showMessage])
+  }, [clearAuthState, loadTrips, showMessage])
 
   useEffect(() => {
     if (token) bootstrap(token)
   }, [token, selectedDate, routeCode, bootstrap])
 
   useEffect(() => {
-    if (!token) return undefined
-    api.me(token).then((data) => {
-      if (data?.user) persistSessionUser(data.user)
-    }).catch((err) => {
-      if (err.status === 401 || err.status === 403) {
-        localStorage.removeItem(TOKEN_KEY)
-        localStorage.removeItem(USER_KEY)
-        setToken('')
-        setUser(null)
-      }
+    if (!token) return
+    loadFleet(token).catch((err) => {
+      if (err.status !== 401 && err.status !== 403) showMessage(err.message, true)
     })
-    return undefined
-  }, [token, persistSessionUser])
+  }, [token, loadFleet, showMessage])
 
   useEffect(() => {
     if (!user) return
@@ -607,10 +648,10 @@ function App() {
     setLoginLoading(true)
     try {
       const data = await api.login(loginForm)
-      localStorage.setItem(TOKEN_KEY, data.token)
-      persistUser(data.user)
-      setToken(data.token)
+      setToken('cookie-session')
       setUser(data.user)
+      setAuthStatus('authenticated')
+      setAuthError('')
       const firstTab = data.user?.role === 'admin' || data.user?.permissions?.home !== false ? 'Home' : (data.user?.permissions?.log !== false ? 'Log' : 'Info')
       setActiveTab(firstTab)
     } catch (err) {
@@ -620,11 +661,15 @@ function App() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(USER_KEY)
-    setToken('')
-    setUser(null)
+  const handleLogout = async () => {
+    try {
+      await api.logout()
+    } catch (err) {
+      showMessage(err.message || 'Could not confirm sign out with the server.', true)
+    } finally {
+      clearAuthState()
+      setActiveTab('Home')
+    }
   }
 
   const confirmCancel = async () => {
@@ -920,24 +965,42 @@ function App() {
   }
 
   const openAdminDashboard = async () => {
+    if (adminDashboardRequestRef.current) return adminDashboardRequestRef.current
     if (!isAdmin) {
       showMessage('Admin access required.', true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
       return
     }
-    setAdminDataLoading(true)
-    setProfitLedgerError('')
-    try {
-      const [data, staffData, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminStaff(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
-      setAdminStats(data)
-      setStaffList(staffData.staff || [])
-      setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+    const startedAt = performance.now()
+    const pending = (async () => {
+      setAdminDataLoading(true)
       setProfitLedgerError('')
-    } catch (err) {
-      setProfitLedgerError(err.message || 'Request failed')
-      showMessage(err.message, true)
+      try {
+        const [data, revenueData, expenseData] = await Promise.all([
+          api.adminDashboard(token),
+          api.adminRevenueEntries(token, { summary: true }),
+          api.adminExpenseSubmissions(token),
+        ])
+        setAdminStats(data)
+        setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+        setProfitLedgerLoaded(true)
+        setProfitLedgerError('')
+        console.info(JSON.stringify({ kind: 'admin_dashboard_load_perf', duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          console.info(JSON.stringify({ kind: 'admin_dashboard_data_to_paint_perf', duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
+        }))
+      } catch (err) {
+        setProfitLedgerError(err.message || 'Request failed')
+        showMessage(err.message, true)
+      } finally {
+        setAdminDataLoading(false)
+      }
+    })()
+    adminDashboardRequestRef.current = pending
+    try {
+      await pending
     } finally {
-      setAdminDataLoading(false)
+      if (adminDashboardRequestRef.current === pending) adminDashboardRequestRef.current = null
     }
   }
 
@@ -949,9 +1012,10 @@ function App() {
       await api.createAdminExpense(token, { ...expenseForm, category: 'Monthly Expense', expense_date: expenseDate, amount: Number(expenseForm.amount), expense_source: 'monthly' })
       setMonthlyExpenseMonth(expenseDate.slice(0, 7))
       setRevenueDate(expenseDate)
-      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
+      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
       setAdminStats(data)
       setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+      setProfitLedgerLoaded(true)
       setProfitLedgerError('')
       setProfitLedger((current) => ({ ...current, monthlyExpenses: data.expenses || [] }))
       setExpenseForm((current) => ({ ...current, description: '', amount: '' }))
@@ -965,9 +1029,10 @@ function App() {
 
   const refreshAccountsData = async () => {
     try {
-      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
+      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
       setAdminStats(data)
       setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+      setProfitLedgerLoaded(true)
       setProfitLedgerError('')
       return data
     } catch (err) {
@@ -1106,7 +1171,15 @@ function App() {
     return () => window.removeEventListener('afterprint', handleAfterPrint)
   }, [printMode])
 
-  if (!token) {
+  if (authStatus === 'checking') {
+    return <main className="auth-page" role="status" aria-live="polite"><section className="login-panel"><img className="brand-logo" src="/logo.png" alt="District Line" /><p>Checking your session…</p></section></main>
+  }
+
+  if (authStatus === 'error') {
+    return <main className="auth-page"><section className="login-panel" role="alert"><img className="brand-logo" src="/logo.png" alt="District Line" /><h1>Unable to verify session</h1><p>{authError}</p><button type="button" className="primary-button wide" onClick={verifySession}>Retry</button></section></main>
+  }
+
+  if (authStatus !== 'authenticated' || !token) {
     return (
       <div className="auth-page">
         <div className="auth-backdrop" aria-hidden="true" />
@@ -1160,7 +1233,7 @@ function App() {
                 }
                 setActiveTab(tab)
                 setMobileNavOpen(false)
-                if ((tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') && !adminStats) openAdminDashboard()
+                if ((tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') && (!adminStats || !profitLedgerLoaded)) openAdminDashboard()
                 if (tab === 'Staff') openStaffManagement()
                 if (tab === 'Log') loadLogs(token, activeTrip)
               }}
@@ -1730,7 +1803,22 @@ function App() {
         </main>
       )}
 
-      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue data={{ ...adminStats, crewMembers: crewList }} token={token} showMessage={showMessage} onRefresh={refreshAccountsData} monthlyExpenseForm={expenseForm} setMonthlyExpenseForm={setExpenseForm} monthlyExpenseSaving={expenseSaving} onAddMonthlyExpense={handleAddExpense} onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }} />}
+      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue
+        data={{ ...adminStats, crewMembers: crewList }}
+        token={token}
+        showMessage={showMessage}
+        onRefresh={refreshAccountsData}
+        revenueEntries={profitLedger.revenueEntries}
+        expenseSubmissionEntries={profitLedger.expenseSubmissions}
+        ledgerLoading={adminDataLoading}
+        onRevenueEntrySaved={(entry) => setProfitLedger((current) => ({ ...current, revenueEntries: [entry, ...current.revenueEntries].slice(0, 100) }))}
+        onExpenseSubmissionSaved={(submission) => setProfitLedger((current) => ({ ...current, expenseSubmissions: [submission, ...current.expenseSubmissions].slice(0, 100) }))}
+        monthlyExpenseForm={expenseForm}
+        setMonthlyExpenseForm={setExpenseForm}
+        monthlyExpenseSaving={expenseSaving}
+        onAddMonthlyExpense={handleAddExpense}
+        onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }}
+      />}
 
       {activeTab === 'Customers' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">

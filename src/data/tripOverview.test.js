@@ -17,13 +17,13 @@ test('Trip Overview applies combined date, bus, route and trip filters', () => {
   assert.deepEqual(filterTripOverviewTrips(trips, { start: '2026-10-27', end: '2026-10-27' }), [])
 })
 
-test('Trip Overview combines only revenue linked to each trip and handles missing revenue safely', () => {
-  const dailyRevenue = [
-    { trip_id: 32, passenger_revenue: 8500, cargo_revenue: 0 },
-    { trip_id: 31, passenger_revenue: 21000, cargo_revenue: 4500 },
-    { trip_id: null, passenger_revenue: 999999, cargo_revenue: 999999 },
+test('Trip Overview combines only locked account revenue linked to each trip and handles missing revenue safely', () => {
+  const accountRevenueEntries = [
+    { trip_id: 32, status: 'locked', seat_subtotal: 8500, cargo_subtotal: 0, total_revenue: 8500 },
+    { trip_id: 31, status: 'locked', seat_subtotal: 21000, cargo_subtotal: 4500, total_revenue: 25500 },
+    { trip_id: 31, status: 'draft', seat_subtotal: 999999, cargo_subtotal: 999999, total_revenue: 1999998 },
   ]
-  const summary = buildTripOverview(trips, dailyRevenue, 49)
+  const summary = buildTripOverview(trips, [], 49, [], accountRevenueEntries)
   assert.deepEqual(summary.rows.map(({ seatRevenue, cargoRevenue, totalRevenue }) => [seatRevenue, cargoRevenue, totalRevenue]), [[8500, 0, 8500], [21000, 4500, 25500]])
   assert.equal(summary.rows[0].available, 47)
   assert.equal(summary.rows[1].available, 40)
@@ -31,11 +31,11 @@ test('Trip Overview combines only revenue linked to each trip and handles missin
   assert.equal(summary.available, 87)
   assert.equal(summary.totalSeats, 98)
   assert.equal(summary.bookedPercent + summary.availablePercent, 100)
-  const empty = buildTripOverview([], dailyRevenue, 49)
+  const empty = buildTripOverview([], [], 49, [], accountRevenueEntries)
   assert.equal(empty.totalSeats, 0)
   assert.equal(empty.bookedPercent, 0)
   assert.equal(empty.availablePercent, 0)
-  const noRevenue = buildTripOverview([trips[0]], [], 49)
+  const noRevenue = buildTripOverview([trips[0]], [], 49, [], [])
   assert.equal(noRevenue.rows[0].totalRevenue, 0)
 })
 

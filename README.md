@@ -2,7 +2,7 @@
 
 ## Run locally
 
-1. Create a PostgreSQL database and set `DATABASE_URL` in the root `.env` file. For this app, the Supabase schema is in `server/migrations/001_initial_postgres.sql`; startup applies it automatically.
+1. Create a PostgreSQL database and set `DATABASE_URL` in the root `.env` file. The Supabase schema and additive session migration are in `server/migrations/`; startup applies unapplied versions automatically.
 2. Install dependencies with `npm ci`.
 3. Start the frontend and API together with `npm run dev`.
 4. Open the Vite address shown in the terminal. Local development seeds demo accounts (`admin_kt` / `admin123` and `staff_kt` / `staff123`) and demo buses.
@@ -16,8 +16,8 @@ The React frontend builds as static files in `dist`; Express API routes run as V
 3. In Supabase Storage, create a public bucket named `district-line-uploads` (or choose another name and set `SUPABASE_STORAGE_BUCKET` to match). Public access means uploaded images can be viewed by anyone with their URL; upload and delete operations remain server-side.
 4. Add these in Vercel Project Settings → Environment Variables. Use **Secret** visibility for credentials and select the intended environments:
    - `DATABASE_URL`: Supabase transaction-pooler URI from the Connect panel.
-   - `JWT_SECRET`: a random secret of at least 32 characters.
    - `ADMIN_USERNAME`, `ADMIN_PASSWORD` (at least 12 characters), and optionally `ADMIN_FULL_NAME` for the first production administrator.
+   - `CORS_ORIGIN` if the frontend and API use different origins. `SESSION_COOKIE_SAME_SITE` defaults to `lax`; use `none` only for a cross-site HTTPS deployment with an explicit origin allowlist.
    - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_STORAGE_BUCKET`. Mark the service role key as Secret; never expose it with a `VITE_` prefix.
    - `SMS_USER_ID`, `SMS_API_KEY`, `SMS_SENDER_ID`, and `SMS_HOTLINE` if SMS sending is required. Keep SMS credentials Secret.
    - `NODE_ENV=production` and `DATABASE_SSL=require`.
@@ -25,12 +25,12 @@ The React frontend builds as static files in `dist`; Express API routes run as V
 
 Vercel Functions use temporary local storage. Do not switch uploads back to local filesystem paths. The server applies the PostgreSQL schema at startup; production does not seed demo accounts or buses. Set a strong production admin password before the first production deployment.
 
-Production mode does not seed demo accounts or demo buses. It refuses to start without a strong JWT secret and initial admin password. If the database still has the default `admin_kt` / `admin123` account, set `ADMIN_PASSWORD` (and optionally `ADMIN_USERNAME`) to rotate it on startup.
+Production mode does not seed demo accounts or demo buses. It requires an initial admin password. Login uses persistent PostgreSQL-backed sessions in an HttpOnly cookie; the cookie lasts at most eight hours and expires after 30 minutes idle. The server stores only a hash of the session identifier. If the database still has the default `admin_kt` / `admin123` account, set `ADMIN_PASSWORD` (and optionally `ADMIN_USERNAME`) to rotate it on startup.
 
 Never commit `.env`, database credentials, or uploaded user files. Use `.env.example` as a variable checklist, and set real secrets in your host's secret/environment settings. Existing SQLite records must be imported separately; adding `DATABASE_URL` does not copy them.
 
 ## Checks
 
-- `npm test` runs the bus-duty API test.
+- `npm test` runs the isolated unit tests. The legacy bus-duty integration harness is skipped because it targets an ignored SQLite path and writes to PostgreSQL.
 - `npm run lint` runs Oxlint.
 - `npm run build` creates the production frontend in `dist/`.
