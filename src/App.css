@@ -8416,33 +8416,36 @@ button,
   .manifest-rear-row { gap: 6px; margin-top: 2px; break-inside: avoid; page-break-inside: avoid; }
 }
 
-/* Trip Overview route seat pies and matching trip details panel. */
+/* Trip Overview panels share a row height that follows the bus chart count. */
 .trip-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
 .trip-overview-seats,
-.trip-overview-trip-list { height: 460px; min-height: 0; box-sizing: border-box; padding: 16px; border: 1px solid #e1e6ed; border-radius: 10px; background: #fff; }
-.trip-overview-seats { display: flex; flex-direction: column; }
-.trip-overview-trip-list { overflow-y: auto; align-content: start; }
+.trip-overview-trip-list { min-height: 0; box-sizing: border-box; padding: 16px; border: 1px solid #e1e6ed; border-radius: 10px; background: #fff; }
+.trip-overview-seats { display: grid; grid-template-columns: minmax(0, 1fr); height: auto; align-content: start; gap: 12px; }
+.trip-overview-trip-list { height: auto; max-height: 720px; overflow-y: auto; align-content: start; }
 .trip-overview-seats > h4,
 .trip-overview-trip-list > h4 { margin: 0 0 12px; color: #29384b; font-size: .9rem; text-transform: capitalize; }
-.trip-overview-route-groups { display: grid; flex: 1; min-height: 0; align-content: start; gap: 12px; overflow-y: auto; }
+.trip-overview-route-groups { display: grid; min-height: 0; align-content: start; gap: 12px; }
 .trip-overview-route-group { display: grid; gap: 8px; }
 .trip-overview-route-group > h5 { margin: 0; color: #29384b; font-size: .78rem; }
-.trip-overview-route-pies { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 10px; }
-.trip-overview-route-pie-card { display: grid; justify-items: center; gap: 10px; min-width: 0; padding: 12px 8px; border: 1px solid #edf0f4; border-radius: 9px; background: #fbfcfe; }
-.trip-overview-route-pie-card h6 { margin: 0; color: #29384b; font-size: .78rem; text-align: center; }
-.trip-overview-route-pie-card .trip-overview-pie { width: clamp(96px, 10vw, 136px); }
-.trip-overview-route-seat-counts { display: grid; width: 100%; gap: 6px; color: #58677a; font-size: .7rem; }
-.trip-overview-route-seat-counts span { display: flex; align-items: center; gap: 6px; }
-.trip-overview-route-seat-counts i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #3b82f6; }
-.trip-overview-route-seat-counts i.available { background: #16a34a; }
-.trip-overview-route-seat-counts strong { margin-left: auto; color: #29384b; }
+.trip-overview-route-pies { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 10px; }
+.trip-overview-route-pie-card { display: grid; grid-template-columns: minmax(120px, .9fr) minmax(0, 1.1fr); align-items: center; gap: 12px; min-width: 0; padding: 14px; border: 1px solid #edf0f4; border-radius: 9px; background: #fbfcfe; }
+.trip-overview-route-pie-card h6 { grid-column: 1 / -1; margin: 0; color: #29384b; font-size: .78rem; text-align: center; }
+.trip-overview-route-chart-wrap { display: grid; justify-items: center; gap: 10px; }
+.trip-overview-route-pie-card .trip-overview-pie { width: clamp(112px, 10vw, 148px); }
+.trip-overview-route-pie-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; color: #657286; font-size: .66rem; }
+.trip-overview-route-pie-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.trip-overview-route-pie-legend i { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
+.trip-overview-route-pie-legend i.available { background: #16a34a; }
+.trip-overview-route-seat-counts { display: grid; gap: 12px; color: #58677a; font-size: .72rem; }
+.trip-overview-route-seat-counts > div { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; align-items: center; }
+.trip-overview-route-seat-counts strong { grid-column: 2; grid-row: 1 / span 2; color: #29384b; font-size: .95rem; }
+.trip-overview-route-seat-counts small { color: #738196; font-size: .67rem; }
 @media (max-width: 960px) {
   .trip-overview-grid { grid-template-columns: minmax(0, 1fr); }
-  .trip-overview-route-groups { min-height: 250px; }
 }
 @media (max-width: 480px) {
-  .trip-overview-route-pies { grid-template-columns: minmax(0, 1fr); }
-  .trip-overview-route-pie-card .trip-overview-pie { width: 120px; }
+  .trip-overview-route-pie-card { grid-template-columns: minmax(105px, .85fr) minmax(0, 1.15fr); gap: 8px; padding: 10px; }
+  .trip-overview-route-pie-card .trip-overview-pie { width: 112px; }
 }
 .profit-ledger-reset {
   min-height: 40px;

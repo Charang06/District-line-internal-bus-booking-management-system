@@ -217,13 +217,18 @@ function App() {
       const registration = String(row.trip.registration_no || row.trip.bus_no || '').trim()
       const busId = row.trip.bus_id
       const key = busId != null ? `bus:${busId}` : registration ? `registration:${registration.toLowerCase()}` : `trip:${row.trip.id}`
-      const bus = busesByKey.get(key) || { key, registration, busId, booked: 0, available: 0, totalSeats: 0 }
+      const bus = busesByKey.get(key) || { key, registration, busId, booked: 0, available: 0, totalSeats: 0, tripCount: 0 }
       bus.booked += row.booked
       bus.available += row.available
       bus.totalSeats += row.booked + row.available
+      bus.tripCount += 1
       busesByKey.set(key, bus)
     })
-    const buses = [...busesByKey.values()].map((bus) => ({ ...bus, bookedPercent: bus.totalSeats ? bus.booked / bus.totalSeats * 100 : 0 }))
+    const buses = [...busesByKey.values()].map((bus) => ({
+      ...bus,
+      bookedPercent: bus.totalSeats ? bus.booked / bus.totalSeats * 100 : 0,
+      availablePercent: bus.totalSeats ? bus.available / bus.totalSeats * 100 : 0,
+    }))
     return { ...route, buses }
   }).filter((route) => route.buses.length), [tripOverview])
   const accountsExpenses = useMemo(() => (adminStats?.expenses || []).filter((expense) => !expense.duty_id && isInDashboardRange(expense.expense_date)), [adminStats, dashboardRange])
@@ -1682,15 +1687,22 @@ function App() {
               <div className="trip-overview-heading"><div><h3 id="trip-overview-heading">Trip Overview</h3><p>Seat availability and trip-linked revenue for the filtered trips.</p></div></div>
               {adminDataLoading ? <p className="daily-revenue-empty" role="status">Loading trip and revenue data…</p> : profitLedgerError ? <p className="daily-revenue-empty" role="alert">Unable to load Trip Overview: {profitLedgerError}</p> : !tripOverview.rows.length ? <p className="daily-revenue-empty">No trips match the selected filters.</p> : <div className="trip-overview-grid">
                 <section className="trip-overview-seats" aria-label="Booked and available seats by bus and route">
-                  <h4>Seats by bus</h4>
+                  <h4>Booked vs Available Seats</h4>
                   <div className="trip-overview-route-groups">
                     {tripOverviewRoutes.map((route) => <section className="trip-overview-route-group" key={route.code} aria-label={route.short || route.label}>
                       <h5>{route.short || route.label}</h5>
                       <div className="trip-overview-route-pies">
                         {route.buses.map((bus) => <article className="trip-overview-route-pie-card" key={bus.key}>
                           <h6>{bus.registration || (bus.busId != null ? `Bus ID ${bus.busId}` : 'Unassigned bus')}</h6>
-                          <div className="trip-overview-pie" role="img" aria-label={`${route.short || route.label}, ${bus.registration || 'Bus'}: ${bus.booked} booked seats, ${bus.available} available seats, ${bus.totalSeats} total seats`} style={{ background: `conic-gradient(#3B82F6 0 ${bus.bookedPercent}%, #16A34A ${bus.bookedPercent}% 100%)` }}><div><strong>{bus.totalSeats}</strong><span>Total seats</span></div></div>
-                          <div className="trip-overview-route-seat-counts"><span><i className="booked" />Booked <strong>{bus.booked}</strong></span><span><i className="available" />Available <strong>{bus.available}</strong></span></div>
+                          <div className="trip-overview-route-chart-wrap">
+                            <div className="trip-overview-pie" role="img" aria-label={`${route.short || route.label}, ${bus.registration || 'Bus'}: ${bus.booked} booked seats, ${bus.available} available seats, ${bus.totalSeats} total capacity`} style={{ background: `conic-gradient(#3B82F6 0 ${bus.bookedPercent}%, #16A34A ${bus.bookedPercent}% 100%)` }}><div><strong>{bus.totalSeats}</strong><span>Total seats</span></div></div>
+                            <div className="trip-overview-route-pie-legend"><span><i className="booked" />Booked</span><span><i className="available" />Available</span></div>
+                          </div>
+                          <div className="trip-overview-route-seat-counts">
+                            <div><span>Booked seats</span><strong>{bus.booked}</strong><small>{bus.bookedPercent.toFixed(1)}%</small></div>
+                            <div><span>Available seats</span><strong>{bus.available}</strong><small>{bus.availablePercent.toFixed(1)}%</small></div>
+                            <div><span>Total capacity</span><strong>{bus.totalSeats}</strong><small>{bus.tripCount} {bus.tripCount === 1 ? 'trip' : 'trips'} × {SEAT_LAYOUT.totalSeats}</small></div>
+                          </div>
                         </article>)}
                       </div>
                     </section>)}
