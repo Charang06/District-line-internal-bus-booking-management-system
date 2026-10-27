@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import bcrypt from 'bcryptjs'
-import { createHash, randomBytes } from 'crypto'
+import { createHash, randomBytes, randomUUID } from 'crypto'
 import pg from 'pg'
 import path from 'path'
 import fs from 'fs'
@@ -21,15 +21,20 @@ const transactionContext = new AsyncLocalStorage()
 const monotonicMs = () => Number(process.hrtime.bigint()) / 1e6
 app.use((req, res, next) => {
   const context = {
+    requestId: randomUUID(),
     client: null,
     startedAt: monotonicMs(),
+    authMs: 0,
+    dashboardMs: 0,
     db: { queries: 0, acquireMs: 0, queryMs: 0, byStatement: {} },
   }
+  res.setHeader('X-Request-ID', context.requestId)
   transactionContext.run(context, () => {
     res.once('finish', () => {
       if (!req.path.startsWith('/api/')) return
       console.info(JSON.stringify({
         kind: 'api_perf',
+        request_id: context.requestId,
         method: req.method,
         path: req.path,
         status: res.statusCode,
@@ -37,6 +42,8 @@ app.use((req, res, next) => {
         db_queries: context.db.queries,
         db_acquire_ms: Number(context.db.acquireMs.toFixed(1)),
         db_query_ms: Number(context.db.queryMs.toFixed(1)),
+        auth_ms: Number(context.authMs.toFixed(1)),
+        dashboard_ms: Number(context.dashboardMs.toFixed(1)),
         db_query_breakdown: Object.entries(context.db.byStatement).map(([statement, metric]) => ({
           statement,
           count: metric.count,
@@ -108,7 +115,15 @@ const pool = new Pool({
   keepAlive: true,
   ssl: process.env.DATABASE_SSL === 'disable' ? false : { rejectUnauthorized: false },
 })
+pool.on('error', (error) => {
+  console.error(JSON.stringify({
+    kind: 'db_pool_idle_client_error',
+    code: error.code || error.name,
+    message: String(error.message || 'PostgreSQL idle client error').slice(0, 240),
+  }))
+})
 let databaseIsReady = false
+let databaseInitialization = null
 
 if (IS_VERCEL) {
   const { attachDatabasePool } = await import('@vercel/functions')
@@ -150,7 +165,24 @@ async function queryDatabase(client, sql, params = []) {
   try {
     if (!activeClient) {
       const acquireStartedAt = monotonicMs()
-      activeClient = await pool.connect()
+      try {
+        activeClient = await pool.connect()
+      } catch (error) {
+        acquireMs = monotonicMs() - acquireStartedAt
+        addDatabaseMetric('acquireMs', acquireMs)
+        console.error(JSON.stringify({
+          kind: 'db_acquire_error',
+          request_id: transactionContext.getStore()?.requestId || null,
+          stage: 'query',
+          label: databaseQueryLabel(sql),
+          acquire_ms: Number(acquireMs.toFixed(1)),
+          code: error.code || error.name,
+          pool_total: pool.totalCount,
+          pool_idle: pool.idleCount,
+          pool_waiting: pool.waitingCount,
+        }))
+        throw error
+      }
       acquireMs = monotonicMs() - acquireStartedAt
       acquiredFromPool = true
       addDatabaseMetric('acquireMs', acquireMs)
@@ -159,7 +191,16 @@ async function queryDatabase(client, sql, params = []) {
     addDatabaseMetric('queries', 1)
     return await activeClient.query(postgresSql(sql), params)
   } catch (error) {
-    if (!acquiredFromPool && !activeClient) {
+    if (queryStartedAt) {
+      console.error(JSON.stringify({
+        kind: 'db_query_error',
+        request_id: transactionContext.getStore()?.requestId || null,
+        label: databaseQueryLabel(sql),
+        duration_ms: Number((monotonicMs() - queryStartedAt).toFixed(1)),
+        code: error.code || error.name,
+      }))
+    }
+    if (!acquiredFromPool && !activeClient && !acquireMs) {
       acquireMs = monotonicMs() - startedAt
       addDatabaseMetric('acquireMs', acquireMs)
     }
@@ -216,7 +257,20 @@ function exec(sql) {
         addDatabaseQueryMetric('BEGIN', queryDuration)
       }
     }).catch((error) => {
-      if (!acquired) addDatabaseMetric('acquireMs', monotonicMs() - acquireStartedAt)
+      if (!acquired) {
+        const acquireMs = monotonicMs() - acquireStartedAt
+        addDatabaseMetric('acquireMs', acquireMs)
+        console.error(JSON.stringify({
+          kind: 'db_acquire_error',
+          request_id: transactionContext.getStore()?.requestId || null,
+          stage: 'transaction_begin',
+          acquire_ms: Number(acquireMs.toFixed(1)),
+          code: error.code || error.name,
+          pool_total: pool.totalCount,
+          pool_idle: pool.idleCount,
+          pool_waiting: pool.waitingCount,
+        }))
+      }
       throw error
     })
   }
@@ -479,8 +533,25 @@ async function issueSession(userId, res) {
 }
 
 function authMiddleware(req, res, next) {
+  const authStartedAt = monotonicMs()
+  const logAuthResult = (outcome, statusCode, error = null) => {
+    const context = transactionContext.getStore()
+    const elapsed = monotonicMs() - authStartedAt
+    if (context) context.authMs += elapsed
+    console.info(JSON.stringify({
+      kind: 'api_auth',
+      request_id: context?.requestId || null,
+      outcome,
+      status: statusCode,
+      duration_ms: Number(elapsed.toFixed(1)),
+      code: error?.code || undefined,
+    }))
+  }
   const sessionId = readSessionCookie(req)
-  if (!sessionId) return res.status(401).json({ message: 'Your session has expired. Please sign in again.' })
+  if (!sessionId) {
+    logAuthResult('missing_session', 401)
+    return res.status(401).json({ message: 'Your session has expired. Please sign in again.' })
+  }
   const tokenHash = hashSessionId(sessionId)
   all(`
     WITH session_to_touch AS (
@@ -506,12 +577,17 @@ function authMiddleware(req, res, next) {
   `, [tokenHash, tokenHash]).then((rows) => {
     const user = rows[0]
     if (!user || (user.status || 'active') === 'inactive') {
+      logAuthResult('invalid_session', 401)
       return res.status(401).json({ message: 'Your session is invalid or expired. Please sign in again.' })
     }
     req.sessionId = user.session_id
     req.user = publicUser(user)
+    logAuthResult('authenticated', 200)
     next()
-  }).catch(next)
+  }).catch((error) => {
+    logAuthResult('database_error', 503, error)
+    next(error)
+  })
 }
 
 function requireAdmin(req, res, next) {
@@ -567,9 +643,13 @@ async function migrateDatabaseIfNeeded() {
   } catch (error) {
     console.error(JSON.stringify({
       kind: 'db_connect_error',
+      request_id: transactionContext.getStore()?.requestId || null,
       stage: 'schema_init',
       acquire_ms: Number((monotonicMs() - acquireStartedAt).toFixed(1)),
       code: error.code || error.name,
+      pool_total: pool.totalCount,
+      pool_idle: pool.idleCount,
+      pool_waiting: pool.waitingCount,
     }))
     throw error
   }
@@ -613,59 +693,107 @@ async function migrateDatabaseIfNeeded() {
 
 async function seedDatabase() {
   await migrateDatabaseIfNeeded()
+  const seedStartedAt = monotonicMs()
+  const acquireStartedAt = monotonicMs()
+  let client = null
+  if (IS_PRODUCTION) {
+    try {
+      client = await pool.connect()
+    } catch (error) {
+      console.error(JSON.stringify({
+        kind: 'db_acquire_error',
+        request_id: transactionContext.getStore()?.requestId || null,
+        stage: 'production_seed',
+        acquire_ms: Number((monotonicMs() - acquireStartedAt).toFixed(1)),
+        code: error.code || error.name,
+        pool_total: pool.totalCount,
+        pool_idle: pool.idleCount,
+        pool_waiting: pool.waitingCount,
+      }))
+      throw error
+    }
+  }
+  if (client) addDatabaseMetric('acquireMs', monotonicMs() - acquireStartedAt)
+  const seedGet = async (sql, params = []) => {
+    const result = await queryDatabase(client, sql, params)
+    return result.rows[0]
+  }
+  const seedRun = async (sql, params = []) => {
+    const statement = /^\s*INSERT\b/i.test(sql) ? `${sql} RETURNING id` : sql
+    const result = await queryDatabase(client, statement, params)
+    return { id: result.rows[0]?.id, changes: result.rowCount }
+  }
+  try {
+    if (client) {
+      await client.query('BEGIN')
+      await client.query('SELECT pg_advisory_xact_lock(8216042, 2)')
+    }
 
-  const configuredAdminUsername = String(process.env.ADMIN_USERNAME || 'admin_kt').trim()
-  const configuredAdminPassword = process.env.ADMIN_PASSWORD || ''
-  if (validateUsername(configuredAdminUsername)) throw new Error('ADMIN_USERNAME must be 3-32 letters, numbers, dots, hyphens, or underscores.')
-  let admin = await get('SELECT id, username, password_hash FROM users WHERE username = ?', [configuredAdminUsername])
-  if (!admin && IS_PRODUCTION) {
-    const legacyAdmin = await get('SELECT id, username, password_hash FROM users WHERE username = ?', ['admin_kt'])
-    if (legacyAdmin && await bcrypt.compare('admin123', legacyAdmin.password_hash)) {
+    const configuredAdminUsername = String(process.env.ADMIN_USERNAME || 'admin_kt').trim()
+    const configuredAdminPassword = process.env.ADMIN_PASSWORD || ''
+    if (validateUsername(configuredAdminUsername)) throw new Error('ADMIN_USERNAME must be 3-32 letters, numbers, dots, hyphens, or underscores.')
+    let admin = await seedGet('SELECT id, username, password_hash FROM users WHERE username = ?', [configuredAdminUsername])
+    if (!admin && IS_PRODUCTION) {
+      const legacyAdmin = await seedGet('SELECT id, username, password_hash FROM users WHERE username = ?', ['admin_kt'])
+      if (legacyAdmin && await bcrypt.compare('admin123', legacyAdmin.password_hash)) {
+        if (configuredAdminPassword.length < 12) throw new Error('Replace the seeded admin password by setting ADMIN_PASSWORD to at least 12 characters.')
+        const hash = await bcrypt.hash(configuredAdminPassword, 12)
+        await seedRun('UPDATE users SET username = ?, password_hash = ? WHERE id = ?', [configuredAdminUsername, hash, legacyAdmin.id])
+        admin = { ...legacyAdmin, username: configuredAdminUsername, password_hash: hash }
+      }
+    }
+    if (admin && IS_PRODUCTION && await bcrypt.compare('admin123', admin.password_hash)) {
       if (configuredAdminPassword.length < 12) throw new Error('Replace the seeded admin password by setting ADMIN_PASSWORD to at least 12 characters.')
       const hash = await bcrypt.hash(configuredAdminPassword, 12)
-      await run('UPDATE users SET username = ?, password_hash = ? WHERE id = ?', [configuredAdminUsername, hash, legacyAdmin.id])
-      admin = { ...legacyAdmin, username: configuredAdminUsername, password_hash: hash }
-    }
-  }
-  if (admin && IS_PRODUCTION && await bcrypt.compare('admin123', admin.password_hash)) {
-    if (configuredAdminPassword.length < 12) throw new Error('Replace the seeded admin password by setting ADMIN_PASSWORD to at least 12 characters.')
-    const hash = await bcrypt.hash(configuredAdminPassword, 12)
-    await run('UPDATE users SET password_hash = ? WHERE id = ?', [hash, admin.id])
-  } else if (!admin) {
-    if (IS_PRODUCTION && configuredAdminPassword.length < 12) throw new Error('Set ADMIN_PASSWORD to at least 12 characters before initializing the production admin account.')
-    const password = IS_PRODUCTION ? configuredAdminPassword : 'admin123'
-    const hash = await bcrypt.hash(password, 12)
-    await run('INSERT INTO users (username, password_hash, role, full_name) VALUES (?, ?, ?, ?)', [
-      configuredAdminUsername, hash, 'admin', IS_PRODUCTION ? (process.env.ADMIN_FULL_NAME || 'System Administrator') : 'Capt. R. Ameen',
-    ])
-  }
-  if (!IS_PRODUCTION) {
-    const staff = await get('SELECT id FROM users WHERE username = ?', ['staff_kt'])
-    if (!staff) {
-      const hash = await bcrypt.hash('staff123', 10)
-      await run('INSERT INTO users (username, password_hash, role, full_name) VALUES (?, ?, ?, ?)', [
-        'staff_kt', hash, 'staff', 'Dispatcher Staff',
+      await seedRun('UPDATE users SET password_hash = ? WHERE id = ?', [hash, admin.id])
+    } else if (!admin) {
+      if (IS_PRODUCTION && configuredAdminPassword.length < 12) throw new Error('Set ADMIN_PASSWORD to at least 12 characters before initializing the production admin account.')
+      const password = IS_PRODUCTION ? configuredAdminPassword : 'admin123'
+      const hash = await bcrypt.hash(password, 12)
+      await seedRun('INSERT INTO users (username, password_hash, role, full_name) VALUES (?, ?, ?, ?)', [
+        configuredAdminUsername, hash, 'admin', IS_PRODUCTION ? (process.env.ADMIN_FULL_NAME || 'System Administrator') : 'Capt. R. Ameen',
       ])
     }
-  } else {
-    const legacyStaff = await get('SELECT id, password_hash FROM users WHERE username = ?', ['staff_kt'])
-    if (legacyStaff && await bcrypt.compare('staff123', legacyStaff.password_hash)) {
-      await run("UPDATE users SET status = 'inactive' WHERE id = ?", [legacyStaff.id])
+    if (!IS_PRODUCTION) {
+      const staff = await seedGet('SELECT id FROM users WHERE username = ?', ['staff_kt'])
+      if (!staff) {
+        const hash = await bcrypt.hash('staff123', 10)
+        await seedRun('INSERT INTO users (username, password_hash, role, full_name) VALUES (?, ?, ?, ?)', [
+          'staff_kt', hash, 'staff', 'Dispatcher Staff',
+        ])
+      }
+    } else {
+      const legacyStaff = await seedGet('SELECT id, password_hash FROM users WHERE username = ?', ['staff_kt'])
+      if (legacyStaff && await bcrypt.compare('staff123', legacyStaff.password_hash)) {
+        await seedRun("UPDATE users SET status = 'inactive' WHERE id = ?", [legacyStaff.id])
+      }
     }
-  }
 
-  const busCount = await get('SELECT COUNT(*) as count FROM buses')
-  if (!Number(busCount?.count || 0) && !IS_PRODUCTION) {
-    await run(
-      `INSERT INTO buses (bus_code, registration_no, display_name, image_url, logo_url, driver_name, driver_phone, conductor_name, conductor_phone, seat_layout_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ['BUS-0001', 'DL-7784', 'Scania VIP Club', '/bus.jpg', '/logo.png', 'Capt. K. Naufal', '0779040300', 'M. Rizwan', '0771234567', SEAT_LAYOUT_ID, 'active'],
-    )
-    await run(
-      `INSERT INTO buses (bus_code, registration_no, display_name, image_url, logo_url, driver_name, driver_phone, conductor_name, conductor_phone, seat_layout_id, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      ['BUS-0002', 'NE-3456', 'District Line Coach', '/bus.jpg', '/logo.png', 'Capt. R. Ameen', '0779040300', 'M. Rizwan', '0771234567', SEAT_LAYOUT_ID, 'active'],
-    )
+    const busCount = await seedGet('SELECT COUNT(*) as count FROM buses')
+    if (!Number(busCount?.count || 0) && !IS_PRODUCTION) {
+      await seedRun(
+        `INSERT INTO buses (bus_code, registration_no, display_name, image_url, logo_url, driver_name, driver_phone, conductor_name, conductor_phone, seat_layout_id, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ['BUS-0001', 'DL-7784', 'Scania VIP Club', '/bus.jpg', '/logo.png', 'Capt. K. Naufal', '0779040300', 'M. Rizwan', '0771234567', SEAT_LAYOUT_ID, 'active'],
+      )
+      await seedRun(
+        `INSERT INTO buses (bus_code, registration_no, display_name, image_url, logo_url, driver_name, driver_phone, conductor_name, conductor_phone, seat_layout_id, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ['BUS-0002', 'NE-3456', 'District Line Coach', '/bus.jpg', '/logo.png', 'Capt. R. Ameen', '0779040300', 'M. Rizwan', '0771234567', SEAT_LAYOUT_ID, 'active'],
+      )
+    }
+    if (client) await client.query('COMMIT')
+    console.info(JSON.stringify({
+      kind: 'database_seed_check',
+      request_id: transactionContext.getStore()?.requestId || null,
+      environment: IS_PRODUCTION ? 'production' : 'development',
+      duration_ms: Number((monotonicMs() - seedStartedAt).toFixed(1)),
+    }))
+  } catch (error) {
+    if (client) await client.query('ROLLBACK').catch(() => {})
+    throw error
+  } finally {
+    client?.release()
   }
 }
 
@@ -889,7 +1017,11 @@ app.post('/api/logout', async (req, res, next) => {
 app.use((req, res, next) => {
   if (databaseIsReady) return next()
   if (!IS_VERCEL) return res.status(503).json({ message: 'The database is reconnecting. Please retry shortly.' })
-  return databaseReady.then(() => next(), next)
+  return ensureDatabaseReady().then(() => next(), (error) => {
+    if (!isTransientDatabaseError(error)) return next(error)
+    res.setHeader('Retry-After', '2')
+    return res.status(503).json({ message: 'The database is temporarily unavailable. Please retry shortly.' })
+  })
 })
 
 app.get('/api/health', (req, res) => {
@@ -897,7 +1029,7 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, sms: { configured: sms.configured, provider: sms.provider } })
 })
 
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', async (req, res, next) => {
   const { username, password } = req.body || {}
   if (!username || !password) return res.status(400).json({ message: 'Username and password are required' })
   try {
@@ -913,8 +1045,7 @@ app.post('/api/login', async (req, res) => {
     await issueSession(user.id, res)
     return res.json({ user: safeUser })
   } catch (error) {
-    console.error('Login error:', error)
-    return res.status(500).json({ message: 'Login failed' })
+    return next(error)
   }
 })
 
@@ -2416,6 +2547,7 @@ app.delete('/api/cargo/:id', authMiddleware, requireStaffPermission('cargo'), as
 })
 
 app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) => {
+  const dashboardStartedAt = monotonicMs()
   const [trips, dutyData, buses, crewMembers, expenses, passengerRecords, regularCustomers, cargoRecords,
     passengerTotals, cargoTotals, passengerDaily, cargoDaily, smsTotals] = await Promise.all([
     all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`),
@@ -2526,6 +2658,18 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
   const dailyRevenue = [...dailyRevenueMap.values()]
     .map((row) => ({ ...row, total_revenue: row.passenger_revenue + row.cargo_revenue }))
     .sort((a, b) => b.travel_date.localeCompare(a.travel_date) || String(a.trip_code || '').localeCompare(String(b.trip_code || '')))
+  const context = transactionContext.getStore()
+  if (context) context.dashboardMs += monotonicMs() - dashboardStartedAt
+  console.info(JSON.stringify({
+    kind: 'admin_dashboard_response',
+    request_id: context?.requestId || null,
+    duration_ms: Number((monotonicMs() - dashboardStartedAt).toFixed(1)),
+    trip_count: trips.length,
+    bus_count: buses.length,
+    booking_count: passengerRecords.length,
+    cargo_count: cargoRecords.length,
+    revenue_row_count: dailyRevenue.length,
+  }))
   res.json({
     ...dutyData,
     trips: await Promise.all(trips.map(hydrateTrip)),
@@ -2559,21 +2703,34 @@ app.get('/api/dashboard', authMiddleware, async (req, res) => {
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error)
   const status = Number(error?.status || error?.statusCode)
-  const statusCode = status >= 400 && status < 600 ? status : 500
-  console.error(`API request failed (${req.method} ${req.originalUrl}):`, error)
+  const transientDatabaseError = isTransientDatabaseError(error)
+  const statusCode = transientDatabaseError ? 503 : status >= 400 && status < 600 ? status : 500
+  console.error(JSON.stringify({
+    kind: 'api_error',
+    request_id: transactionContext.getStore()?.requestId || null,
+    method: req.method,
+    path: req.path,
+    status: statusCode,
+    code: error.code || error.name,
+    message: String(error.message || '').slice(0, 300),
+  }))
+  if (transientDatabaseError) res.setHeader('Retry-After', '2')
   res.status(statusCode).json({
-    message: statusCode === 500 ? 'Internal server error. Check the API server log for details.' : error.message,
+    message: transientDatabaseError
+      ? 'The database is temporarily unavailable. Please retry shortly.'
+      : statusCode === 500 ? 'Internal server error. Check the API server log for details.' : error.message,
   })
 })
 
 function isTransientDatabaseError(error) {
   const code = String(error?.code || '')
-  if (code.startsWith('08') || ['ECONNRESET', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH', 'EAI_AGAIN', 'ECONNREFUSED'].includes(code)) return true
+  if (code.startsWith('08') || ['53300', '57P01', '57P02', '57P03', 'ECONNRESET', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH', 'EAI_AGAIN', 'ECONNREFUSED'].includes(code)) return true
+  if (/timeout exceeded when trying to connect|connection terminated due to connection timeout|connection terminated unexpectedly|server closed the connection unexpectedly/i.test(String(error?.message || ''))) return true
   return (Array.isArray(error?.errors) && error.errors.some(isTransientDatabaseError))
     || (error?.cause && isTransientDatabaseError(error.cause))
 }
 
-async function initializeDatabaseWithRetry() {
+async function initializeDatabaseWithRetry(initializationId) {
   const delays = [1000, 2000, 4000, 8000, 15000]
   for (let attempt = 0; ; attempt += 1) {
     try {
@@ -2582,20 +2739,51 @@ async function initializeDatabaseWithRetry() {
       databaseIsReady = true
       console.info(JSON.stringify({
         kind: 'database_init',
+        initialization_id: initializationId,
         duration_ms: Number((monotonicMs() - initializationStartedAt).toFixed(1)),
         attempt: attempt + 1,
       }))
       return
     } catch (error) {
-      if (!isTransientDatabaseError(error) || (IS_VERCEL && attempt >= 1)) throw error
+      const transient = isTransientDatabaseError(error)
+      if (!transient || (IS_VERCEL && attempt >= 1)) {
+        console.error(JSON.stringify({
+          kind: 'database_init_failed',
+          initialization_id: initializationId,
+          attempt: attempt + 1,
+          transient,
+          code: error.code || error.name,
+          message: String(error.message || '').slice(0, 240),
+        }))
+        throw error
+      }
       const delay = delays[Math.min(attempt, delays.length - 1)]
-      console.error(`Database setup attempt ${attempt + 1} failed; retrying in ${delay / 1000}s.`, error.code || error.name)
+      console.warn(JSON.stringify({
+        kind: 'database_init_retry',
+        initialization_id: initializationId,
+        attempt: attempt + 1,
+        delay_ms: delay,
+        code: error.code || error.name,
+      }))
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
   }
 }
 
-const databaseReady = initializeDatabaseWithRetry()
+function ensureDatabaseReady() {
+  if (databaseIsReady) return Promise.resolve()
+  if (!databaseInitialization) {
+    const initializationId = randomUUID()
+    databaseInitialization = initializeDatabaseWithRetry(initializationId).catch((error) => {
+      if (isTransientDatabaseError(error)) databaseInitialization = null
+      throw error
+    })
+  }
+  return databaseInitialization
+}
+
+const databaseReady = ensureDatabaseReady()
+if (IS_VERCEL) databaseReady.catch(() => {})
 
 if (!IS_VERCEL) {
   app.listen(PORT, () => {
