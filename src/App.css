@@ -4176,11 +4176,7 @@ img.user-avatar-photo {
 }
 
 .mini-calendar::before {
-  content: "▣ 2026";
-  display: block;
-  color: #344054;
-  font-size: 12px;
-  line-height: 1.1;
+  content: none;
 }
 
 .calendar-header {
@@ -4192,14 +4188,12 @@ img.user-avatar-photo {
 
 .calendar-header > span {
   display: block;
-  max-width: 120px;
-  font-size: 0;
+  max-width: none;
+  font-size: 13px;
 }
 
 .calendar-header > span::after {
-  content: "May";
-  font-size: 13px;
-  font-weight: 800;
+  content: none;
 }
 
 .calendar-nav button {
