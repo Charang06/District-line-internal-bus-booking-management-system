@@ -1,8 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../api'
 
-function formatCredits(value) {
-  return new Intl.NumberFormat('en-LK', { maximumFractionDigits: 2 }).format(value)
+const creditFormatter = new Intl.NumberFormat('en-LK', { maximumFractionDigits: 2 })
+const formatCredits = (value) => creditFormatter.format(value)
+
+function sameBalance(current, incoming) {
+  return Boolean(current && incoming
+    && current.updated_at === incoming.updated_at
+    && current.status === incoming.status
+    && current.sms_credit_balance === incoming.sms_credit_balance
+    && current.allocated_credit_total === incoming.allocated_credit_total
+    && current.sender_id_balances.length === incoming.sender_id_balances.length
+    && current.sender_id_balances.every((sender, index) => {
+      const next = incoming.sender_id_balances[index]
+      return sender.sender_id === next.sender_id
+        && sender.allocated_balance === next.allocated_balance
+        && sender.active === next.active
+    }))
 }
 
 export default function SmsBalanceCard({ token }) {
@@ -12,16 +26,20 @@ export default function SmsBalanceCard({ token }) {
   const [refreshing, setRefreshing] = useState(false)
   const requestActive = useRef(false)
   const balanceRef = useRef(null)
+  const lastAutomaticRequestAt = useRef(0)
 
-  const refresh = useCallback(async () => {
+  const refresh = useCallback(async (automatic = false) => {
     if (!token || requestActive.current) return
+    const now = Date.now()
+    if (automatic && now - lastAutomaticRequestAt.current < 3_000) return
+    if (automatic) lastAutomaticRequestAt.current = now
     requestActive.current = true
     if (balanceRef.current) setRefreshing(true)
     else setLoading(true)
     try {
       const latest = await api.smsLenzBalance(token)
       balanceRef.current = latest
-      setBalance(latest)
+      setBalance((current) => sameBalance(current, latest) ? current : latest)
       setError('')
     } catch (requestError) {
       setError(balanceRef.current
@@ -36,12 +54,12 @@ export default function SmsBalanceCard({ token }) {
 
   useEffect(() => {
     if (!token) return undefined
-    const initialFetch = setTimeout(() => { void refresh() }, 0)
+    const initialFetch = setTimeout(() => { void refresh(true) }, 0)
     const timer = setInterval(() => {
-      if (document.visibilityState === 'visible') void refresh()
+      if (document.visibilityState === 'visible') void refresh(true)
     }, 60_000)
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') void refresh()
+      if (document.visibilityState === 'visible') void refresh(true)
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => {

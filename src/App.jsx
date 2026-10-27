@@ -1712,9 +1712,10 @@ function App() {
         }} />
       )}
 
-      {activeTab === 'Dashboard' && isAdmin && adminStats && (
+      {activeTab === 'Dashboard' && isAdmin && (
         <main className="content-page dashboard-page">
           <SmsBalanceCard token={token} />
+          {adminStats ? <>
           <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={adminDataLoading} error={profitLedgerError} />
           <section className="content-card dashboard-seat-chart-section">
             <div className="dashboard-section-heading">
@@ -1802,10 +1803,14 @@ function App() {
               </div>}
             </section>
           </section>
+          </> : <section className="content-card" role="status" aria-live="polite">
+            {adminDataLoading ? 'Loading account data…' : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
+            {!adminDataLoading && profitLedgerError && <button type="button" className="primary-button small" onClick={openAdminDashboard}>Retry dashboard load</button>}
+          </section>}
         </main>
       )}
 
-      {(activeTab === 'Dashboard' || activeTab === 'Accounts' || activeTab === 'Customers') && isAdmin && !adminStats && (
+      {(activeTab === 'Accounts' || activeTab === 'Customers') && isAdmin && !adminStats && (
         <main className="content-page dashboard-page">
           <section className="content-card" role="status" aria-live="polite">
             {adminDataLoading ? 'Loading account data…' : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
