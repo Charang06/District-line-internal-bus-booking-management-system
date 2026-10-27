@@ -4,13 +4,20 @@ import { ROUTES } from '../data/seatLayout'
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const summaryMoney = (value) => `Rs. ${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
 const currentMonth = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` }
+const routeShortName = (code) => ROUTES.find((route) => route.code === code)?.short || code || 'Unassigned route'
 
-export default function ExpenseSubmissionsTable({ submissions = [], trips = [], revenueEntries = [], dailyRevenue = [], monthlyExpenses = [], loading = false, error = '' }) {
+export default function ExpenseSubmissionsTable({ className = '', submissions = [], trips = [], revenueEntries = [], dailyRevenue = [], monthlyExpenses = [], loading = false, error = '' }) {
   const [view, setView] = useState('trip')
   const [dateSearch, setDateSearch] = useState('')
   const [busSearch, setBusSearch] = useState('')
   const [period, setPeriod] = useState('all')
   const [monthSearch, setMonthSearch] = useState(currentMonth)
+  const busOptions = [...new Set([
+    ...submissions.map((submission) => submission.bus_no),
+    ...revenueEntries.map((entry) => entry.bus_no),
+    ...dailyRevenue.map((entry) => entry.registration_no || entry.bus_no),
+    ...trips.map((trip) => trip.registration_no || trip.bus_no),
+  ].map((bus) => String(bus || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b))
   const dateMatches = (dateValue) => {
     const date = String(dateValue || '').slice(0, 10)
     if (period === 'month') {
@@ -24,7 +31,7 @@ export default function ExpenseSubmissionsTable({ submissions = [], trips = [], 
     if (dateSearch && date !== dateSearch) return false
     return true
   }
-  const matchesBus = (value) => !busSearch || String(value || '').toLowerCase().includes(busSearch.trim().toLowerCase())
+  const matchesBus = (value) => !busSearch || String(value || '').trim().toLowerCase() === busSearch.trim().toLowerCase()
   const filtered = useMemo(() => submissions.filter((submission) => matchesBus(submission.bus_no) && dateMatches(submission.expense_date)), [submissions, dateSearch, busSearch, period, monthSearch])
   const routeRows = useMemo(() => submissions.filter((submission) => matchesBus(submission.bus_no) && dateMatches(submission.expense_date)).flatMap((submission) => {
     const legs = [
@@ -73,7 +80,7 @@ export default function ExpenseSubmissionsTable({ submissions = [], trips = [], 
     return `Rs. ${value.toFixed(0)}`
   }
   const axisTicks = Array.from({ length: 5 }, (_, index) => chartMax - (chartSpan * index / 4))
-  return <section className="content-card accounts-recent-card accounts-expense-ledger">
+  return <section className={`content-card accounts-recent-card accounts-expense-ledger ${className}`}>
     <div className="accounts-panel-heading"><div><h2>Profit report</h2><p>Finalized bus duties with accounting totals from Accounts.</p></div><span>{loading ? 'Loading...' : `Showing ${Math.min(activeRows.length, 100)} of ${activeRows.length} entries`}</span></div>
     <div className="accounts-expense-ledger-switch" role="group" aria-label="Expense ledger view">
       <button type="button" className={view === 'trip' ? 'active' : ''} aria-pressed={view === 'trip'} onClick={() => setView('trip')}>Trip</button>
@@ -81,9 +88,10 @@ export default function ExpenseSubmissionsTable({ submissions = [], trips = [], 
     </div>
     <div className="accounts-revenue-ledger-filters">
       <label>Date<input type="date" aria-label="Search expenses by date" value={dateSearch} onChange={(event) => setDateSearch(event.target.value)} /></label>
-      <label>Bus No<input type="search" aria-label="Search expenses by bus number" value={busSearch} onChange={(event) => setBusSearch(event.target.value)} placeholder="Search bus number" /></label>
+      <label>Bus No<select aria-label="Filter expenses by bus number" value={busSearch} onChange={(event) => setBusSearch(event.target.value)}><option value="">All buses</option>{busOptions.map((busNo) => <option key={busNo} value={busNo}>{busNo}</option>)}</select></label>
       <label>Period<select aria-label="Filter expenses by period" value={period} onChange={(event) => setPeriod(event.target.value)}><option value="all">All</option><option value="week">Week</option><option value="month">Month</option></select></label>
       {period === 'month' && <label>Month<input type="month" aria-label="Select profit report month" value={monthSearch} onChange={(event) => setMonthSearch(event.target.value)} /></label>}
+      <button type="button" className="profit-ledger-reset" onClick={() => { setDateSearch(''); setBusSearch(''); setPeriod('week'); setMonthSearch(currentMonth()); setView('trip') }}>Reset</button>
     </div>
     <div className={`stats-grid profit-ledger-summary${period === 'month' ? ' with-monthly' : ''}`}>
       <div className="metric-card"><span>Total revenue</span><strong>{summaryMoney(summaryRevenue)}</strong></div>
@@ -101,10 +109,11 @@ export default function ExpenseSubmissionsTable({ submissions = [], trips = [], 
           const groupWidth = (chartWidth - 56) / chartEntries.length
           const center = 48 + groupWidth * (index + 0.5)
           const zeroY = yFor(0)
-          const label = `${entry.expense_date || '—'} · ${entry.bus_no || 'Unassigned'} · ID ${entry.ledgerId || entry.id}${view === 'route' ? ` · ${entry.route_code}` : ''}`
+          const routeName = routeShortName(entry.route_code)
+          const label = `${entry.expense_date || '—'} · ${entry.bus_no || 'Unassigned'}${view === 'route' ? ` · ${routeName}` : ''}`
           return <g key={entry.id}>
             {values.map((value, barIndex) => { const y = yFor(value); const height = Math.max(1, Math.abs(zeroY - y)); const negative = barIndex === 2 && value < 0; return <rect key={colors[barIndex]} x={center - 27 + barIndex * 19} y={Math.min(y, zeroY)} width="15" height={height} rx="2" className={`profit-ledger-bar ${colors[barIndex]}${negative ? ' negative' : ''}`}><title>{`${label}\nRevenue: ${money(values[0])}\nExpenses: ${money(values[1])}\nNet Profit: ${money(values[2])}`}</title></rect> })}
-            <text x={center} y="235" textAnchor="middle" className="profit-ledger-entry-label"><tspan x={center}>{entry.expense_date || '—'}</tspan><tspan x={center} dy="14">{entry.bus_no || 'Unassigned'}</tspan><tspan x={center} dy="13">{view === 'route' ? `${entry.route_code} · ` : ''}ID {entry.ledgerId || entry.id}</tspan></text>
+            <text x={center} y="235" textAnchor="middle" className="profit-ledger-entry-label"><tspan x={center}>{entry.expense_date || '—'}</tspan><tspan x={center} dy="14">{entry.bus_no || 'Unassigned'}</tspan>{view === 'route' ? <tspan x={center} dy="13">{routeName}</tspan> : null}</text>
           </g>
         })}
       </svg></div>}

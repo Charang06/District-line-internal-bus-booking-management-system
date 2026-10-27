@@ -73,8 +73,10 @@ const ROUTES = {
 const pool = new Pool({
   connectionString: databaseUrl,
   max: IS_VERCEL ? 1 : 10,
+  connectionTimeoutMillis: 5000,
   ssl: process.env.DATABASE_SSL === 'disable' ? false : { rejectUnauthorized: false },
 })
+let databaseIsReady = false
 
 if (IS_VERCEL) {
   const { attachDatabasePool } = await import('@vercel/functions')
@@ -585,7 +587,11 @@ const allowedCorsOrigins = String(process.env.CORS_ORIGIN || '').split(',').map(
 app.use(cors({ origin: IS_PRODUCTION ? allowedCorsOrigins : true }))
 app.use(express.json({ limit: '8mb' }))
 if (!IS_VERCEL) app.use('/uploads', express.static(localUploadDir))
-app.use((req, res, next) => databaseReady.then(() => next(), next))
+app.use((req, res, next) => {
+  if (databaseIsReady) return next()
+  if (!IS_VERCEL) return res.status(503).json({ message: 'The database is reconnecting. Please retry shortly.' })
+  return databaseReady.then(() => next(), next)
+})
 
 app.get('/api/health', (req, res) => {
   const sms = smsConfig()
@@ -1390,13 +1396,30 @@ app.post('/api/buses', authMiddleware, requireAdmin, async (req, res) => {
   } = req.body || {}
   if (!registration_no) return res.status(400).json({ message: 'Registration number is required' })
   try {
+    const normalizedRegistration = String(registration_no).trim()
+    const existingBus = await get('SELECT * FROM buses WHERE lower(trim(registration_no)) = lower(trim(?))', [normalizedRegistration])
+    if (existingBus) {
+      if (existingBus.status !== 'inactive') {
+        return res.status(409).json({ message: 'A bus with that registration number already exists' })
+      }
+      await run(
+        `UPDATE buses SET display_name = ?, image_url = ?, logo_url = ?, driver_name = ?, driver_phone = ?,
+          conductor_name = ?, conductor_phone = ?, status = 'active', updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [display_name ?? existingBus.display_name, image_url ?? existingBus.image_url, logo_url ?? existingBus.logo_url,
+          driver_name ?? existingBus.driver_name, driver_phone ?? existingBus.driver_phone,
+          conductor_name ?? existingBus.conductor_name, conductor_phone ?? existingBus.conductor_phone, existingBus.id],
+      )
+      const bus = await get('SELECT * FROM buses WHERE id = ?', [existingBus.id])
+      await audit(req.user, 'bus.reactivate', 'bus', bus.id, bus.registration_no)
+      return res.json({ bus, reactivated: true })
+    }
     const bus_code = await nextCode('BUS', 'buses', 'bus_code')
     const result = await run(
       `INSERT INTO buses (bus_code, registration_no, display_name, image_url, logo_url, driver_name, driver_phone, conductor_name, conductor_phone, seat_layout_id, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         bus_code,
-        String(registration_no).trim(),
+        normalizedRegistration,
         display_name || '',
         image_url || '/bus.jpg',
         logo_url || '/logo.png',
@@ -1758,7 +1781,7 @@ app.post('/api/bookings', authMiddleware, requireStaffPermission('passengers'), 
       `INSERT INTO bookings (booking_ref, booking_group_id, trip_id, seat_number, passenger_name, contact, gender, boarding_point, destination, fare, payment_status, notes, status, confirmation_status, sms_status, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'confirmed', 'unconfirmed', 'pending', ?)`,
       [
-        booking_ref, booking_group_id || null, trip_id, seat, passengerName, normalizePhone(contactNumber), gender || 'Male',
+        booking_ref, booking_group_id || null, trip_id, seat, passengerName, normalizePhone(contactNumber), gender || '',
         boarding_point || '', destination || '', Number(fare), payment_status || 'unpaid', notes || '', req.user.id,
       ],
     )
@@ -2034,15 +2057,23 @@ app.post('/api/cargo', authMiddleware, requireStaffPermission('cargo'), async (r
   const contactNumber = String(sender_phone || receiver_phone || '').trim()
   const customerName = sender_name || receiver_name || ''
   const paymentStatus = String(payment_status || 'unpaid').trim().toLowerCase()
-  if (!contactNumber || !description) {
-    return res.status(400).json({ message: 'Contact number and goods description are required' })
+  const quantity = Number(weight)
+  if (!description) {
+    return res.status(400).json({ message: 'Goods description is required' })
   }
-  if (!isValidPhone(contactNumber)) {
+  if (!String(weight ?? '').trim() || !Number.isFinite(quantity) || quantity <= 0) {
+    return res.status(400).json({ message: 'Enter a quantity greater than 0.' })
+  }
+  if (contactNumber && !isValidPhone(contactNumber)) {
     return res.status(400).json({ message: 'Enter a valid Sri Lankan contact number' })
   }
-  if (charge === undefined || Number(charge) < 0 || Number.isNaN(Number(charge))) {
+  if (!['paid', 'unpaid', 'pass'].includes(paymentStatus)) {
+    return res.status(400).json({ message: 'Choose Paid, Pay on Pickup, or Pass.' })
+  }
+  if ((charge === undefined || Number(charge) < 0 || Number.isNaN(Number(charge))) && paymentStatus !== 'pass') {
     return res.status(400).json({ message: 'Cargo charge must be entered manually' })
   }
+  const cargoCharge = paymentStatus === 'pass' ? 0 : Number(charge)
   let trip = null
   if (trip_id) {
     trip = await get(`${tripJoinSelect()} WHERE t.id = ?`, [trip_id])
@@ -2056,7 +2087,7 @@ app.post('/api/cargo', authMiddleware, requireStaffPermission('cargo'), async (r
       temporaryCargoRef, trip?.id || null, trip?.travel_date || req.body.travel_date || null, trip?.route_code || req.body.route_code || null,
       trip?.route_label || req.body.route_label || null, trip?.registration_no || req.body.bus_registration || '',
       customerName, normalizePhone(contactNumber), '', '',
-      description, weight || '', Number(charge), paymentStatus, cargo_status || 'registered', notes || '', req.user.id,
+      description, String(quantity), cargoCharge, paymentStatus, cargo_status || 'registered', notes || '', req.user.id,
     ],
   )
   const cargo_ref = `B${result.id}`
@@ -2211,15 +2242,37 @@ app.get('/api/dashboard', authMiddleware, async (req, res) => {
   res.json({ buses, bookings, cargo, totals: { buses: buses.length, bookings: bookings.length, cargo: cargo.length } })
 })
 
-const databaseReady = seedDatabase()
+function isTransientDatabaseError(error) {
+  const code = String(error?.code || '')
+  if (code.startsWith('08') || ['ECONNRESET', 'ETIMEDOUT', 'EHOSTUNREACH', 'ENETUNREACH', 'EAI_AGAIN', 'ECONNREFUSED'].includes(code)) return true
+  return (Array.isArray(error?.errors) && error.errors.some(isTransientDatabaseError))
+    || (error?.cause && isTransientDatabaseError(error.cause))
+}
+
+async function initializeDatabaseWithRetry() {
+  const delays = [1000, 2000, 4000, 8000, 15000]
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      await seedDatabase()
+      databaseIsReady = true
+      return
+    } catch (error) {
+      if (!isTransientDatabaseError(error) || (IS_VERCEL && attempt >= 2)) throw error
+      const delay = delays[Math.min(attempt, delays.length - 1)]
+      console.error(`Database setup attempt ${attempt + 1} failed; retrying in ${delay / 1000}s.`, error.code || error.name)
+      await new Promise((resolve) => setTimeout(resolve, delay))
+    }
+  }
+}
+
+const databaseReady = initializeDatabaseWithRetry()
 
 if (!IS_VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`District Line API listening on http://localhost:${PORT}; waiting for database connection.`)
+  })
   databaseReady
-    .then(() => {
-      app.listen(PORT, () => {
-        console.log(`District Line API running on http://localhost:${PORT}`)
-      })
-    })
+    .then(() => console.log('District Line API database ready.'))
     .catch((error) => {
       console.error('Database setup error:', error)
       process.exit(1)

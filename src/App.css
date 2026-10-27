@@ -1,4 +1,4 @@
-.app-shell {
+﻿.app-shell {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -7317,21 +7317,25 @@ button,
 
 .accounts-sector-trip-date {
   display: grid;
-  gap: 4px;
-  width: min(180px, 100%);
-  margin: 6px 0;
+  gap: 6px;
+  width: min(220px, 100%);
+  margin: 8px 0;
   color: #7b8490;
-  font-size: 0.68rem;
+  font-size: 0.82rem;
 }
 
 .accounts-sector-trip-date input {
-  min-height: 34px;
-  padding: 5px 8px;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 10px 12px;
   border: 1px solid #dce3eb;
-  border-radius: 7px;
-  background: #fff;
+  border-radius: 10px;
+  background: #f8fafc;
   color: #26364b;
   font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .accounts-expense-sector p {
@@ -8360,3 +8364,100 @@ button,
   .profit-ledger-chart-legend { gap: 10px; }
   .profit-ledger-chart-svg { height: 280px; }
 }
+
+/* Admin dashboard phone layout and trip summary cards. */
+@media (max-width: 760px) {
+  .dashboard-page { gap: 12px; }
+  .dashboard-page .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .dashboard-page .metric-card { padding: 14px; }
+  .dashboard-page .metric-card strong { font-size: clamp(1.25rem, 6vw, 1.8rem); overflow-wrap: anywhere; }
+  .dashboard-page .trip-controls-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: 9px; padding: 10px; }
+  .dashboard-page .trip-controls-filters label { min-width: 0; }
+  .dashboard-page .trip-controls-filters input,
+  .dashboard-page .trip-controls-filters select { width: 100%; min-width: 0; min-height: 42px; box-sizing: border-box; font-size: 16px; }
+  .dashboard-page .trip-controls-filters > strong,
+  .dashboard-page .trip-controls-filters > button { grid-column: 1 / -1; }
+  .dashboard-page .trip-controls-filters > strong { overflow-wrap: anywhere; }
+  .dashboard-page .daily-revenue-table-wrap { max-width: 100%; border-radius: 8px; }
+  .dashboard-page .dashboard-seat-chart-section { padding: 14px; }
+  .dashboard-page .dashboard-seat-chart-card { padding: 10px; }
+  .dashboard-page .dashboard-seat-chart { min-height: 120px; }
+}
+@media (max-width: 420px) {
+  .dashboard-page .stats-grid { grid-template-columns: minmax(0, 1fr); }
+  .dashboard-page .dashboard-section-heading { padding: 13px; }
+  .dashboard-page .dashboard-filter-reset { width: 100%; min-height: 42px; border: 1px solid #d7dde5; border-radius: 8px; background: #fff; }
+}
+
+.cargo-payment-badge.pass { background: #d9f1e2; color: #17613a; }
+.cargo-weight-field { display: grid; grid-template-columns: minmax(0, 1fr); }
+.cargo-weight-field em { display: none; }
+.cargo-payment-options { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+/* Passenger manifests print in landscape and keep all seat rows together. */
+@media print {
+  @page passengerManifest { size: A4 landscape; margin: 6mm; }
+  .site-footer { display: none !important; }
+  .print-passenger-manifest { page: passengerManifest; break-inside: avoid; page-break-inside: avoid; }
+  .print-cargo-manifest .cargo-manifest-summary { display: none !important; }
+  .manifest-paper { min-height: 0; padding: 3mm; page-break-after: avoid; break-inside: avoid; page-break-inside: avoid; }
+  .manifest-topbar { gap: 4px; margin-bottom: 5px; }
+  .manifest-brand-logo { width: 150px; height: 34px; object-fit: contain; }
+  .manifest-tagline { font-size: 8px; }
+  .manifest-meta-row { gap: 4px 12px; font-size: 9px; padding: 3px 0; }
+  .manifest-seat-layout { gap: 2px; break-inside: avoid; page-break-inside: avoid; }
+  .manifest-row { gap: 4px; break-inside: avoid; page-break-inside: avoid; }
+  .manifest-seat-pair { gap: 4px; }
+  .manifest-seat-card { min-height: 42px; padding: 2px 4px; break-inside: avoid; page-break-inside: avoid; }
+  .manifest-seat-number { width: 17px; height: 17px; font-size: 8px; margin-bottom: 1px; }
+  .manifest-seat-contact { gap: 3px; font-size: 6px; margin-bottom: 0; min-height: 8px; padding-bottom: 0; }
+  .manifest-seat-field { gap: 4px; font-size: 7px; min-height: 8px; margin-top: 0; }
+  .manifest-seat-field strong { font-size: 7px; }
+  .manifest-rear-row { gap: 6px; margin-top: 2px; break-inside: avoid; page-break-inside: avoid; }
+}
+
+/* Trip Overview route seat pies and matching trip details panel. */
+.trip-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; }
+.trip-overview-seats,
+.trip-overview-trip-list { height: 460px; min-height: 0; box-sizing: border-box; padding: 16px; border: 1px solid #e1e6ed; border-radius: 10px; background: #fff; }
+.trip-overview-seats { display: flex; flex-direction: column; }
+.trip-overview-trip-list { overflow-y: auto; align-content: start; }
+.trip-overview-seats > h4,
+.trip-overview-trip-list > h4 { margin: 0 0 12px; color: #29384b; font-size: .9rem; text-transform: capitalize; }
+.trip-overview-route-groups { display: grid; flex: 1; min-height: 0; align-content: start; gap: 12px; overflow-y: auto; }
+.trip-overview-route-group { display: grid; gap: 8px; }
+.trip-overview-route-group > h5 { margin: 0; color: #29384b; font-size: .78rem; }
+.trip-overview-route-pies { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 10px; }
+.trip-overview-route-pie-card { display: grid; justify-items: center; gap: 10px; min-width: 0; padding: 12px 8px; border: 1px solid #edf0f4; border-radius: 9px; background: #fbfcfe; }
+.trip-overview-route-pie-card h6 { margin: 0; color: #29384b; font-size: .78rem; text-align: center; }
+.trip-overview-route-pie-card .trip-overview-pie { width: clamp(96px, 10vw, 136px); }
+.trip-overview-route-seat-counts { display: grid; width: 100%; gap: 6px; color: #58677a; font-size: .7rem; }
+.trip-overview-route-seat-counts span { display: flex; align-items: center; gap: 6px; }
+.trip-overview-route-seat-counts i { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: #3b82f6; }
+.trip-overview-route-seat-counts i.available { background: #16a34a; }
+.trip-overview-route-seat-counts strong { margin-left: auto; color: #29384b; }
+@media (max-width: 960px) {
+  .trip-overview-grid { grid-template-columns: minmax(0, 1fr); }
+  .trip-overview-route-groups { min-height: 250px; }
+}
+@media (max-width: 480px) {
+  .trip-overview-route-pies { grid-template-columns: minmax(0, 1fr); }
+  .trip-overview-route-pie-card .trip-overview-pie { width: 120px; }
+}
+.profit-ledger-reset {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid #d7dde5;
+  border-radius: 8px;
+  background: #fff;
+  color: #344767;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.profit-ledger-reset:hover { background: #f4f7fa; }
+.dashboard-page > .dashboard-trip-controls { order: 1; }
+.dashboard-page > .dashboard-seat-chart-section,
+.dashboard-page > .hint { order: 2; }
+.dashboard-page > .dashboard-profit-report { order: 3; }

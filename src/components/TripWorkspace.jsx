@@ -23,7 +23,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const [bookingError, setBookingError] = useState('')
   const [cargoError, setCargoError] = useState('')
   const [bookingForm, setBookingForm] = useState(() => readTripDraft(trip.id)?.bookingForm || {
-    passengerName: '', contact: '', gender: 'Male', from: route.defaultFrom, to: route.defaultTo, fare: '2700', note: '',
+    passengerName: '', contact: '', gender: '', from: route.defaultFrom, to: route.defaultTo, fare: '2700', note: '',
   })
   const [cargoForm, setCargoForm] = useState(() => {
     const saved = readTripDraft(trip.id)?.cargoForm || {}
@@ -81,7 +81,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const seatCounts = useMemo(() => {
     const values = Object.values(seatsByNumber)
     return {
-      male: values.filter((seat) => seat.status === 'booked' && seat.gender !== 'Female').length,
+      male: values.filter((seat) => seat.status === 'booked' && seat.gender === 'Male').length,
       female: values.filter((seat) => seat.status === 'booked' && seat.gender === 'Female').length,
       free: values.filter((seat) => seat.status === 'available').length,
     }
@@ -124,7 +124,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
       }
       showMessage(`Bookings saved: ${results.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
       setSelectedSeats([])
-      setBookingForm((prev) => ({ ...prev, passengerName: '', contact: '', fare: '2700', note: '' }))
+      setBookingForm((prev) => ({ ...prev, passengerName: '', contact: '', gender: '', fare: '2700', note: '' }))
       await loadBookings()
       await onSaved(trip)
     } catch (err) {
@@ -135,8 +135,8 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const handleSaveCargo = async () => {
     const contactNumber = cargoForm.contactNo.trim().replace(/\s+/g, '').replace(/^\+/, '')
     if (!cargoForm.goods.trim()) return setCargoError('Enter a description of the goods.')
-    if (!contactNumber) return setCargoError('Enter a contact number.')
-    if (!/^(0?7\d{8}|94?7\d{8})$/.test(contactNumber)) return setCargoError('Enter a valid Sri Lankan contact number.')
+    if (!String(cargoForm.weight).trim() || !Number.isFinite(Number(cargoForm.weight)) || Number(cargoForm.weight) <= 0) return setCargoError('Enter a quantity greater than 0.')
+    if (contactNumber && !/^(0?7\d{8}|94?7\d{8})$/.test(contactNumber)) return setCargoError('Enter a valid Sri Lankan contact number.')
     if (cargoForm.fee === '' || !Number.isFinite(Number(cargoForm.fee)) || Number(cargoForm.fee) < 0) return setCargoError('Enter a valid amount of Rs. 0 or more.')
     if (!cargoForm.payment) return setCargoError('Select a payment option.')
     setCargoError('')
@@ -177,13 +177,13 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
               {onDeleteTrip ? <button type="button" className="ghost-button small delete-trip-button" onClick={() => onDeleteTrip(trip)}>Delete bus</button> : null}
             </div>
           </div>
-          <SeatMap seatsByNumber={seatsByNumber} selectedSeats={selectedSeats} onSelect={handleSelectSeat} />
           <div className="seat-legend">
             <span className="legend male">Male RSV {seatCounts.male}</span>
             <span className="legend female">Female RSV {seatCounts.female}</span>
             <span className="legend free">Free {seatCounts.free}</span>
             <span className="legend selected">Selected {selectedSeats.length}</span>
           </div>
+          <SeatMap seatsByNumber={seatsByNumber} selectedSeats={selectedSeats} onSelect={handleSelectSeat} />
           {onAddBus ? <button type="button" className="primary-button small add-another-bus no-print" onClick={onAddBus}>+ Add another bus</button> : null}
         </div>
 
@@ -211,7 +211,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
               <label><span>Mobile No (optional)</span><input type="tel" value={bookingForm.contact} onChange={(event) => setBookingForm((prev) => ({ ...prev, contact: event.target.value }))} /></label>
             </div>
             <div className="gender-row">
-              {['Male', 'Female', 'Other'].map((gender) => (
+              {['Male', 'Female'].map((gender) => (
                 <label key={gender} className="radio-pill">
                   <input type="radio" name={`gender-${trip.id}`} checked={bookingForm.gender === gender} onChange={() => setBookingForm((prev) => ({ ...prev, gender }))} />
                   {gender}
@@ -242,12 +242,12 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
                 <option value="">Select goods type</option>
                 {['Bike', 'Carton Box', 'Bags', 'Documents', 'Shop Bags', 'House Holds'].map((type) => <option key={type} value={type}>{type}</option>)}
               </select></label>
-              <label className="cargo-weight-field"><span>Weight / PCS</span><input value={cargoForm.weight} onChange={(event) => setCargoForm((prev) => ({ ...prev, weight: event.target.value }))} /><em>KG</em></label>
+              <label className="cargo-weight-field"><span>Quantity</span><input type="number" min="0.01" step="any" required value={cargoForm.weight} onChange={(event) => setCargoForm((prev) => ({ ...prev, weight: event.target.value }))} /></label>
             </div>
             <label className="cargo-description-field"><span>Luggage Description / Additional Details</span><textarea value={cargoForm.notes} onChange={(event) => setCargoForm((prev) => ({ ...prev, notes: event.target.value }))} placeholder="e.g. 2 sealed cardboard boxes containing garments, handle with care" /></label>
             <div className="two-col grouped-fields">
               <label><span>Customer Name</span><input value={cargoForm.customerName} onChange={(event) => setCargoForm((prev) => ({ ...prev, customerName: event.target.value }))} /></label>
-              <label><span>Contact Number</span><input value={cargoForm.contactNo} onChange={(event) => setCargoForm((prev) => ({ ...prev, contactNo: event.target.value }))} /></label>
+              <label><span>Contact Number (optional)</span><input type="tel" value={cargoForm.contactNo} onChange={(event) => setCargoForm((prev) => ({ ...prev, contactNo: event.target.value }))} /></label>
             </div>
             <div className="two-col grouped-fields cargo-payment-row">
               <label><span>Total Amount</span><input value={cargoForm.fee} onChange={(event) => setCargoForm((prev) => ({ ...prev, fee: event.target.value }))} /></label>
@@ -256,6 +256,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
                 <div className="cargo-payment-options">
                   <label><input type="radio" name={`cargo-payment-${trip.id}`} checked={cargoForm.payment === 'Paid'} onChange={() => setCargoForm((prev) => ({ ...prev, payment: 'Paid' }))} /> Paid</label>
                   <label><input type="radio" name={`cargo-payment-${trip.id}`} checked={cargoForm.payment === 'unpaid'} onChange={() => setCargoForm((prev) => ({ ...prev, payment: 'unpaid' }))} /> Pay on Pickup</label>
+                  <label><input type="radio" name={`cargo-payment-${trip.id}`} checked={cargoForm.payment === 'pass'} onChange={() => setCargoForm((prev) => ({ ...prev, payment: 'pass', fee: '0' }))} /> Pass</label>
                 </div>
               </div>
             </div>

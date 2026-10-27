@@ -7,15 +7,26 @@ const DEFAULT_CARGO_ROWS = [
   { description: 'Cash on Hand', tag: '', amount: '0' },
   { description: 'Pending Cash', tag: '', amount: '0' },
 ]
+const REVENUE_DRAFT_PREFIX = 'district-line-revenue-form-draft-'
+
+function readRevenueDraft(routeCode) {
+  try {
+    const draft = JSON.parse(localStorage.getItem(`${REVENUE_DRAFT_PREFIX}${routeCode}`) || 'null')
+    return draft && typeof draft === 'object' ? draft : {}
+  } catch {
+    return {}
+  }
+}
 
 function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, knownBusNumbers }) {
-  const [date, setDate] = useState(todayIso)
-  const [busNo, setBusNo] = useState('')
-  const [driverName, setDriverName] = useState('')
-  const [conductorName, setConductorName] = useState('')
-  const [seatCapacity, setSeatCapacity] = useState(String(SEAT_LAYOUT.totalSeats))
-  const [seatRows, setSeatRows] = useState(SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
-  const [cargoRows, setCargoRows] = useState(() => DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
+  const [draft] = useState(() => readRevenueDraft(route.code))
+  const [date, setDate] = useState(() => draft.date || todayIso())
+  const [busNo, setBusNo] = useState(() => draft.busNo || '')
+  const [driverName, setDriverName] = useState(() => draft.driverName || '')
+  const [conductorName, setConductorName] = useState(() => draft.conductorName || '')
+  const [seatCapacity, setSeatCapacity] = useState(() => draft.seatCapacity || String(SEAT_LAYOUT.totalSeats))
+  const [seatRows, setSeatRows] = useState(() => Array.isArray(draft.seatRows) ? draft.seatRows : SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
+  const [cargoRows, setCargoRows] = useState(() => Array.isArray(draft.cargoRows) ? draft.cargoRows : DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
   const [saving, setSaving] = useState(false)
   const trips = (data.trips || []).filter((trip) => trip.travel_date === date && trip.route_code === route.code)
   const staffNames = [...new Set((data.crewMembers || []).filter((member) => member.role === 'driver').map((member) => String(member.full_name || '').trim()).filter(Boolean))]
@@ -41,6 +52,13 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
     setDriverName(selectedTrip.driver_name || '')
     setConductorName(selectedTrip.conductor_name || '')
   }, [selectedTrip])
+  useEffect(() => {
+    try {
+      localStorage.setItem(`${REVENUE_DRAFT_PREFIX}${route.code}`, JSON.stringify({ date, busNo, driverName, conductorName, seatCapacity, seatRows, cargoRows }))
+    } catch {
+      // Keep the form usable if browser storage is unavailable or full.
+    }
+  }, [route.code, date, busNo, driverName, conductorName, seatCapacity, seatRows, cargoRows])
   const updateSeat = (index, field, value) => setSeatRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row))
   const updateCargo = (index, field, value) => setCargoRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row))
   const submit = async (event) => {
@@ -120,8 +138,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
   const [revenuePeriod, setRevenuePeriod] = useState('all')
   const [saving, setSaving] = useState(false)
   const [expenseDate, setExpenseDate] = useState(todayIso)
-  const [firstLegDate, setFirstLegDate] = useState(todayIso)
-  const [returnLegDate, setReturnLegDate] = useState(todayIso)
+  const [firstLegDate, setFirstLegDate] = useState('')
+  const [returnLegDate, setReturnLegDate] = useState('')
   const [expenseRouteCode, setExpenseRouteCode] = useState(ROUTES[0].code)
   const [expenseTripId, setExpenseTripId] = useState('')
   const [expenseRevenueEntryId, setExpenseRevenueEntryId] = useState('')
@@ -389,8 +407,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
   const resetExpenseForm = () => {
     setExpenseDate(todayIso())
-    setFirstLegDate(todayIso())
-    setReturnLegDate(todayIso())
+    setFirstLegDate('')
+    setReturnLegDate('')
     setExpenseRouteCode(ROUTES[0].code)
     setExpenseTripId('')
     setExpenseRevenueEntryId('')
@@ -478,7 +496,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
         </section>
 
         <section className="content-card accounts-expense-details">
-          <label>Operating date<input required type="date" value={expenseDate} onChange={(event) => { setExpenseDate(event.target.value); setFirstLegDate(event.target.value); setExpenseTripId(''); setExpenseRevenueEntryId(''); setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); setExpenseBusNo('') }} /></label>
+          <label>Operating date<input required type="date" value={expenseDate} onChange={(event) => { setExpenseDate(event.target.value); setFirstLegDate(''); setReturnLegDate(''); setExpenseTripId(''); setExpenseRevenueEntryId(''); setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); setExpenseBusNo('') }} /></label>
           <label>Bus number<select required value={expenseBusNo} onChange={(event) => {
             const busNo = event.target.value
             setExpenseBusNo(busNo)
@@ -505,7 +523,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
             const route = ROUTES.find((item) => item.code === sector.code) || ROUTES[0]
             return <article className="content-card accounts-expense-sector" key={sector.code}>
               <span className="accounts-sector-arrow">{index === 0 ? '→' : '←'}</span>
-              <div><small>{sector.label}</small><h3>{route.label}</h3><label className="accounts-sector-trip-date">Trip date<input type="date" value={sector.date} onChange={(event) => { sector.setDate(event.target.value); if (index === 0) { setExpenseDate(event.target.value); setExpenseTripId(''); setExpenseRevenueEntryId(''); setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); setExpenseBusNo('') } else { setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); if (expenseReturnTripId || expenseReturnRevenueEntryId) setExpenseBusNo('') } }} /></label><p>{sector.trip?.trip_code ? `Coach #${sector.trip.trip_code}` : expenseBusNo ? `Coach #${expenseBusNo}` : 'Select the trip date'}</p></div>
+              <div><small>{sector.label}</small><h3>{route.label}</h3><label className="accounts-sector-trip-date">Date<input type="date" lang="en-US" value={sector.date} onChange={(event) => { sector.setDate(event.target.value); if (index === 0) { setExpenseDate(event.target.value); setExpenseTripId(''); setExpenseRevenueEntryId(''); setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); setExpenseBusNo('') } else { setExpenseReturnTripId(''); setExpenseReturnRevenueEntryId(''); if (expenseReturnTripId || expenseReturnRevenueEntryId) setExpenseBusNo('') } }} /></label><p>{sector.trip?.trip_code ? `Coach #${sector.trip.trip_code}` : expenseBusNo ? `Coach #${expenseBusNo}` : 'Select the trip date'}</p></div>
               <div className="accounts-sector-revenue"><small>LOGGED REVENUE</small><strong>{money(sector.amount)}</strong></div>
             </article>
           })}

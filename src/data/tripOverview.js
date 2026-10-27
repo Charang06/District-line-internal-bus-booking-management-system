@@ -26,15 +26,26 @@ export function findUnscheduledBuses(buses, scheduledTrips, { route = '', bus = 
   })
 }
 
-export function buildTripOverview(trips, dailyRevenue, seatCapacity, unscheduledBuses = []) {
-  const revenueByTrip = new Map(dailyRevenue.filter((row) => row.trip_id != null).map((row) => [String(row.trip_id), row]))
+export function buildTripOverview(trips, dailyRevenue, seatCapacity, unscheduledBuses = [], accountRevenueEntries = []) {
+  // Keep the prior argument for callers, but revenue in Trip Overview must come
+  // from the Accounts operational submissions table only.
+  void dailyRevenue
   const rows = trips.map((trip) => {
-    const revenue = revenueByTrip.get(String(trip.id)) || {}
+    const directAccountEntries = accountRevenueEntries.filter((entry) => entry.status === 'locked' && entry.trip_id != null && String(entry.trip_id) === String(trip.id))
+    const busNo = String(trip.registration_no || trip.bus_no || '').trim().toLowerCase()
+    const accountEntries = directAccountEntries.length ? directAccountEntries : accountRevenueEntries.filter((entry) => (
+      entry.status === 'locked'
+      && entry.trip_id == null
+      && entry.travel_date === trip.travel_date
+      && entry.route_code === trip.route_code
+      && String(entry.bus_no || '').trim().toLowerCase() === busNo
+    ))
     const booked = Number(trip.booked_count || 0)
     const available = Math.max(0, seatCapacity - booked)
-    const seatRevenue = Number(revenue.passenger_revenue || 0)
-    const cargoRevenue = Number(revenue.cargo_revenue || 0)
-    return { trip, booked, available, seatRevenue, cargoRevenue, totalRevenue: seatRevenue + cargoRevenue }
+    const seatRevenue = accountEntries.reduce((sum, entry) => sum + Number(entry.seat_subtotal || 0), 0)
+    const cargoRevenue = accountEntries.reduce((sum, entry) => sum + Number(entry.cargo_subtotal || 0), 0)
+    const totalRevenue = accountEntries.reduce((sum, entry) => sum + Number(entry.total_revenue || 0), 0)
+    return { trip, booked, available, seatRevenue, cargoRevenue, totalRevenue }
   })
   rows.push(...unscheduledBuses.map((bus) => ({
     trip: { id: null, trip_code: 'No scheduled trip', travel_date: '', route_label: 'No route assigned', registration_no: bus.registration_no },

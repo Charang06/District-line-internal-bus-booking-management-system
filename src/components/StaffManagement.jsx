@@ -31,7 +31,7 @@ function permissionSummary(permissions = {}) {
   return STAFF_PERMISSION_OPTIONS.filter((item) => permissions[item.key]).map((item) => item.label.replace(' page', '')).join(' · ') || 'No access assigned'
 }
 
-export default function StaffManagement({ token, staffList, setStaffList, crewList, setCrewList, buses, onRegisterBus, onDeleteBus, showMessage, onSaved, requestConfirmation }) {
+export default function StaffManagement({ token, staffList, setStaffList, crewList, setCrewList, buses, onRegisterBus, onDeleteBus, onActivateBus, showMessage, onSaved, requestConfirmation }) {
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -296,8 +296,8 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
 
       <section className="content-card staff-bus-contacts-card">
         <div className="dashboard-section-heading"><div><span className="staff-eyebrow">Bus contacts</span><h2>Buses</h2><p>Register buses here. Saved registration numbers will be available as suggestions wherever a bus number is entered.</p></div><button type="button" className="primary-button" onClick={onRegisterBus}>Add bus</button></div>
-        <div className="staff-bus-contact-list">{(buses || []).filter((bus) => bus.status !== 'inactive').map((bus) => <p key={bus.id}><strong>{bus.registration_no}</strong>{bus.display_name ? <span>{bus.display_name}</span> : null}<button type="button" className="staff-bus-contact-remove" onClick={() => onDeleteBus(bus)}>Delete</button></p>)}
-          {!(buses || []).some((bus) => bus.status !== 'inactive') && <span className="staff-bus-contact-empty">No buses registered yet.</span>}
+        <div className="staff-bus-contact-list">{(buses || []).map((bus) => <p key={bus.id} className={bus.status === 'inactive' ? 'inactive' : ''}><strong>{bus.registration_no}</strong>{bus.display_name ? <span>{bus.display_name}</span> : null}{bus.status === 'inactive' ? <><small>Inactive</small><button type="button" className="staff-activate-button small" onClick={() => onActivateBus?.(bus)}>Reactivate</button></> : <button type="button" className="staff-bus-contact-remove" onClick={() => onDeleteBus(bus)}>Delete</button>}</p>)}
+          {!(buses || []).length && <span className="staff-bus-contact-empty">No buses registered yet.</span>}
         </div>
       </section>
 

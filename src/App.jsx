@@ -7,7 +7,7 @@ import AdminProfile from './components/AdminProfile'
 import AccountsRevenue from './components/AccountsRevenue'
 import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
 import { ROUTES, SEAT_LAYOUT, routeByCode } from './data/seatLayout'
-import { buildTripOverview, filterTripOverviewTrips, findUnscheduledBuses } from './data/tripOverview'
+import { buildTripOverview, filterTripOverviewTrips } from './data/tripOverview'
 
 const TOKEN_KEY = 'district-line-token'
 const USER_KEY = 'district-line-user'
@@ -103,10 +103,8 @@ function App() {
   const [staffList, setStaffList] = useState([])
   const [crewList, setCrewList] = useState([])
   const [busContactList, setBusContactList] = useState([])
-  const [revenuePeriod, setRevenuePeriod] = useState('daily')
   const [revenueDate, setRevenueDate] = useState(todayIso())
-  const [seatChartPeriod, setSeatChartPeriod] = useState('week')
-  const [dashboardRoute, setDashboardRoute] = useState('')
+  const [dashboardRoute, setDashboardRoute] = useState('KTY_CMB')
   const [dashboardBus, setDashboardBus] = useState('')
   const [dashboardTrip, setDashboardTrip] = useState('')
   const [profitPeriod, setProfitPeriod] = useState('day')
@@ -177,24 +175,9 @@ function App() {
   const bookedSeatCount = customerLogs.filter((log) => log.status !== 'cancelled').length
 
   const dashboardRange = useMemo(() => {
-    const anchor = new Date(`${revenueDate}T00:00:00`)
-    if (Number.isNaN(anchor.getTime())) return null
-    let start = new Date(anchor)
-    let end = new Date(anchor)
-    if (revenuePeriod === 'weekly') {
-      start.setDate(start.getDate() - ((start.getDay() + 6) % 7))
-      end = new Date(start)
-      end.setDate(end.getDate() + 6)
-    } else if (revenuePeriod === 'monthly') {
-      start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
-      end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
-    } else if (revenuePeriod === 'yearly') {
-      start = new Date(anchor.getFullYear(), 0, 1)
-      end = new Date(anchor.getFullYear(), 11, 31)
-    }
-    const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    return { start: iso(start), end: iso(end) }
-  }, [revenueDate, revenuePeriod])
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(revenueDate)) return null
+    return { start: revenueDate, end: revenueDate }
+  }, [revenueDate])
 
   const isInDashboardRange = (date) => Boolean(date && dashboardRange && date >= dashboardRange.start && date <= dashboardRange.end)
   const matchesDashboardRoute = (row) => !dashboardRoute || row.route_code === dashboardRoute
@@ -208,17 +191,8 @@ function App() {
   const seatBookingCharts = useMemo(() => {
     const anchor = new Date(`${revenueDate}T00:00:00`)
     if (Number.isNaN(anchor.getTime())) return []
-    let start
-    let end
-    if (seatChartPeriod === 'week') {
-      start = new Date(anchor)
-      start.setDate(start.getDate() - ((start.getDay() + 6) % 7))
-      end = new Date(start)
-      end.setDate(end.getDate() + 6)
-    } else {
-      start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
-      end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
-    }
+    const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
+    const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
     const iso = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     const dates = []
     for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) dates.push(iso(cursor))
@@ -232,16 +206,26 @@ function App() {
       })
       return { code, dates, counts: dates.map((date) => counts.get(date) || 0) }
     })
-  }, [adminStats, revenueDate, seatChartPeriod, dashboardTrip])
+  }, [adminStats, revenueDate, dashboardTrip])
   const filteredTrips = useMemo(() => dashboardRange ? filterTripOverviewTrips(adminStats?.trips || [], { start: dashboardRange.start, end: dashboardRange.end, route: dashboardRoute, bus: dashboardBus, tripId: dashboardTrip }) : [], [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const filteredPassengerRecords = useMemo(() => (adminStats?.passengerRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const filteredCargoRecords = useMemo(() => (adminStats?.cargoRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
-  const unscheduledOverviewBuses = useMemo(() => {
-    if (!dashboardRange) return []
-    const scheduledTrips = (adminStats?.trips || []).filter((trip) => isInDashboardRange(trip.travel_date))
-    return findUnscheduledBuses(adminStats?.buses || [], scheduledTrips, { route: dashboardRoute, bus: dashboardBus, tripId: dashboardTrip })
-  }, [adminStats, dashboardRange, dashboardRoute, dashboardTrip, dashboardBus])
-  const tripOverview = useMemo(() => buildTripOverview(filteredTrips, adminStats?.dailyRevenue || [], SEAT_LAYOUT.totalSeats, unscheduledOverviewBuses), [adminStats, filteredTrips, unscheduledOverviewBuses])
+  const tripOverview = useMemo(() => buildTripOverview(filteredTrips, adminStats?.dailyRevenue || [], SEAT_LAYOUT.totalSeats, [], profitLedger.revenueEntries || []), [adminStats, filteredTrips, profitLedger.revenueEntries])
+  const tripOverviewRoutes = useMemo(() => ROUTES.map((route) => {
+    const busesByKey = new Map()
+    tripOverview.rows.filter((row) => !row.unscheduled && row.trip.route_code === route.code).forEach((row) => {
+      const registration = String(row.trip.registration_no || row.trip.bus_no || '').trim()
+      const busId = row.trip.bus_id
+      const key = busId != null ? `bus:${busId}` : registration ? `registration:${registration.toLowerCase()}` : `trip:${row.trip.id}`
+      const bus = busesByKey.get(key) || { key, registration, busId, booked: 0, available: 0, totalSeats: 0 }
+      bus.booked += row.booked
+      bus.available += row.available
+      bus.totalSeats += row.booked + row.available
+      busesByKey.set(key, bus)
+    })
+    const buses = [...busesByKey.values()].map((bus) => ({ ...bus, bookedPercent: bus.totalSeats ? bus.booked / bus.totalSeats * 100 : 0 }))
+    return { ...route, buses }
+  }).filter((route) => route.buses.length), [tripOverview])
   const accountsExpenses = useMemo(() => (adminStats?.expenses || []).filter((expense) => !expense.duty_id && isInDashboardRange(expense.expense_date)), [adminStats, dashboardRange])
   const accountsExpenseTotal = useMemo(() => accountsExpenses.reduce((total, expense) => total + Number(expense.amount || 0), 0), [accountsExpenses])
   const monthlyExpenses = useMemo(() => (adminStats?.expenses || []).filter((expense) => !expense.duty_id && expense.expense_date?.slice(0, 7) === monthlyExpenseMonth), [adminStats, monthlyExpenseMonth])
@@ -470,6 +454,15 @@ function App() {
     setNotice(isError ? '' : text)
     setError(isError ? text : '')
   }, [])
+
+  useEffect(() => {
+    if (!token || !isAdmin || activeTab !== 'Accounts') return undefined
+    let cancelled = false
+    api.adminCrew(token)
+      .then((result) => { if (!cancelled) setCrewList(result.crew || []) })
+      .catch((err) => { if (!cancelled) showMessage(err.message, true) })
+    return () => { cancelled = true }
+  }, [activeTab, token, isAdmin, showMessage])
 
   useEffect(() => {
     if (!notice && !error) return undefined
@@ -707,7 +700,12 @@ function App() {
       setCustomerLogs((current) => current.map((item) => byId.get(item.id) || item))
       setEditingContactId(null)
       showMessage(`${log.passenger_name}'s mobile number updated.`)
-      await loadLogs(token, activeTrip)
+      try {
+        await loadLogs(token, activeTrip)
+      } catch {
+        // The contact update already succeeded and local rows are updated; a
+        // transient log refresh failure should not present as a failed save.
+      }
     } catch (err) {
       showMessage(err.message, true)
     } finally {
@@ -855,9 +853,9 @@ function App() {
         if (mobileNo) await api.createBusContact(token, { bus_no: registrationNo, phone_number: mobileNo })
         showMessage('Bus details updated.')
       } else {
-        await api.createBus(token, { ...busForm, registration_no: registrationNo })
+        const result = await api.createBus(token, { ...busForm, registration_no: registrationNo })
         if (mobileNo) await api.createBusContact(token, { bus_no: registrationNo, phone_number: mobileNo })
-        showMessage('Bus registered.')
+        showMessage(result.reactivated ? 'Inactive bus reactivated.' : 'Bus registered.')
       }
       setShowBusForm(false)
       setEditingBus(null)
@@ -889,6 +887,17 @@ function App() {
     }
       },
     })
+  }
+
+  const handleActivateBus = async (bus) => {
+    try {
+      await api.updateBus(token, bus.id, { status: 'active' })
+      await loadFleet(token)
+      if (activeTab === 'Dashboard') await openAdminDashboard()
+      showMessage(`${bus.registration_no} is active again.`)
+    } catch (err) {
+      showMessage(err.message, true)
+    }
   }
 
   const handleBusImage = async (bus, file) => {
@@ -935,7 +944,6 @@ function App() {
       await api.createAdminExpense(token, { ...expenseForm, category: 'Monthly Expense', expense_date: expenseDate, amount: Number(expenseForm.amount), expense_source: 'monthly' })
       setMonthlyExpenseMonth(expenseDate.slice(0, 7))
       setRevenueDate(expenseDate)
-      setRevenuePeriod('monthly')
       const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token), api.adminExpenseSubmissions(token)])
       setAdminStats(data)
       setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
@@ -1523,6 +1531,7 @@ function App() {
                 <tr>
                   <th>Bill No</th>
                   <th>Goods Description</th>
+                  <th>Quantity</th>
                   <th>Customer Name</th>
                   <th>Contact Number</th>
                   <th>Destination</th>
@@ -1535,21 +1544,22 @@ function App() {
                 {cargoLogs.map((item) => (
                   <tr key={item.id}>
                     <td className="cargo-bill-number">{item.cargo_ref}</td>
-                    <td className="cargo-goods-description"><strong>{item.description}</strong><small>{item.notes || `${item.weight || 'Cargo'}${item.weight ? ' kg' : ''}`}</small></td>
+                    <td className="cargo-goods-description"><strong>{item.description}</strong>{item.notes ? <small>{item.notes}</small> : null}</td>
+                    <td>{item.weight || '—'}</td>
                     <td>{item.sender_name || item.receiver_name || '—'}</td>
                     <td>{item.sender_phone || item.receiver_phone || '—'}</td>
                     <td>{route.label.split(' to ')[1] || '—'}</td>
                     <td className="cargo-fee">{Number(item.charge || 0).toLocaleString('en-US')}</td>
-                    <td><span className={`cargo-payment-badge ${String(item.payment_status || '').toLowerCase() === 'paid' ? 'paid' : 'cod'}`}>{String(item.payment_status || '').toLowerCase() === 'paid' ? '● Paid' : '● COD'}</span></td>
+                    <td><span className={`cargo-payment-badge ${String(item.payment_status || '').toLowerCase() === 'paid' ? 'paid' : String(item.payment_status || '').toLowerCase() === 'pass' ? 'pass' : 'cod'}`}>{String(item.payment_status || '').toLowerCase() === 'paid' ? '● Paid' : String(item.payment_status || '').toLowerCase() === 'pass' ? '● Pass' : '● COD'}</span></td>
                     <td className="no-print cargo-action-cell">{staffPermissions.cargo ? <button type="button" className="cargo-delete-button" aria-label={`Delete luggage entry ${item.cargo_ref}`} title="Delete luggage entry" onClick={() => handleDeleteCargo(item)}><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M10 11v6m4-6v6M5.5 7l1 13h11l1-13M9 7V4h6v3" /></svg></button> : null}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr>
-                  <td colSpan="8">
+                  <td colSpan="9">
                     <span>Total Registered Cargo: {cargoLogs.length} consignment{cargoLogs.length === 1 ? '' : 's'} · Collected / In Transit: <strong>Rs. {cargoLogs.reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</strong></span>
-                    <span className="cargo-payment-totals"><span><i className="paid-dot" />Paid: Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() === 'paid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span><span><i className="cod-dot" />Collect on Delivery (COD): Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() !== 'paid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span></span>
+                    <span className="cargo-payment-totals"><span><i className="paid-dot" />Paid: Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() === 'paid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span><span><i className="cod-dot" />Collect on Delivery (COD): Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() === 'unpaid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span></span>
                   </td>
                 </tr>
               </tfoot>
@@ -1606,7 +1616,7 @@ function App() {
       )}
 
       {activeTab === 'Staff' && isAdmin && (
-        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} onRegisterBus={() => { setEditingBus(null); setBusForm({ registration_no: '', mobile_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
+        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} onRegisterBus={() => { setEditingBus(null); setBusForm({ registration_no: '', mobile_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} onActivateBus={handleActivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
           if (result.id === user?.id && result.permissions?.home === false && activeTab === 'Home') {
             const nextTab = result.permissions?.log !== false ? 'Log' : 'Info'
             setActiveTab(nextTab)
@@ -1617,11 +1627,10 @@ function App() {
 
       {activeTab === 'Dashboard' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">
-          <ExpenseSubmissionsTable submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={adminDataLoading} error={profitLedgerError} />
+          <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={adminDataLoading} error={profitLedgerError} />
           <section className="content-card dashboard-seat-chart-section">
             <div className="dashboard-section-heading">
-              <div><h2>Seats booked by travel date</h2><p>Confirmed seats for each route during the selected week or month.</p></div>
-              <label className="dashboard-seat-chart-period">Period<select value={seatChartPeriod} onChange={(event) => setSeatChartPeriod(event.target.value)}><option value="week">Week</option><option value="month">Month</option></select></label>
+              <div><h2>Seats booked by travel date</h2><p>Confirmed seats for each route in the selected month.</p></div>
             </div>
             <div className="dashboard-seat-chart-grid">
               {seatBookingCharts.map((chart) => {
@@ -1631,7 +1640,7 @@ function App() {
                 const plot = { left: 42, top: 16, width: 730, height: 210 }
                 const bandWidth = plot.width / chart.dates.length
                 const barWidth = Math.max(3, Math.min(24, bandWidth * 0.66))
-                const showDateLabel = (index) => seatChartPeriod === 'week' || index % 5 === 0 || index === chart.dates.length - 1
+                const showDateLabel = (index) => index % 5 === 0 || index === chart.dates.length - 1
                 return <article className="dashboard-seat-chart-card" key={chart.code}>
                   <h3>{chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}</h3>
                   <svg className="dashboard-seat-chart" viewBox="0 0 800 285" role="img" aria-label={`Confirmed seats booked by date: ${chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}`}>
@@ -1657,60 +1666,46 @@ function App() {
             </div>
           </section>
           {!adminStats.smsGateway?.configured && <p className="hint">SMS gateway is pending configuration. Bookings still work.</p>}
-          <section className="content-card">
+          <section className="content-card dashboard-trip-controls">
             <div className="dashboard-section-heading trip-controls-heading">
               <div><h2>Trip controls</h2><p>Filter trips by date, route, or individual trip.</p></div>
             </div>
             <div className="trip-controls-filters">
-              <label>Period<select value={revenuePeriod} onChange={(event) => setRevenuePeriod(event.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
               <label>Choose date<input type="date" value={revenueDate} onChange={(event) => setRevenueDate(event.target.value)} /></label>
-              <label>Bus No<select value={dashboardBus} onChange={(event) => { setDashboardBus(event.target.value); setDashboardTrip('') }}><option value="">All buses</option><option value="__unassigned__">Unassigned</option>{[...new Set([...(adminStats.buses || []).filter((bus) => bus.status !== 'inactive').map((bus) => String(bus.registration_no || '').trim()), ...(adminStats.trips || []).map((trip) => String(trip.registration_no || trip.bus_no || '').trim())].filter((busNo) => busNo && busNo.toLowerCase() !== 'unassigned'))].sort().map((busNo) => <option key={busNo} value={busNo}>{busNo}</option>)}</select></label>
-              <label>Route<select value={dashboardRoute} onChange={(event) => { setDashboardRoute(event.target.value); setDashboardTrip('') }}><option value="">All routes</option>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
+              <label>Bus No<select value={dashboardBus} onChange={(event) => { setDashboardBus(event.target.value); setDashboardTrip('') }}><option value="">All buses</option>{[...new Set((adminStats.buses || []).map((bus) => String(bus.registration_no || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)).map((busNo) => <option key={busNo} value={busNo}>{busNo}</option>)}</select></label>
+              <label>Route<select value={dashboardRoute} onChange={(event) => { setDashboardRoute(event.target.value); setDashboardTrip('') }}>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
               <label>Trip<select value={dashboardTrip} onChange={(event) => setDashboardTrip(event.target.value)}><option value="">All trips</option>{(adminStats.trips || []).filter((trip) => isInDashboardRange(trip.travel_date) && (!dashboardRoute || trip.route_code === dashboardRoute) && matchesDashboardBus(trip)).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
               <strong>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
-              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenuePeriod('daily'); setRevenueDate(todayIso()); setDashboardBus(''); setDashboardRoute(''); setDashboardTrip('') }}>Reset filters</button>
+              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenueDate(todayIso()); setDashboardBus(''); setDashboardRoute('KTY_CMB'); setDashboardTrip('') }}>Reset filters</button>
             </div>
             <section className="trip-overview" aria-labelledby="trip-overview-heading">
               <div className="trip-overview-heading"><div><h3 id="trip-overview-heading">Trip Overview</h3><p>Seat availability and trip-linked revenue for the filtered trips.</p></div></div>
               {adminDataLoading ? <p className="daily-revenue-empty" role="status">Loading trip and revenue data…</p> : profitLedgerError ? <p className="daily-revenue-empty" role="alert">Unable to load Trip Overview: {profitLedgerError}</p> : !tripOverview.rows.length ? <p className="daily-revenue-empty">No trips match the selected filters.</p> : <div className="trip-overview-grid">
-                <section className="trip-overview-seats" aria-label="Combined booked and available seats">
-                  <h4>Booked vs Available Seats</h4>
-                  <div className="trip-overview-seat-content">
-                    <div className="trip-overview-pie-wrap">
-                      <div className="trip-overview-pie" role="img" aria-label={`${tripOverview.booked} booked seats (${tripOverview.bookedPercent.toFixed(1)} percent), ${tripOverview.available} available seats (${tripOverview.availablePercent.toFixed(1)} percent), total capacity ${tripOverview.totalSeats}`} style={{ background: tripOverview.totalSeats ? `conic-gradient(#3B82F6 0 ${tripOverview.bookedPercent}%, #16A34A ${tripOverview.bookedPercent}% 100%)` : '#e5e9ef' }}><div><strong>{tripOverview.totalSeats}</strong><span>Total seats</span></div></div>
-                      <div className="trip-overview-legend"><span><i className="booked" />Booked</span><span><i className="available" />Available</span></div>
-                    </div>
-                    <div className="trip-overview-seat-stats"><div><span>Booked seats</span><strong>{tripOverview.booked}</strong><small>{tripOverview.bookedPercent.toFixed(1)}%</small></div><div><span>Available seats</span><strong>{tripOverview.available}</strong><small>{tripOverview.availablePercent.toFixed(1)}%</small></div><div><span>Total capacity</span><strong>{tripOverview.totalSeats}</strong><small>{tripOverview.rows.length} trips × {SEAT_LAYOUT.totalSeats}</small></div></div>
+                <section className="trip-overview-seats" aria-label="Booked and available seats by bus and route">
+                  <h4>Seats by bus</h4>
+                  <div className="trip-overview-route-groups">
+                    {tripOverviewRoutes.map((route) => <section className="trip-overview-route-group" key={route.code} aria-label={route.short || route.label}>
+                      <h5>{route.short || route.label}</h5>
+                      <div className="trip-overview-route-pies">
+                        {route.buses.map((bus) => <article className="trip-overview-route-pie-card" key={bus.key}>
+                          <h6>{bus.registration || (bus.busId != null ? `Bus ID ${bus.busId}` : 'Unassigned bus')}</h6>
+                          <div className="trip-overview-pie" role="img" aria-label={`${route.short || route.label}, ${bus.registration || 'Bus'}: ${bus.booked} booked seats, ${bus.available} available seats, ${bus.totalSeats} total seats`} style={{ background: `conic-gradient(#3B82F6 0 ${bus.bookedPercent}%, #16A34A ${bus.bookedPercent}% 100%)` }}><div><strong>{bus.totalSeats}</strong><span>Total seats</span></div></div>
+                          <div className="trip-overview-route-seat-counts"><span><i className="booked" />Booked <strong>{bus.booked}</strong></span><span><i className="available" />Available <strong>{bus.available}</strong></span></div>
+                        </article>)}
+                      </div>
+                    </section>)}
                   </div>
                 </section>
                 <section className="trip-overview-trip-list" aria-label="Filtered trip and vehicle details">
+                  <h4>Trip details</h4>
                   {tripOverview.rows.map(({ trip, booked, available, seatRevenue, cargoRevenue, totalRevenue, unscheduled, busId }) => <article className="trip-overview-trip-card" key={unscheduled ? `bus-${busId}` : `trip-${trip.id}`}>
                     <div className="trip-overview-trip-heading"><h4>{trip.trip_code || `Trip ${trip.id}`}</h4><span>{unscheduled ? `Bus ID ${busId}` : `Trip ID ${trip.id}`}</span></div>
                     <div className="trip-overview-trip-details"><div><span>Date</span><strong>{trip.travel_date || 'No trip in selected range'}</strong></div><div><span>Route</span><strong>{trip.route_label || ROUTES.find((route) => route.code === trip.route_code)?.label || trip.route_code || 'No route assigned'}</strong></div><div><span>Bus</span><strong>{trip.registration_no || trip.bus_no || 'Unassigned'}</strong></div><div><span>Driver</span><strong>{trip.driver_name || trip.bus_driver_name || 'Unassigned'}</strong></div><div><span>Conductor</span><strong>{trip.conductor_name || trip.bus_conductor_name || 'Unassigned'}</strong></div><div><span>Seats</span><strong>{booked} booked · {available} available</strong></div></div>
                     <div className="trip-overview-revenue"><div><span>Seat Revenue</span><strong>{lkr(seatRevenue)}</strong></div><div><span>Cargo Revenue</span><strong>{lkr(cargoRevenue)}</strong></div><div className="total"><span>Total Revenue</span><strong>{lkr(totalRevenue)}</strong></div></div>
                   </article>)}
-                  <p className="trip-overview-note">Registered buses without a scheduled trip in this date range appear with all seats available. Trip revenue uses confirmed passenger fares and cargo charges linked to that trip; cargo without a trip ID is not assigned to a trip total.</p>
                 </section>
               </div>}
             </section>
-            <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Code</th><th>Date</th><th>Route</th><th>Bus</th><th>Driver name</th><th>Conductor name</th><th>Booked</th><th>Available</th></tr></thead>
-              <tbody>
-              {filteredTrips.map((trip) => (
-                  <tr key={trip.id}>
-                    <td>{trip.trip_code}</td>
-                    <td>{trip.travel_date}</td>
-                    <td>{trip.route_label}</td>
-                    <td>{trip.registration_no || 'Unassigned'}</td>
-                    <td>{trip.driver_name || trip.bus_driver_name || 'Unassigned'}</td>
-                    <td>{trip.conductor_name || trip.bus_conductor_name || 'Unassigned'}</td>
-                    <td>{trip.booked_count}</td>
-                    <td>{trip.available_count}</td>
-                  </tr>
-                ))}
-                {!filteredTrips.length && <tr><td colSpan="8" className="daily-revenue-empty">No trips in this period.</td></tr>}
-              </tbody>
-            </table></div>
           </section>
         </main>
       )}
@@ -2015,7 +2010,7 @@ function App() {
                     <td>{item.route_label?.split(' to ')[1] || route.label.split(' to ')[1] || '—'}</td>
                     <td>{item.weight || '—'}</td>
                     <td className="cargo-manifest-amount">{Number(item.charge || 0).toLocaleString('en-US')}</td>
-                    <td>{String(item.payment_status || '').toLowerCase() === 'paid' ? 'Paid' : 'Collect on delivery'}</td>
+                    <td>{String(item.payment_status || '').toLowerCase() === 'pass' ? 'Pass' : String(item.payment_status || '').toLowerCase() === 'paid' ? 'Paid' : 'Collect on delivery'}</td>
                     <td>{item.cargo_status || 'Registered'}</td>
                   </tr>
                 ))}
@@ -2025,7 +2020,7 @@ function App() {
             <footer className="cargo-manifest-summary">
               <strong>Total fees: Rs. {cargoLogs.reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</strong>
               <span>Paid: Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() === 'paid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span>
-              <span>Collect on delivery: Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() !== 'paid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span>
+              <span>Collect on delivery: Rs. {cargoLogs.filter((item) => String(item.payment_status || '').toLowerCase() === 'unpaid').reduce((sum, item) => sum + Number(item.charge || 0), 0).toLocaleString('en-US')}</span>
             </footer>
           </div>
         </section>
