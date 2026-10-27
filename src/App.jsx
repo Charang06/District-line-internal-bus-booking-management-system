@@ -92,6 +92,7 @@ function App() {
   const [editingContactId, setEditingContactId] = useState(null)
   const [contactDraft, setContactDraft] = useState('')
   const [logsLoading, setLogsLoading] = useState(false)
+  const logsRequestIdRef = useRef(0)
   const [cargoLogs, setCargoLogs] = useState([])
   const [logFilters, setLogFilters] = useState({ q: '', from: '', sms: '', status: '' })
   const [smsBusyId, setSmsBusyId] = useState(null)
@@ -507,11 +508,14 @@ function App() {
   }, [routeCode, selectedDate])
 
   const loadLogs = useCallback(async (authToken, selectedTrip) => {
+    const requestId = ++logsRequestIdRef.current
     setLogsLoading(true)
     if (!selectedTrip?.id) {
-      setCustomerLogs([])
-      setCargoLogs([])
-      setLogsLoading(false)
+      if (requestId === logsRequestIdRef.current) {
+        setCustomerLogs([])
+        setCargoLogs([])
+        setLogsLoading(false)
+      }
       return
     }
 
@@ -539,10 +543,12 @@ function App() {
           && booking.confirmation_status === 'confirmed'
         ))
         : returnedBookings
-      setCustomerLogs(visibleBookings.sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id)))
-      setCargoLogs(cargoData.cargo || [])
+      if (requestId === logsRequestIdRef.current) {
+        setCustomerLogs(visibleBookings.sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id)))
+        setCargoLogs(cargoData.cargo || [])
+      }
     } finally {
-      setLogsLoading(false)
+      if (requestId === logsRequestIdRef.current) setLogsLoading(false)
     }
   }, [logFilters])
 
@@ -627,9 +633,11 @@ function App() {
 
   useEffect(() => {
     if (token && activeTripId) {
-      loadLogs(token, trips.find((trip) => trip.id === activeTripId))
+      loadLogs(token, trips.find((trip) => trip.id === activeTripId)).catch((err) => {
+        if (err.status !== 401 && err.status !== 403) showMessage(err.message, true)
+      })
     }
-  }, [activeTripId, trips, token, loadLogs])
+  }, [activeTripId, trips, token, loadLogs, showMessage])
 
   const calendarCells = useMemo(() => {
     const first = new Date(calendarCursor.year, calendarCursor.month, 1)

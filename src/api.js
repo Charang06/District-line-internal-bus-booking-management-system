@@ -6,7 +6,9 @@ export function assetUrl(url) {
 }
 
 function apiFetch(url, options = {}) {
-  return fetch(url, { ...options, credentials: 'include' })
+  // Authenticated API responses are frequently updated by form submissions.
+  // Keep them out of the browser HTTP cache; React owns the in-memory tables.
+  return fetch(url, { ...options, cache: 'no-store', credentials: 'include' })
 }
 
 function authHeaders(_token) {

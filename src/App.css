@@ -7045,6 +7045,10 @@ button,
   .accounts-monthly-expenses-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .accounts-monthly-expenses-form > button {
+    grid-column: 1 / -1;
+  }
 }
 
 .accounts-expense-ledger-switch button {
@@ -7794,6 +7798,16 @@ button,
     grid-template-columns: 1fr;
   }
 
+  .accounts-monthly-expenses-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-monthly-expenses-form > button {
+    grid-column: auto;
+    width: 100%;
+    min-height: 44px;
+  }
+
   .accounts-revenue-actions {
     align-items: stretch;
     flex-direction: column;
@@ -7838,6 +7852,22 @@ button,
 
   .accounts-lock-submit {
     width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .accounts-expense-items-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-expense-item {
+    border-right: 0;
+    border-bottom: 1px solid #eee9df;
+    padding: 10px 4px;
+  }
+
+  .accounts-expense-amount input {
+    height: 40px;
   }
 }
 
@@ -8458,3 +8488,131 @@ button,
 .dashboard-page > .dashboard-seat-chart-section,
 .dashboard-page > .hint { order: 2; }
 .dashboard-page > .dashboard-profit-report { order: 3; }
+
+/* Revenue uses the Expenses page's warm account styling and shared controls. */
+.accounts-revenue-mode {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+
+.accounts-revenue-mode .accounts-expense-heading {
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.9fr);
+}
+
+.accounts-revenue-mode .accounts-route-revenue-stack {
+  gap: 16px;
+}
+
+.accounts-revenue-mode .accounts-trip-details {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 18px;
+  border-color: #e4e0d6;
+  background: #fffefa;
+}
+
+.accounts-revenue-mode .accounts-trip-details input,
+.accounts-revenue-mode .accounts-trip-details select {
+  max-width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border-color: #e2ded3;
+  background: #fbfaf5;
+  color: #24344a;
+}
+
+.accounts-revenue-mode .accounts-revenue-panel {
+  border-color: #e4e0d6;
+  background: #fffefa;
+}
+
+.accounts-revenue-mode .accounts-expense-items-heading {
+  align-items: center;
+  min-height: 47px;
+}
+
+.accounts-revenue-mode .accounts-expense-items-heading h2 {
+  font-size: 1.1rem;
+}
+
+.accounts-revenue-mode .accounts-expense-items-heading p {
+  margin: 4px 0 0;
+  color: #7b8490;
+  font-size: 0.78rem;
+}
+
+.accounts-revenue-mode .accounts-revenue-panel .daily-revenue-table-wrap th,
+.accounts-revenue-mode .accounts-revenue-panel .daily-revenue-table-wrap td {
+  border-color: #ebe5d9;
+}
+
+.accounts-revenue-mode .accounts-revenue-panel table input {
+  border-color: #e0ddd5;
+  border-radius: 7px;
+  background: #fbfaf7;
+  color: #28364a;
+}
+
+.accounts-revenue-mode .accounts-subtotal {
+  color: #625c51;
+}
+
+.accounts-revenue-mode .accounts-subtotal strong {
+  border-color: #e8e3d8;
+  background: #f7efe3;
+  color: #334155;
+}
+
+.accounts-revenue-mode .accounts-total-card {
+  border-color: #e4e0d6;
+  background: #fffefa;
+}
+
+.accounts-revenue-mode .accounts-total-main {
+  border-color: #102e48;
+  background: #102e48;
+  color: #fff;
+}
+
+.accounts-revenue-mode .accounts-total-main > div > span {
+  color: #d0ad6d;
+}
+
+.accounts-revenue-mode .accounts-total-card .accounts-total-main h2 {
+  color: #fff;
+}
+
+.accounts-revenue-mode .accounts-currency-badge {
+  background: #bd9146;
+  color: #fff;
+}
+
+.accounts-revenue-mode .accounts-total-main > strong {
+  border-color: rgb(255 255 255 / 18%);
+  background: rgb(255 255 255 / 10%);
+  color: #fff;
+}
+
+.accounts-revenue-mode .accounts-lock-submit {
+  background: #bd9146;
+}
+
+@media (max-width: 900px) {
+  .accounts-revenue-mode .accounts-expense-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .accounts-revenue-mode .accounts-trip-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .accounts-revenue-mode .accounts-trip-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .accounts-revenue-mode .accounts-revenue-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

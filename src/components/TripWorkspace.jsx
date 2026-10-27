@@ -22,6 +22,10 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const [selectedSeats, setSelectedSeats] = useState(() => readTripDraft(trip.id)?.selectedSeats || [])
   const [bookingError, setBookingError] = useState('')
   const [cargoError, setCargoError] = useState('')
+  const [refreshError, setRefreshError] = useState('')
+  const [bookingSaving, setBookingSaving] = useState(false)
+  const [cargoSaving, setCargoSaving] = useState(false)
+  const bookingLoadIdRef = useRef(0)
   const [bookingForm, setBookingForm] = useState(() => readTripDraft(trip.id)?.bookingForm || {
     passengerName: '', contact: '', gender: '', from: route.defaultFrom, to: route.defaultTo, fare: '2700', note: '',
   })
@@ -48,8 +52,9 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   }, [route.code, route.defaultFrom, route.defaultTo, routeStops])
 
   const loadBookings = useCallback(async () => {
+    const requestId = ++bookingLoadIdRef.current
     const data = await api.trip(token, trip.id)
-    setBookings((data.bookings || []).filter(Boolean))
+    if (requestId === bookingLoadIdRef.current) setBookings((data.bookings || []).filter(Boolean))
   }, [token, trip.id])
 
   useEffect(() => {
@@ -96,6 +101,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   }
 
   const handleSaveBooking = async () => {
+    if (bookingSaving) return
     const passengerName = bookingForm.passengerName.trim()
     const contact = bookingForm.contact.trim()
     const phone = contact.replace(/\s+/g, '').replace(/^\+/, '')
@@ -104,8 +110,11 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
     if (contact && !/^(0?7\d{8}|94?7\d{8})$/.test(phone)) return setBookingError('Enter a valid Sri Lankan contact number.')
     if (bookingForm.fare === '' || !Number.isFinite(Number(bookingForm.fare)) || Number(bookingForm.fare) < 0) return setBookingError('Enter a valid fare of Rs. 0 or more.')
     setBookingError('')
+    setRefreshError('')
+    setBookingSaving(true)
+    let savedCount = 0
+    const results = []
     try {
-      const results = []
       const booking_group_id = globalThis.crypto?.randomUUID?.() || `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`
       for (const seatNumber of selectedSeats) {
         const data = await api.createBooking(token, {
@@ -121,18 +130,34 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
           notes: bookingForm.note,
         })
         results.push(data.booking)
+        savedCount += 1
       }
-      showMessage(`Bookings saved: ${results.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
       setSelectedSeats([])
       setBookingForm((prev) => ({ ...prev, passengerName: '', contact: '', gender: '', fare: '2700', note: '' }))
-      await loadBookings()
-      await onSaved(trip)
+      try {
+        await Promise.all([loadBookings(), onSaved(trip)])
+        showMessage(`Bookings saved: ${results.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
+      } catch (refreshErr) {
+        setRefreshError('Booking saved, but the table could not be refreshed. Retry the refresh below.')
+        setBookingError(refreshErr.message)
+      }
     } catch (err) {
-      setBookingError(err.message)
+      if (savedCount) {
+        setSelectedSeats((current) => current.filter((seat) => !results.some((booking) => Number(booking.seat_number) === Number(seat))))
+        try {
+          await Promise.all([loadBookings(), onSaved(trip)])
+        } catch {
+          setRefreshError('Some bookings were saved, but the table could not be refreshed. Retry the refresh below.')
+        }
+        setBookingError(`${savedCount} seat booking${savedCount === 1 ? '' : 's'} saved; the remaining booking failed: ${err.message}`)
+      } else setBookingError(err.message)
+    } finally {
+      setBookingSaving(false)
     }
   }
 
   const handleSaveCargo = async () => {
+    if (cargoSaving) return
     const contactNumber = cargoForm.contactNo.trim().replace(/\s+/g, '').replace(/^\+/, '')
     if (!cargoForm.goods.trim()) return setCargoError('Enter a description of the goods.')
     if (!String(cargoForm.weight).trim() || !Number.isFinite(Number(cargoForm.weight)) || Number(cargoForm.weight) <= 0) return setCargoError('Enter a quantity greater than 0.')
@@ -140,6 +165,8 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
     if (cargoForm.fee === '' || !Number.isFinite(Number(cargoForm.fee)) || Number(cargoForm.fee) < 0) return setCargoError('Enter a valid amount of Rs. 0 or more.')
     if (!cargoForm.payment) return setCargoError('Select a payment option.')
     setCargoError('')
+    setRefreshError('')
+    setCargoSaving(true)
     try {
       const data = await api.createCargo(token, {
         trip_id: trip.id,
@@ -151,17 +178,34 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
         payment_status: cargoForm.payment,
         notes: cargoForm.notes,
       })
-      showMessage(`Cargo ${data.cargo.cargo_ref} saved.`)
       setCargoForm({ goods: '', weight: '', customerName: '', contactNo: '', fee: '', payment: '', notes: '' })
-      await onSaved(trip)
+      try {
+        await onSaved(trip)
+        showMessage(`Cargo ${data.cargo.cargo_ref} saved.`)
+      } catch (refreshErr) {
+        setRefreshError('Cargo was saved, but the table could not be refreshed. Retry the refresh below.')
+        setCargoError(refreshErr.message)
+      }
     } catch (err) {
       setCargoError(err.message)
+    } finally {
+      setCargoSaving(false)
+    }
+  }
+
+  const retryRefresh = async () => {
+    setRefreshError('')
+    try {
+      await Promise.all([loadBookings(), onSaved(trip)])
+    } catch (err) {
+      setRefreshError(`Refresh failed: ${err.message}`)
     }
   }
 
   return (
     <section className="booking-shell trip-workspace">
       <div className="seat-layout">
+        {refreshError && <div className="form-validation-message" role="alert">{refreshError} <button type="button" className="ghost-button small" onClick={retryRefresh}>Retry refresh</button></div>}
         <div className="trip-seat-column">
           <div className="booking-header">
             <div className="info-block"><span>Bus No</span><strong>{trip.registration_no || '—'}</strong></div>
@@ -227,7 +271,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
             </div>
             <label><span>Notes</span><textarea value={bookingForm.note} onChange={(event) => setBookingForm((prev) => ({ ...prev, note: event.target.value }))} /></label>
             <div className="reservation-actions">
-              <button type="button" className="primary-button" onClick={handleSaveBooking}>Save Passenger booking</button>
+              <button type="button" className="primary-button" disabled={bookingSaving} onClick={handleSaveBooking}>{bookingSaving ? 'Saving booking...' : 'Save Passenger booking'}</button>
             </div>
           </div> : <div className="reservation-panel permission-notice">Passenger booking permission is disabled for your staff account.</div>}
 
@@ -260,7 +304,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
                 </div>
               </div>
             </div>
-            <button type="button" className="primary-button" onClick={handleSaveCargo}>Save Goods Booking</button>
+            <button type="button" className="primary-button" disabled={cargoSaving} onClick={handleSaveCargo}>{cargoSaving ? 'Saving cargo...' : 'Save Goods Booking'}</button>
           </div> : <div className="cargo-panel permission-notice">Cargo permission is disabled for your staff account.</div>}
         </div>
       </div>

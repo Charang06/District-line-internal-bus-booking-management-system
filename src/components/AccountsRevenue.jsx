@@ -92,7 +92,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
     setTimeout(() => URL.revokeObjectURL(url), 0)
   }
   return <form onSubmit={submit} className="accounts-route-revenue-form">
-    <section className="content-card accounts-trip-details">
+    <section className="content-card accounts-trip-details accounts-expense-details accounts-revenue-details">
       <h2>{route.label}</h2>
       <label>Trip date<input required type="date" value={date} onChange={(event) => { setDate(event.target.value); setBusNo(''); setDriverName(''); setConductorName('') }} /></label>
       <label>Bus number<select required value={busNo} onChange={(event) => setBusNo(event.target.value)}><option value="">Select a registered bus</option>{knownBusNumbers.map((number) => <option key={number} value={number}>{number}</option>)}</select></label>
@@ -101,8 +101,8 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
       <label>Number of seats<input type="number" min="1" max={SEAT_LAYOUT.totalSeats} step="1" value={seatCapacity} onChange={(event) => setSeatCapacity(event.target.value)} /><small>{seatCount} entered / {Math.max(0, Number(seatCapacity || 0) - seatCount)} remaining</small></label>
     </section>
     <div className="accounts-revenue-columns">
-      <section className="content-card accounts-revenue-panel"><div className="accounts-panel-heading"><h2>Revenue from Seats</h2><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap"><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => <tr key={row.category}><td className="accounts-seat-count-cell"><input aria-label={`${route.label} ${row.category} number of seats`} type="number" min="0" max={Number(seatCapacity || 0)} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} /></td><td><input aria-label={`${route.label} ${row.category} fare amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>)}</tbody></table></div><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div></section>
-      <section className="content-card accounts-revenue-panel"><div className="accounts-panel-heading"><h2>Revenue from Cargo</h2><span>LUGGAGE &amp; WAYBILLS</span></div><div className="daily-revenue-table-wrap"><table className="accounts-cargo-table"><thead><tr><th>Description</th><th>Amount (Rs.)</th></tr></thead><tbody>{cargoRows.map((row, index) => <tr key={`cargo-${index}`}><td className="accounts-cargo-description"><input aria-label={`${route.label} cargo description`} maxLength="120" required value={row.description} onChange={(event) => updateCargo(index, 'description', event.target.value)} />{row.tag ? <span className="accounts-cargo-tag">{row.tag}</span> : null}<button type="button" className="accounts-remove-row" aria-label={`Remove ${row.description || 'cargo'} row`} onClick={() => setCargoRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}>×</button></td><td><input aria-label={`${route.label} cargo amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateCargo(index, 'amount', event.target.value)} /></td></tr>)}</tbody></table></div><button type="button" className="accounts-add-row" onClick={() => setCargoRows((rows) => rows.length < 30 ? [...rows, { description: '', tag: '', amount: '0' }] : rows)}>+ Add custom cargo row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(cargoSubtotal)}</strong></div></section>
+      <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2>Revenue from Seats</h2><p>Passenger seat counts and fares for this trip.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap"><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => <tr key={row.category}><td className="accounts-seat-count-cell"><input aria-label={`${route.label} ${row.category} number of seats`} type="number" min="0" max={Number(seatCapacity || 0)} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} /></td><td><input aria-label={`${route.label} ${row.category} fare amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>)}</tbody></table></div><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div></section>
+      <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2>Revenue from Cargo</h2><p>Luggage and waybill charges for this trip.</p></div><span>LUGGAGE &amp; WAYBILLS</span></div><div className="daily-revenue-table-wrap"><table className="accounts-cargo-table"><thead><tr><th>Description</th><th>Amount (Rs.)</th></tr></thead><tbody>{cargoRows.map((row, index) => <tr key={`cargo-${index}`}><td className="accounts-cargo-description"><input aria-label={`${route.label} cargo description`} maxLength="120" required value={row.description} onChange={(event) => updateCargo(index, 'description', event.target.value)} />{row.tag ? <span className="accounts-cargo-tag">{row.tag}</span> : null}<button type="button" className="accounts-remove-row" aria-label={`Remove ${row.description || 'cargo'} row`} onClick={() => setCargoRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}>×</button></td><td><input aria-label={`${route.label} cargo amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateCargo(index, 'amount', event.target.value)} /></td></tr>)}</tbody></table></div><button type="button" className="accounts-add-row" onClick={() => setCargoRows((rows) => rows.length < 30 ? [...rows, { description: '', tag: '', amount: '0' }] : rows)}>+ Add custom cargo row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(cargoSubtotal)}</strong></div></section>
     </div>
     <section className="content-card accounts-total-card"><div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong></div><div className="accounts-total-controls"><div className="accounts-draft-status"><strong>Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div><div className="accounts-revenue-actions"><button type="button" className="ghost-button" onClick={resetRouteForm}>Reset Form</button><button type="button" className="secondary-button" onClick={onPrint}>Print Manifest Voucher</button><button type="button" className="secondary-button" onClick={exportCsv}>Export CSV</button></div><button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || seatCount > Number(seatCapacity || 0) || totalRevenue <= 0}>{saving ? 'Saving revenue entry...' : 'Submit & Lock Revenue Entry'}</button>{totalRevenue <= 0 && <span className="accounts-submit-hint">Enter at least one seat or cargo amount to submit.</span>}</div></section>
   </form>
@@ -446,16 +446,21 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
       </section>
 
       {activeSection === 'revenue' ? <>
-      <section className="content-card accounts-corridor-selector">
-        <span className="accounts-kicker">REVENUE FOR BOTH CORRIDORS</span>
-        <p>Complete the forms for each route below.</p>
+      <div className="accounts-revenue-mode">
+      <section className="accounts-expense-heading accounts-revenue-heading">
+        <div>
+          <span className="accounts-kicker">SELECT ACTIVE CORRIDOR <b>FORM DL-REV</b></span>
+          <h2>Revenue Form (KKY &amp; CMB Operations)</h2>
+          <p>Complete the passenger and cargo revenue forms for each route below.</p>
+        </div>
+        <div className="accounts-expense-route-tools"><span className="accounts-expense-draft-badge">● Revenue entries are saved to the operational ledger</span></div>
       </section>
 
       <div className="accounts-route-revenue-stack">
         {ROUTES.map((route) => <RevenueRouteForm key={route.code} route={route} data={data} token={token} showMessage={showMessage} onSaved={(entry) => { setEntries((current) => [entry, ...current].slice(0, 100)); onRevenueEntrySaved?.(entry) }} onPrint={onPrint} knownBusNumbers={knownBusNumbers} />)}
       </div>
 
-      <section className="content-card accounts-recent-card">
+      <section className="content-card accounts-recent-card accounts-expense-ledger accounts-revenue-ledger">
         <div className="accounts-panel-heading"><div><h2>RECENT OPERATIONAL REVENUE SUBMISSIONS</h2><p>Live ledger of manually submitted trip revenue.</p></div><span>{loadingEntries ? 'Loading...' : 'REVENUE LEDGER'}</span></div>
         <div className="accounts-revenue-ledger-filters">
           <label>Date<input type="date" aria-label="Search revenue by date" value={revenueDateSearch} onChange={(event) => setRevenueDateSearch(event.target.value)} /></label>
@@ -471,6 +476,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
           {!loadingEntries && !filteredRevenueEntries.length && <tr><td colSpan="7" className="daily-revenue-empty">{entries.length ? 'No revenue submissions match these filters.' : 'No manual revenue submissions yet.'}</td></tr>}
         </tbody></table></div>
       </section>
+      </div>
       </> : <>
         <section className="accounts-expense-heading">
           <div>
