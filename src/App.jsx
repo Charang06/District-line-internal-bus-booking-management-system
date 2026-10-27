@@ -6,6 +6,7 @@ import StaffManagement from './components/StaffManagement'
 import AdminProfile from './components/AdminProfile'
 import AccountsRevenue from './components/AccountsRevenue'
 import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
+import SmsBalanceCard from './components/SmsBalanceCard'
 import { ROUTES, SEAT_LAYOUT, routeByCode } from './data/seatLayout'
 import { buildTripOverview, filterTripOverviewTrips } from './data/tripOverview'
 
@@ -1713,6 +1714,7 @@ function App() {
 
       {activeTab === 'Dashboard' && isAdmin && adminStats && (
         <main className="content-page dashboard-page">
+          <SmsBalanceCard token={token} />
           <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={adminDataLoading} error={profitLedgerError} />
           <section className="content-card dashboard-seat-chart-section">
             <div className="dashboard-section-heading">

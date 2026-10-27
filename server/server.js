@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url'
 import { AsyncLocalStorage } from 'async_hooks'
 import { loadEnv } from './env.js'
 import { sendSms, buildConfirmationMessage, buildCancellationMessage, smsConfig } from './sms.js'
+import { getSmsLenzBalance, SmsLenzBalanceError } from './smslenz-balance.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -1327,6 +1328,19 @@ app.post('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (
     try { await exec('ROLLBACK') } catch {}
     console.error('Expense submission save failed:', error)
     return res.status(500).json({ message: 'Could not save and lock the expense submission.' })
+  }
+})
+
+app.get('/api/admin/smslenz/balance', authMiddleware, requireAdmin, async (req, res) => {
+  const startedAt = monotonicMs()
+  try {
+    const balance = await getSmsLenzBalance()
+    console.info(JSON.stringify({ kind: 'smslenz_balance', request_id: transactionContext.getStore()?.requestId || null, outcome: 'success', duration_ms: Number((monotonicMs() - startedAt).toFixed(1)) }))
+    res.json(balance)
+  } catch (error) {
+    const failure = error instanceof SmsLenzBalanceError ? error : new SmsLenzBalanceError('Unable to retrieve the SMS balance. Please retry shortly.')
+    console.warn(JSON.stringify({ kind: 'smslenz_balance', request_id: transactionContext.getStore()?.requestId || null, outcome: failure.kind, duration_ms: Number((monotonicMs() - startedAt).toFixed(1)) }))
+    res.status(failure.status).json({ message: failure.message })
   }
 })
 

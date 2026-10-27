@@ -2567,6 +2567,9 @@ th {
   gap: 18px;
 }
 
+.dashboard-page > .sms-balance-card { order: 0; box-sizing: border-box; width: 100%; margin: 0; padding: 16px 18px; border: 1px solid #dce3eb; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgb(20 34 52 / 4%); transition: box-shadow .16s ease, border-color .16s ease; }
+.dashboard-page > .sms-balance-card:hover { border-color: #cbd5e1; box-shadow: 0 2px 6px rgb(20 34 52 / 7%); }
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2587,6 +2590,49 @@ th {
 .metric-card strong {
   font-size: 2rem;
   color: #1b2d3d;
+}
+
+.sms-balance-card { min-width: 0; }
+.sms-balance-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.sms-balance-title-wrap { display: flex; min-width: 0; align-items: center; gap: 11px; }
+.sms-balance-icon { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; border-radius: 10px; background: #eaf2ff; color: #315f9f; }
+.sms-balance-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.sms-balance-heading h2 { margin: 0; color: #1b2d3d; font-size: 1.05rem; }
+.sms-balance-heading p { margin: 5px 0 0; color: #5a6c7f; font-size: .82rem; }
+.sms-balance-refresh { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 5px 10px; border: 1px solid #d7dde5; border-radius: 8px; background: #fff; color: #344767; font: inherit; font-size: .78rem; font-weight: 650; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.sms-balance-refresh:hover:not(:disabled) { border-color: #b8c6d8; background: #f7f9fc; color: #1b2d3d; }
+.sms-balance-refresh:focus-visible { outline: 2px solid #6b91c6; outline-offset: 2px; }
+.sms-balance-refresh:disabled { cursor: wait; opacity: .72; }
+.sms-balance-refresh svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.sms-balance-refresh svg.spinning { animation: sms-balance-spin .8s linear infinite; }
+@keyframes sms-balance-spin { to { transform: rotate(360deg); } }
+.sms-balance-main { display: grid; gap: 3px; margin-top: 14px; }
+.sms-balance-main span, .sms-balance-meta, .sms-balance-message { color: #5a6c7f; font-size: .84rem; }
+.sms-balance-main strong { color: #1b2d3d; font-size: clamp(1.2rem, 2vw, 1.65rem); font-variant-numeric: tabular-nums; line-height: 1.2; overflow-wrap: anywhere; }
+.sms-balance-main strong small { color: #667487; font-size: .74rem; font-weight: 600; }
+.sms-balance-main small, .sms-balance-meta small { color: #748092; font-size: .75rem; overflow-wrap: anywhere; }
+.sms-balance-meta { display: grid; gap: 7px; margin-top: 12px; }
+.sms-balance-meta ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.sms-balance-meta li { display: flex; justify-content: space-between; gap: 10px; }
+.sms-balance-meta li span { min-width: 0; overflow-wrap: anywhere; }
+.sms-balance-meta li strong { flex: 0 0 auto; }
+.sms-balance-meta li strong { color: #1b2d3d; }
+.sms-balance-error { margin: 10px 0 0; color: #a52929; font-size: .82rem; overflow-wrap: anywhere; }
+.sms-balance-warning, .sms-balance-refreshing { display: block; margin: 8px 0 0; color: #748092; font-size: .75rem; }
+.sms-balance-skeleton { display: grid; width: min(100%, 340px); gap: 8px; margin-top: 16px; }
+.sms-balance-skeleton span { display: block; height: 13px; border-radius: 6px; background: linear-gradient(90deg, #eef1f5 25%, #f8f9fb 40%, #eef1f5 65%); background-size: 300% 100%; animation: sms-balance-shimmer 1.25s ease-in-out infinite; }
+.sms-balance-skeleton span:first-child { width: 72%; height: 25px; }
+.sms-balance-skeleton small { color: #748092; font-size: .75rem; }
+@keyframes sms-balance-shimmer { to { background-position: -150% 0; } }
+@media (max-width: 760px) { .sms-balance-heading { align-items: stretch; flex-direction: row; } .sms-balance-refresh { min-height: 44px; } }
+@media (max-width: 420px) {
+  .dashboard-page > .sms-balance-card { padding: 14px; }
+  .sms-balance-heading { align-items: flex-start; gap: 9px; }
+  .sms-balance-title-wrap { gap: 8px; }
+  .sms-balance-icon { width: 36px; height: 36px; flex-basis: 36px; }
+  .sms-balance-refresh { width: 44px; min-width: 44px; min-height: 44px; padding: 0; font-size: 0; }
+  .sms-balance-refresh svg { width: 18px; height: 18px; }
+  .sms-balance-meta > small { overflow-wrap: anywhere; }
 }
 
 .daily-revenue-card {
@@ -8342,8 +8388,8 @@ button,
 .accounts-expense-ledger .accounts-revenue-ledger-filters > label { flex: 1 1 170px; min-width: 150px; }
 .accounts-expense-ledger .accounts-revenue-ledger-filters input,
 .accounts-expense-ledger .accounts-revenue-ledger-filters select { width: 100%; min-height: 40px; padding: 8px 10px; border: 1px solid #d9e0e8; border-radius: 8px; background: #fff; color: #1d2b3d; font: inherit; }
-.profit-ledger-summary { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; }
-.profit-ledger-summary.with-monthly { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.profit-ledger-summary { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.profit-ledger-summary.with-monthly { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 .profit-ledger-summary .metric-card { display: flex; min-height: 104px; flex-direction: column; justify-content: center; padding: 16px 18px; border: 1px solid #dce3eb; border-radius: 10px; background: #fff; box-shadow: 0 1px 3px rgb(20 34 52 / 4%); }
 .profit-ledger-summary .metric-card span { margin-bottom: 8px; color: #667487; font-size: .8rem; }
 .profit-ledger-summary .metric-card strong { color: #1c2d40; font-size: clamp(1.25rem, 2vw, 1.65rem); font-variant-numeric: tabular-nums; line-height: 1.2; overflow-wrap: anywhere; }

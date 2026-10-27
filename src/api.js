@@ -103,6 +103,7 @@ export const api = {
   uploadProfilePhoto: (token, image) => apiFetch(`${API_BASE}/profile/photo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
   changePassword: (token, body) => apiFetch(`${API_BASE}/profile/password`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   adminDashboard: (token) => timedRequest('admin_dashboard', `${API_BASE}/admin/dashboard`, { headers: authHeaders(token) }),
+  smsLenzBalance: (token) => apiFetch(`${API_BASE}/admin/smslenz/balance`, { headers: authHeaders(token) }).then(parse),
   adminRevenueEntries: (token, { summary = false } = {}) => timedRequest(
     'admin_revenue_entries',
     `${API_BASE}/admin/revenue-entries${summary ? '?summary=1' : ''}`,
