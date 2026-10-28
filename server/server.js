@@ -2325,6 +2325,56 @@ app.patch('/api/bookings/:id/contact', authMiddleware, requireStaffPermission('p
   res.json({ bookings })
 })
 
+app.patch('/api/bookings/:id/details', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+  const body = req.body || {}
+  const hasName = Object.hasOwn(body, 'passenger_name')
+  const hasContact = Object.hasOwn(body, 'contact')
+  const hasGender = Object.hasOwn(body, 'gender')
+  const hasBoardingPoint = Object.hasOwn(body, 'boarding_point')
+  const hasDestination = Object.hasOwn(body, 'destination')
+  const hasFare = Object.hasOwn(body, 'fare')
+  const hasNotes = Object.hasOwn(body, 'notes')
+  if (!hasName && !hasContact && !hasGender && !hasBoardingPoint && !hasDestination && !hasFare && !hasNotes) return res.status(400).json({ message: 'Update customer details.' })
+  const passengerName = hasName ? String(body.passenger_name || '').trim() : ''
+  const contact = hasContact ? String(body.contact || '').trim() : ''
+  const gender = hasGender ? String(body.gender || '').trim() : ''
+  const boardingPoint = hasBoardingPoint ? String(body.boarding_point || '').trim() : ''
+  const destination = hasDestination ? String(body.destination || '').trim() : ''
+  const fare = hasFare ? Number(body.fare) : null
+  const notes = hasNotes ? String(body.notes ?? '').trim() : ''
+  if (hasName && (!passengerName || passengerName.length > 120)) {
+    return res.status(400).json({ message: 'Enter a customer name up to 120 characters.' })
+  }
+  if (hasContact && (!isValidPhone(contact) || contact.length > 30)) return res.status(400).json({ message: 'Enter a valid customer mobile number (up to 30 characters).' })
+  if (hasGender && gender.length > 30) return res.status(400).json({ message: 'Gender must be 30 characters or fewer.' })
+  if (hasBoardingPoint && boardingPoint.length > 120) return res.status(400).json({ message: 'Boarding point must be 120 characters or fewer.' })
+  if (hasDestination && destination.length > 120) return res.status(400).json({ message: 'Destination must be 120 characters or fewer.' })
+  if (hasFare && (!Number.isSafeInteger(fare) || fare < 0 || fare > 1_000_000_000)) return res.status(400).json({ message: 'Fare must be a whole number from 0 to 1,000,000,000.' })
+  if (hasNotes && notes.length > 1000) return res.status(400).json({ message: 'Customer notes must be 1,000 characters or fewer.' })
+
+  const booking = await get('SELECT * FROM bookings WHERE id = ?', [req.params.id])
+  if (!booking) return res.status(404).json({ message: 'Passenger booking not found.' })
+  const finalizedDuty = await get(`SELECT d.duty_code FROM bus_duties d WHERE d.status = 'finalized' AND (d.first_trip_id = ? OR d.return_trip_id = ?) LIMIT 1`, [booking.trip_id, booking.trip_id])
+  if (finalizedDuty) return res.status(409).json({ message: `Booking is part of finalized duty ${finalizedDuty.duty_code} and cannot be changed.` })
+
+  const groupWhere = booking.booking_group_id ? 'booking_group_id = ?' : 'id = ?'
+  const groupValue = booking.booking_group_id || booking.id
+  const assignments = []
+  const values = []
+  if (hasName) { assignments.push('passenger_name = ?'); values.push(passengerName) }
+  if (hasContact) { assignments.push('contact = ?'); values.push(normalizePhone(contact)) }
+  if (hasGender) { assignments.push('gender = ?'); values.push(gender) }
+  if (hasBoardingPoint) { assignments.push('boarding_point = ?'); values.push(boardingPoint) }
+  if (hasDestination) { assignments.push('destination = ?'); values.push(destination) }
+  if (hasFare) { assignments.push('fare = ?'); values.push(fare) }
+  if (hasNotes) { assignments.push('notes = ?'); values.push(notes) }
+  assignments.push('updated_at = CURRENT_TIMESTAMP')
+  await run(`UPDATE bookings SET ${assignments.join(', ')} WHERE ${groupWhere}`, [...values, groupValue])
+  const bookings = await all(`SELECT * FROM bookings WHERE ${groupWhere}`, [groupValue])
+  await audit(req.user, 'booking.details.update', 'booking', booking.id, `${booking.booking_ref}: customer details updated`)
+  res.json({ bookings })
+})
+
 app.post('/api/bookings/:id/sms', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
   const bookingId = Number(req.params.id)
   if (!Number.isSafeInteger(bookingId) || bookingId < 1) return res.status(400).json({ message: 'Invalid booking ID.' })

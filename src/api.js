@@ -93,6 +93,7 @@ export const api = {
   cancelBooking: (token, id) => apiFetch(`${API_BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token), body: '{}' }).then(parse),
   setBookingConfirmation: (token, id, confirmation_status) => apiFetch(`${API_BASE}/bookings/${id}/confirmation`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ confirmation_status }) }).then(parse),
   updateBookingContact: (token, id, contact) => request(`${API_BASE}/bookings/${id}/contact`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ contact }) }),
+  updateBookingDetails: (token, id, body) => request(`${API_BASE}/bookings/${id}/details`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }),
   sendSms: (token, id, retry = false) => apiFetch(`${API_BASE}/bookings/${id}/sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
   sendCancellationSms: (token, id, retry = false) => apiFetch(`${API_BASE}/bookings/${id}/cancellation-sms`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ retry }) }).then(parse),
   cargo: (token, query = '') => apiFetch(`${API_BASE}/cargo${query}`, { headers: authHeaders(token) }).then(parse),

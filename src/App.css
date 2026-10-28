@@ -8087,6 +8087,17 @@ button,
   -webkit-overflow-scrolling: touch;
 }
 
+.customer-details-modal > p { margin: -6px 0 16px; color: #5b6878; line-height: 1.5; }
+.customer-details-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; }
+.customer-details-form-grid label { min-width: 0; margin-bottom: 12px; }
+.customer-details-form-grid input,
+.customer-details-form-grid select,
+.customer-details-form-grid textarea { min-width: 0; font: inherit; }
+.customer-details-modal textarea { min-height: 100px; resize: vertical; }
+.customer-details-notes-field { grid-column: 1 / -1; }
+.customer-details-modal .reservation-actions { justify-content: flex-end; gap: 8px; margin-top: 16px; }
+@media (max-width: 600px) { .customer-details-form-grid { grid-template-columns: minmax(0, 1fr); } .customer-details-notes-field { grid-column: auto; } }
+
 .passenger-log-table-scroll table {
   min-width: 1080px;
 }

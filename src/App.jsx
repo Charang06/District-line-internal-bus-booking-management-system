@@ -90,8 +90,14 @@ function App() {
   const [trips, setTrips] = useState([])
   const [activeTripId, setActiveTripId] = useState(null)
   const [customerLogs, setCustomerLogs] = useState([])
-  const [editingContactId, setEditingContactId] = useState(null)
-  const [contactDraft, setContactDraft] = useState('')
+  const [editingCustomerDetailsId, setEditingCustomerDetailsId] = useState(null)
+  const [customerNameDraft, setCustomerNameDraft] = useState('')
+  const [customerContactDraft, setCustomerContactDraft] = useState('')
+  const [customerGenderDraft, setCustomerGenderDraft] = useState('')
+  const [customerFromDraft, setCustomerFromDraft] = useState('')
+  const [customerToDraft, setCustomerToDraft] = useState('')
+  const [customerFareDraft, setCustomerFareDraft] = useState('')
+  const [customerNotesDraft, setCustomerNotesDraft] = useState('')
   const [logsLoading, setLogsLoading] = useState(false)
   const logsRequestIdRef = useRef(0)
   const [cargoLogs, setCargoLogs] = useState([])
@@ -112,6 +118,7 @@ function App() {
   const [crewList, setCrewList] = useState([])
   const [busContactList, setBusContactList] = useState([])
   const [revenueDate, setRevenueDate] = useState(todayIso())
+  const [seatChartMonth, setSeatChartMonth] = useState(() => todayIso().slice(0, 7))
   const [dashboardRoute, setDashboardRoute] = useState('KTY_CMB')
   const [dashboardBus, setDashboardBus] = useState('')
   const [dashboardTrip, setDashboardTrip] = useState('')
@@ -198,7 +205,7 @@ function App() {
   const filteredRevenue = useMemo(() => (adminStats?.dailyRevenue || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const seatBookingCharts = useMemo(() => {
     return measureDashboardChart('seat_bookings', () => {
-      const anchor = new Date(`${revenueDate}T00:00:00`)
+      const anchor = new Date(`${seatChartMonth}-01T00:00:00`)
       if (Number.isNaN(anchor.getTime())) return []
       const start = new Date(anchor.getFullYear(), anchor.getMonth(), 1)
       const end = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0)
@@ -216,7 +223,7 @@ function App() {
         return { code, dates, counts: dates.map((date) => counts.get(date) || 0) }
       })
     })
-  }, [adminStats, revenueDate, dashboardTrip])
+  }, [adminStats, seatChartMonth, dashboardTrip])
   const filteredTrips = useMemo(() => dashboardRange ? filterTripOverviewTrips(adminStats?.trips || [], { start: dashboardRange.start, end: dashboardRange.end, route: dashboardRoute, bus: dashboardBus, tripId: dashboardTrip }) : [], [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const filteredPassengerRecords = useMemo(() => (adminStats?.passengerRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const filteredCargoRecords = useMemo(() => (adminStats?.cargoRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
@@ -466,6 +473,7 @@ function App() {
       }
     }).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id))
   }, [customerLogs])
+  const editingCustomerLog = customerLogRows.find((log) => log.id === editingCustomerDetailsId) || null
 
   const showMessage = useCallback((text, isError = false) => {
     setNotice(isError ? '' : text)
@@ -748,23 +756,32 @@ function App() {
     }
   }
 
-  const handleSaveCustomerContact = async (log) => {
-    const value = contactDraft.trim()
-    if (!value) return showMessage('Enter a customer mobile number.', true)
+  const handleSaveCustomerDetails = async (log) => {
+    const passengerName = customerNameDraft.trim()
+    const contact = customerContactDraft.trim()
+    const fare = Number(customerFareDraft)
+    const notes = customerNotesDraft.trim()
+    if (!passengerName) return showMessage('Enter a customer name.', true)
+    if (passengerName.length > 120) return showMessage('Customer names must be 120 characters or fewer.', true)
+    if (!contact) return showMessage('Enter a customer mobile number.', true)
+    if (contact.length > 30) return showMessage('Customer mobile numbers must be 30 characters or fewer.', true)
+    if (!Number.isSafeInteger(fare) || fare < 0 || fare > 1_000_000_000) return showMessage('Enter a whole-number fare from Rs. 0 to Rs. 1,000,000,000.', true)
+    if (notes.length > 1000) return showMessage('Customer notes must be 1,000 characters or fewer.', true)
     setSmsBusyId(log.id)
     try {
-      const data = await api.updateBookingContact(token, log.bookings[0].id, value)
-      const updated = data.bookings || [data.booking]
-      const byId = new Map(updated.map((booking) => [booking.id, booking]))
-      setCustomerLogs((current) => current.map((item) => byId.get(item.id) || item))
-      setEditingContactId(null)
-      showMessage(`${log.passenger_name}'s mobile number updated.`)
-      try {
-        await loadLogs(token, activeTrip)
-      } catch {
-        // The contact update already succeeded and local rows are updated; a
-        // transient log refresh failure should not present as a failed save.
-      }
+      const data = await api.updateBookingDetails(token, log.bookings[0].id, {
+        passenger_name: passengerName,
+        contact,
+        gender: customerGenderDraft,
+        boarding_point: customerFromDraft,
+        destination: customerToDraft,
+        fare,
+        notes,
+      })
+      const byId = new Map((data.bookings || []).map((booking) => [booking.id, booking]))
+      setCustomerLogs((current) => current.map((booking) => byId.get(booking.id) || booking))
+      setEditingCustomerDetailsId(null)
+      showMessage(`${passengerName}'s customer log details were updated.`)
     } catch (err) {
       showMessage(err.message, true)
     } finally {
@@ -1556,7 +1573,7 @@ function App() {
                       <td>{log.seat_numbers.join(', ')}</td>
                       <td>{log.passenger_name}</td>
                       <td>{log.gender || '—'}</td>
-                      <td>{editingContactId === log.id ? <div className="customer-contact-edit"><input type="tel" maxLength={30} value={contactDraft} aria-label={`Mobile number for ${log.passenger_name}`} onChange={(event) => setContactDraft(event.target.value)} /><button type="button" className="ghost-button small" disabled={smsBusyId === log.id} onClick={() => handleSaveCustomerContact(log)}>Save</button><button type="button" className="ghost-button small" onClick={() => setEditingContactId(null)}>Cancel</button></div> : <>{log.contact}{staffPermissions.passengers && <button type="button" className="ghost-button small" onClick={() => { setEditingContactId(log.id); setContactDraft(log.contact || '') }}>Edit</button>}</>}</td>
+                      <td>{log.contact}</td>
                       <td>{log.boarding_point}</td>
                       <td>{log.destination}</td>
                       <td>{log.fare_total}</td>
@@ -1579,6 +1596,7 @@ function App() {
                         />
                       </td>
                       <td className="no-print">
+                        {staffPermissions.passengers && <button type="button" className="ghost-button small" disabled={smsBusyId === log.id} onClick={() => { setEditingCustomerDetailsId(log.id); setCustomerNameDraft(log.passenger_name || ''); setCustomerContactDraft(log.contact || ''); setCustomerGenderDraft(log.gender || ''); setCustomerFromDraft(log.boarding_point || ''); setCustomerToDraft(log.destination || ''); setCustomerFareDraft(String(log.bookings[0]?.fare ?? '')); setCustomerNotesDraft(log.notes || '') }}>Edit</button>}
                         {log.any_active && staffPermissions.passengers ? (
                           <button type="button" className="ghost-button small" onClick={() => setCancelTarget(log)}>Cancel</button>
                         ) : '—'}
@@ -1720,6 +1738,7 @@ function App() {
           <section className="content-card dashboard-seat-chart-section">
             <div className="dashboard-section-heading">
               <div><h2>Seats booked by travel date</h2><p>Confirmed seats for each route in the selected month.</p></div>
+              <label className="dashboard-seat-chart-month">Month<input type="month" value={seatChartMonth} onChange={(event) => setSeatChartMonth(event.target.value)} /></label>
             </div>
             <div className="dashboard-seat-chart-grid">
               {seatBookingCharts.map((chart) => {
@@ -1930,6 +1949,30 @@ function App() {
               <button type="button" className="ghost-button" onClick={() => setConfirmDialog(null)}>Cancel</button>
               <button type="button" className={confirmDialog.destructive === false ? 'primary-button' : 'danger-button'} onClick={() => { const action = confirmDialog.onConfirm; setConfirmDialog(null); action() }}>{confirmDialog.confirmLabel}</button>
             </div>
+          </section>
+        </div>
+      )}
+
+      {editingCustomerLog && (
+        <div className="modal-backdrop no-print" onMouseDown={(event) => { if (event.target === event.currentTarget && smsBusyId !== editingCustomerLog.id) setEditingCustomerDetailsId(null) }}>
+          <section className="modal customer-details-modal" role="dialog" aria-modal="true" aria-labelledby="customer-details-title">
+            <h2 id="customer-details-title">Edit customer row</h2>
+            <p>Update the customer details for seat{editingCustomerLog.seat_numbers.length === 1 ? '' : 's'} {editingCustomerLog.seat_numbers.join(', ')}.</p>
+            <form onSubmit={(event) => { event.preventDefault(); handleSaveCustomerDetails(editingCustomerLog) }}>
+              <div className="customer-details-form-grid">
+                <label>Customer name<input autoFocus required maxLength={120} value={customerNameDraft} onChange={(event) => setCustomerNameDraft(event.target.value)} /></label>
+                <label>Contact number<input type="tel" required maxLength={30} value={customerContactDraft} onChange={(event) => setCustomerContactDraft(event.target.value)} /></label>
+                <label>Gender<select value={customerGenderDraft} onChange={(event) => setCustomerGenderDraft(event.target.value)}><option value="">Not specified</option><option value="Male">Male</option><option value="Female">Female</option>{customerGenderDraft && !['Male', 'Female'].includes(customerGenderDraft) && <option value={customerGenderDraft}>{customerGenderDraft}</option>}</select></label>
+                <label>From<select value={customerFromDraft} onChange={(event) => setCustomerFromDraft(event.target.value)}><option value="">Select boarding point</option>{routeByCode(editingCustomerLog.route_code).boarding.map((point) => <option key={point} value={point}>{point}</option>)}{customerFromDraft && !routeByCode(editingCustomerLog.route_code).boarding.includes(customerFromDraft) && <option value={customerFromDraft}>{customerFromDraft}</option>}</select></label>
+                <label>To<select value={customerToDraft} onChange={(event) => setCustomerToDraft(event.target.value)}><option value="">Select destination</option>{routeByCode(editingCustomerLog.route_code).alighting.map((point) => <option key={point} value={point}>{point}</option>)}{customerToDraft && !routeByCode(editingCustomerLog.route_code).alighting.includes(customerToDraft) && <option value={customerToDraft}>{customerToDraft}</option>}</select></label>
+                <label>Fare per seat (Rs.)<input type="number" min="0" max="1000000000" step="1" required value={customerFareDraft} onChange={(event) => setCustomerFareDraft(event.target.value)} /></label>
+                <label className="customer-details-notes-field">Remark / Note<textarea maxLength={1000} value={customerNotesDraft} onChange={(event) => setCustomerNotesDraft(event.target.value)} /></label>
+              </div>
+              <div className="reservation-actions">
+                <button type="button" className="ghost-button" disabled={smsBusyId === editingCustomerLog.id} onClick={() => setEditingCustomerDetailsId(null)}>Cancel</button>
+                <button type="submit" className="primary-button" disabled={smsBusyId === editingCustomerLog.id}>{smsBusyId === editingCustomerLog.id ? 'Saving…' : 'Save changes'}</button>
+              </div>
+            </form>
           </section>
         </div>
       )}
