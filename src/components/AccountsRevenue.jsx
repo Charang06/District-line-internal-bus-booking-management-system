@@ -24,7 +24,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
   const [busNo, setBusNo] = useState(() => draft.busNo || '')
   const [driverName, setDriverName] = useState(() => draft.driverName || '')
   const [conductorName, setConductorName] = useState(() => draft.conductorName || '')
-  const [seatCapacity, setSeatCapacity] = useState(() => draft.seatCapacity || String(SEAT_LAYOUT.totalSeats))
+  const [seatCapacity, setSeatCapacity] = useState(() => draft.seatCapacity ?? '0')
   const [seatRows, setSeatRows] = useState(() => Array.isArray(draft.seatRows) ? draft.seatRows : SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
   const [cargoRows, setCargoRows] = useState(() => Array.isArray(draft.cargoRows) ? draft.cargoRows : DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
   const [saving, setSaving] = useState(false)
@@ -42,7 +42,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
     setBusNo('')
     setDriverName('')
     setConductorName('')
-    setSeatCapacity(String(SEAT_LAYOUT.totalSeats))
+    setSeatCapacity('0')
     setSeatRows(SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
     setCargoRows(DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
   }
@@ -74,37 +74,27 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
       })
       onSaved(result.entry)
       showMessage(`${result.entry.entry_code} saved and locked.`)
-      setSeatRows(SEAT_CATEGORIES.map((category) => ({ category, count: '0', amount: '0' })))
-      setCargoRows(DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
+      resetRouteForm()
     } catch (error) { showMessage(error.message, true) }
     finally { setSaving(false) }
   }
-  const exportCsv = () => {
-    const rows = [
-      ['Date', 'Bus number', 'Route', 'Entry type', 'Description', 'Quantity', 'Amount (Rs.)', 'Total (Rs.)'],
-      ...seatRows.map((row, index) => [date, busNo, route.label, 'Seat', row.category, row.count, row.amount, seatTotals[index]]),
-      ...cargoRows.map((row) => [date, busNo, route.label, 'Cargo', `${row.description} (${row.tag})`, 1, row.amount, row.amount]),
-      ['', '', '', '', 'Gross total', '', '', totalRevenue],
-    ]
-    const csv = rows.map((row) => row.map((value) => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\r\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
-    const link = document.createElement('a'); link.href = url; link.download = `revenue-${date}-${route.code}-${busNo || 'bus'}.csv`; link.click()
-    setTimeout(() => URL.revokeObjectURL(url), 0)
-  }
   return <form onSubmit={submit} className="accounts-route-revenue-form">
-    <section className="content-card accounts-trip-details accounts-expense-details accounts-revenue-details">
+    <section className="content-card accounts-revenue-entry-card">
+    <div className="accounts-revenue-form-toolbar"><button type="button" className="ghost-button" onClick={resetRouteForm}>Reset Form</button></div>
+    <div className="accounts-trip-details accounts-expense-details accounts-revenue-details">
       <h2>{route.label}</h2>
       <label>Trip date<input required type="date" value={date} onChange={(event) => { setDate(event.target.value); setBusNo(''); setDriverName(''); setConductorName('') }} /></label>
       <label>Bus number<select required value={busNo} onChange={(event) => setBusNo(event.target.value)}><option value="">Select a registered bus</option>{knownBusNumbers.map((number) => <option key={number} value={number}>{number}</option>)}</select></label>
       <label>Driver<select value={driverName} onChange={(event) => setDriverName(event.target.value)}><option value="">Select a registered driver</option>{staffNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
       <label>Conductor<select value={conductorName} onChange={(event) => setConductorName(event.target.value)}><option value="">Select a registered conductor</option>{conductorNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
-      <label>Number of seats<input type="number" min="1" max={SEAT_LAYOUT.totalSeats} step="1" value={seatCapacity} onChange={(event) => setSeatCapacity(event.target.value)} /><small>{seatCount} entered / {Math.max(0, Number(seatCapacity || 0) - seatCount)} remaining</small></label>
-    </section>
+      <label>Number of seats<input type="number" min="0" max={SEAT_LAYOUT.totalSeats} step="1" value={seatCapacity} onChange={(event) => setSeatCapacity(event.target.value)} /><small>{seatCount} entered / {Math.max(0, Number(seatCapacity || 0) - seatCount)} remaining</small></label>
+    </div>
     <div className="accounts-revenue-columns">
       <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2>Revenue from Seats</h2><p>Passenger seat counts and fares for this trip.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap"><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => <tr key={row.category}><td className="accounts-seat-count-cell"><input aria-label={`${route.label} ${row.category} number of seats`} type="number" min="0" max={Number(seatCapacity || 0)} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} /></td><td><input aria-label={`${route.label} ${row.category} fare amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>)}</tbody></table></div><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div></section>
       <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2>Revenue from Cargo</h2><p>Luggage and waybill charges for this trip.</p></div><span>LUGGAGE &amp; WAYBILLS</span></div>{cargoRows.length > 0 ? <div className="daily-revenue-table-wrap"><table className="accounts-cargo-table"><thead><tr><th>Description</th><th>Amount (Rs.)</th></tr></thead><tbody>{cargoRows.map((row, index) => <tr key={`cargo-${index}`}><td className="accounts-cargo-description"><input aria-label={`${route.label} cargo description`} maxLength="120" required value={row.description} onChange={(event) => updateCargo(index, 'description', event.target.value)} />{row.tag ? <span className="accounts-cargo-tag">{row.tag}</span> : null}<button type="button" className="accounts-remove-row" aria-label={`Remove ${row.description || 'cargo'} row`} onClick={() => setCargoRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}>×</button></td><td><input aria-label={`${route.label} cargo amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateCargo(index, 'amount', event.target.value)} /></td></tr>)}</tbody></table></div> : <p className="accounts-cargo-empty">No cargo entries for this trip.</p>}<button type="button" className="accounts-add-row" onClick={() => setCargoRows((rows) => rows.length < 30 ? [...rows, { description: '', tag: '', amount: '0' }] : rows)}>+ Add custom cargo row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(cargoSubtotal)}</strong></div></section>
     </div>
-    <section className="content-card accounts-total-card"><div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong></div><div className="accounts-total-controls"><div className="accounts-draft-status"><strong>Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div><div className="accounts-revenue-actions"><button type="button" className="ghost-button" onClick={resetRouteForm}>Reset Form</button><button type="button" className="secondary-button" onClick={onPrint}>Print Manifest Voucher</button><button type="button" className="secondary-button" onClick={exportCsv}>Export CSV</button></div><button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || seatCount > Number(seatCapacity || 0)}>{saving ? 'Saving revenue entry...' : 'Submit & Lock Revenue Entry'}</button>{seatCount === 0 && cargoRows.length === 0 && <span className="accounts-submit-hint">No seat or cargo revenue entered. You can still submit this entry.</span>}</div></section>
+    <section className="content-card accounts-total-card"><div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong></div><div className="accounts-total-controls"><div className="accounts-draft-status"><strong>Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div><button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || seatCount > Number(seatCapacity || 0)}>{saving ? 'Saving revenue entry...' : 'Submit & Lock Revenue Entry'}</button>{seatCount === 0 && cargoRows.length === 0 && <span className="accounts-submit-hint">No seat or cargo revenue entered. You can still submit this entry.</span>}</div></section>
+    </section>
   </form>
 }
 

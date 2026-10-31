@@ -66,6 +66,12 @@ function queryString(params) {
 }
 
 function App() {
+  const initialResetToken = window.location.hash.startsWith('#reset-password?')
+    ? new URLSearchParams(window.location.hash.slice('#reset-password?'.length)).get('token') || ''
+    : ''
+  useEffect(() => {
+    if (initialResetToken) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+  }, [initialResetToken])
   const adminDashboardRequestRef = useRef(null)
   const sessionCheckStartedRef = useRef(false)
   const [token, setToken] = useState('')
@@ -75,8 +81,15 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: 'admin_kt', password: '' })
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
+  const [showRecovery, setShowRecovery] = useState(Boolean(initialResetToken))
+  const [recoveryForm, setRecoveryForm] = useState({ email: '', token: initialResetToken, password: '', confirmPassword: '' })
+  const [recoveryStep, setRecoveryStep] = useState(initialResetToken ? 'reset' : 'request')
+  const [recoveryMessage, setRecoveryMessage] = useState('')
+  const [recoveryError, setRecoveryError] = useState('')
+  const [recoveryLoading, setRecoveryLoading] = useState(false)
   const [notice, setNotice] = useState('')
   const [error, setError] = useState('')
 
@@ -678,6 +691,32 @@ function App() {
     }
   }
 
+  const handleAdminRecovery = async (event) => {
+    event.preventDefault()
+    setRecoveryError('')
+    setRecoveryMessage('')
+    setRecoveryLoading(true)
+    try {
+      if (recoveryStep === 'request') {
+        const result = await api.requestAdminPasswordRecovery({ email: recoveryForm.email })
+        setRecoveryMessage(result.message || 'If this address belongs to an active admin account, a reset link will be emailed.')
+      } else {
+        const result = await api.resetAdminPassword({ token: recoveryForm.token, password: recoveryForm.password, confirmPassword: recoveryForm.confirmPassword })
+        setRecoveryMessage(result.message || 'Password updated. Sign in with your new password.')
+        setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' })
+        setRecoveryStep('request')
+        setToken('')
+        setUser(null)
+        setAuthStatus('unauthenticated')
+        window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+      }
+    } catch (err) {
+      setRecoveryError(err.message || 'Could not complete password recovery.')
+    } finally {
+      setRecoveryLoading(false)
+    }
+  }
+
   const handleLogout = async () => {
     try {
       await api.logout()
@@ -1205,22 +1244,45 @@ function App() {
     return <main className="auth-page"><section className="login-panel" role="alert"><img className="brand-logo" src="/logo.png" alt="District Line" /><h1>Unable to verify session</h1><p>{authError}</p><button type="button" className="primary-button wide" onClick={verifySession}>Retry</button></section></main>
   }
 
-  if (authStatus !== 'authenticated' || !token) {
+  if (showRecovery || authStatus !== 'authenticated' || !token) {
     return (
       <div className="auth-page">
         <div className="auth-backdrop" aria-hidden="true" />
         <section className="login-panel" aria-labelledby="login-title">
           <img className="brand-logo" src="/logo.png" alt="District Line" />
-          <h1 id="login-title">District Line Admin</h1>
-          <p>Sign in to manage fleet bookings and operations</p>
-          <form onSubmit={(event) => { event.preventDefault(); handleLogin() }}>
+          <h1 id="login-title">{showRecovery ? recoveryStep === 'reset' ? 'Set a new password' : 'Recover admin password' : 'District Line Admin'}</h1>
+          <p>{showRecovery ? recoveryStep === 'reset' ? 'Choose a new password for your administrator account.' : 'We will email a single-use reset link to your registered recovery address.' : 'Sign in to manage fleet bookings and operations'}</p>
+          {showRecovery ? <form onSubmit={handleAdminRecovery}>
+            {recoveryStep === 'request' ? <>
+              <label htmlFor="recovery-email">Registered recovery email</label>
+              <input id="recovery-email" required type="email" autoComplete="email" value={recoveryForm.email} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, email: event.target.value }))} />
+            </> : null}
+            {recoveryStep === 'reset' ? <>
+              <label htmlFor="recovery-new-password">New password (at least 12 characters)</label>
+              <input id="recovery-new-password" required minLength={12} type="password" autoComplete="new-password" value={recoveryForm.password} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, password: event.target.value }))} />
+              <label htmlFor="recovery-confirm-password">Confirm new password</label>
+              <input id="recovery-confirm-password" required minLength={12} type="password" autoComplete="new-password" value={recoveryForm.confirmPassword} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} />
+            </> : null}
+            {recoveryError ? <div className="banner error" role="alert">{recoveryError}</div> : null}
+            {recoveryMessage ? <div className="banner success" role="status">{recoveryMessage}</div> : null}
+            <button type="submit" className="primary-button wide login-submit" disabled={recoveryLoading}>{recoveryLoading ? 'Please wait…' : recoveryStep === 'request' ? 'Send reset link' : 'Reset password'}</button>
+            <button type="button" className="recovery-back" onClick={() => { setShowRecovery(false); setRecoveryError(''); setRecoveryMessage(''); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryStep('request') }}>Back to sign in</button>
+          </form> : <form onSubmit={(event) => { event.preventDefault(); handleLogin() }}>
             <label htmlFor="login-username">Username / Admin ID</label>
             <input id="login-username" required autoComplete="username" autoFocus value={loginForm.username} onChange={(event) => setLoginForm((prev) => ({ ...prev, username: event.target.value }))} />
             <label htmlFor="login-password">Password</label>
-            <input id="login-password" required type="password" autoComplete="current-password" value={loginForm.password} onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))} />
+            <div className="login-password-field">
+              <input id="login-password" required type={showLoginPassword ? 'text' : 'password'} autoComplete="current-password" value={loginForm.password} onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))} />
+              <button type="button" className="login-password-toggle" aria-label={showLoginPassword ? 'Hide password' : 'Show password'} aria-pressed={showLoginPassword} onClick={() => setShowLoginPassword((visible) => !visible)}>
+                {showLoginPassword ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.2A10.8 10.8 0 0112 5c5.2 0 8.8 4.5 10 7-.4.9-1.2 2-2.3 3M6.2 6.2C3.9 7.7 2.5 10 2 12c1.2 2.5 4.8 7 10 7 1.4 0 2.6-.3 3.7-.8" /></svg> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>}
+              </button>
+            </div>
             {loginError ? <div className="banner error" role="alert">{loginError}</div> : null}
             <button type="submit" className="primary-button wide login-submit" disabled={loginLoading}>{loginLoading ? 'Signing in…' : 'Sign In'}</button>
+            <button type="button" className="recovery-link" onClick={() => { setShowRecovery(true); setRecoveryStep('request'); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryError(''); setRecoveryMessage('') }}>Forgot password?</button>
+            <p className="login-hint">Staff: contact your administrator to reset your password.</p>
           </form>
+          }
           <p className="login-hint">Colombo | Kattankudy Express Service</p>
         </section>
       </div>
@@ -1246,6 +1308,7 @@ function App() {
           <span aria-hidden="true" />
           <span aria-hidden="true" />
         </button>
+        {mobileNavOpen && <button type="button" className="mobile-nav-backdrop" aria-label="Close navigation menu" onClick={() => setMobileNavOpen(false)} />}
         <nav id="primary-navigation" className={`nav-tabs${mobileNavOpen ? ' is-open' : ''}`} aria-label="Main navigation">
           {navTabs.map((tab) => (
             <button

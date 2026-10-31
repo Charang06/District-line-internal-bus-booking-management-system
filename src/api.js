@@ -76,6 +76,12 @@ export const api = {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   }),
+  requestAdminPasswordRecovery: (body) => request(`${API_BASE}/password-recovery/request`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
+  resetAdminPassword: (body) => request(`${API_BASE}/password-recovery/reset`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
   logout: () => request(`${API_BASE}/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }),
   buses: (token, includeInactive = false) =>
     apiFetch(`${API_BASE}/buses${includeInactive ? '?includeInactive=1' : ''}`, { headers: authHeaders(token) }).then(parse),
@@ -101,6 +107,7 @@ export const api = {
   deleteCargo: (token, id) => apiFetch(`${API_BASE}/cargo/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
   me: (token) => apiFetch(`${API_BASE}/me`, { headers: authHeaders(token) }).then(parse),
   updateProfile: (token, body) => apiFetch(`${API_BASE}/profile`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  updateRecoveryEmail: (token, email) => apiFetch(`${API_BASE}/profile/recovery-email`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ email }) }).then(parse),
   uploadProfilePhoto: (token, image) => apiFetch(`${API_BASE}/profile/photo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
   changePassword: (token, body) => apiFetch(`${API_BASE}/profile/password`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   adminDashboard: (token) => timedRequest('admin_dashboard', `${API_BASE}/admin/dashboard`, { headers: authHeaders(token) }),

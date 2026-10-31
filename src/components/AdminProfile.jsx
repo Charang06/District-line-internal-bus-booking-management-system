@@ -24,6 +24,7 @@ function readImageFile(file) {
 
 export default function AdminProfile({ token, user, onUserUpdate, onClose, showMessage }) {
   const [fullName, setFullName] = useState(user?.fullName || '')
+  const [recoveryEmail, setRecoveryEmail] = useState(user?.recoveryEmail || '')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -49,6 +50,19 @@ export default function AdminProfile({ token, user, onUserUpdate, onClose, showM
       const data = await api.uploadProfilePhoto(token, image)
       onUserUpdate(data.user)
       showMessage('Profile photo updated.')
+    } catch (err) {
+      showMessage(err.message, true)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleRecoveryEmail = async () => {
+    setBusy(true)
+    try {
+      const data = await api.updateRecoveryEmail(token, recoveryEmail)
+      onUserUpdate({ ...user, recoveryEmail: recoveryEmail.trim().toLowerCase() })
+      showMessage(data.message || 'Recovery email saved.')
     } catch (err) {
       showMessage(err.message, true)
     } finally {
@@ -104,6 +118,11 @@ export default function AdminProfile({ token, user, onUserUpdate, onClose, showM
         </label>
         <div className="reservation-actions">
           <button type="button" className="primary-button" disabled={busy} onClick={handleSaveProfile}>Save profile</button>
+        </div>
+        <div className="admin-password-block">
+          <h3>Password recovery email</h3>
+          <label><span>Registered recovery email</span><input type="email" autoComplete="email" value={recoveryEmail} onChange={(event) => setRecoveryEmail(event.target.value)} /></label>
+          <div className="reservation-actions"><button type="button" className="primary-button" disabled={busy} onClick={handleRecoveryEmail}>Save recovery email</button></div>
         </div>
         <div className="admin-password-block">
           <h3>Change password</h3>

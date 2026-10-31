@@ -59,6 +59,10 @@ app.use((req, res, next) => {
   })
 })
 const IS_VERCEL = Boolean(process.env.VERCEL)
+// Vercel terminates the public connection before forwarding requests to the
+// function. Trust that single proxy hop so recovery limits use the visitor IP
+// instead of one shared function/proxy address. Local development stays direct.
+if (IS_VERCEL) app.set('trust proxy', 1)
 const localUploadDir = path.join(__dirname, '..', 'public', 'uploads')
 if (!IS_VERCEL) fs.mkdirSync(path.join(localUploadDir, 'profiles'), { recursive: true })
 const PORT = process.env.PORT || 3002
@@ -358,6 +362,7 @@ function publicUser(user) {
     fullName: user.full_name,
     status: user.status || 'active',
     profilePhoto: user.profile_photo_url || '',
+    recoveryEmail: user.role === 'admin' ? user.recovery_email || '' : '',
     permissions: parsePermissions(user.role, user.permissions),
   }
 }
@@ -381,8 +386,8 @@ function validateUsername(username) {
 }
 
 function validatePassword(password) {
-  if (!password || String(password).length < 8) {
-    return 'Password must be at least 8 characters.'
+  if (!password || String(password).length < 12) {
+    return 'Password must be at least 12 characters.'
   }
   return null
 }
@@ -478,6 +483,9 @@ const SESSION_COOKIE_NAME = 'district_line_session'
 const SESSION_IDLE_MINUTES = 30
 const SESSION_MAX_HOURS = 8
 const SESSION_TOUCH_MINUTES = 5
+// A low per-IP limit locks out whole offices/mobile carriers behind NAT. The
+// per-admin cooldown below still prevents repeated emails to one account.
+const RECOVERY_MAX_ATTEMPTS = 20
 const allowedCorsOrigins = String(process.env.CORS_ORIGIN || '').split(',').map((origin) => origin.trim()).filter(Boolean)
 const configuredSameSite = String(process.env.SESSION_COOKIE_SAME_SITE || 'lax').trim().toLowerCase()
 if (!['lax', 'strict', 'none'].includes(configuredSameSite)) {
@@ -633,6 +641,8 @@ async function audit(user, action, entityType, entityId, details) {
 const DATABASE_MIGRATIONS = [
   { version: 1, file: '001_initial_postgres.sql' },
   { version: 2, file: '002_auth_sessions.sql' },
+  { version: 3, file: '003_password_recovery.sql' },
+  { version: 4, file: '004_admin_email_recovery.sql' },
 ]
 
 async function migrateDatabaseIfNeeded() {
@@ -741,13 +751,11 @@ async function seedDatabase() {
         const hash = await bcrypt.hash(configuredAdminPassword, 12)
         await seedRun('UPDATE users SET username = ?, password_hash = ? WHERE id = ?', [configuredAdminUsername, hash, legacyAdmin.id])
         admin = { ...legacyAdmin, username: configuredAdminUsername, password_hash: hash }
+      } else if (legacyAdmin) {
+        admin = legacyAdmin
       }
     }
-    if (admin && IS_PRODUCTION && await bcrypt.compare('admin123', admin.password_hash)) {
-      if (configuredAdminPassword.length < 12) throw new Error('Replace the seeded admin password by setting ADMIN_PASSWORD to at least 12 characters.')
-      const hash = await bcrypt.hash(configuredAdminPassword, 12)
-      await seedRun('UPDATE users SET password_hash = ? WHERE id = ?', [hash, admin.id])
-    } else if (!admin) {
+    if (!admin) {
       if (IS_PRODUCTION && configuredAdminPassword.length < 12) throw new Error('Set ADMIN_PASSWORD to at least 12 characters before initializing the production admin account.')
       const password = IS_PRODUCTION ? configuredAdminPassword : 'admin123'
       const hash = await bcrypt.hash(password, 12)
@@ -1050,6 +1058,140 @@ app.post('/api/login', async (req, res, next) => {
   }
 })
 
+function recoveryRateLimit(req, res, next) {
+  const ipHash = createHash('sha256').update(String(req.ip || req.socket?.remoteAddress || 'unknown')).digest('hex')
+  queryDatabase(null, `INSERT INTO password_recovery_rate_limits (ip_hash, window_started_at, attempts) VALUES (?, CURRENT_TIMESTAMP, 1)
+    ON CONFLICT (ip_hash) DO UPDATE SET
+      window_started_at = CASE WHEN password_recovery_rate_limits.window_started_at < CURRENT_TIMESTAMP - INTERVAL '15 minutes' THEN CURRENT_TIMESTAMP ELSE password_recovery_rate_limits.window_started_at END,
+      attempts = CASE WHEN password_recovery_rate_limits.window_started_at < CURRENT_TIMESTAMP - INTERVAL '15 minutes' THEN 1 ELSE password_recovery_rate_limits.attempts + 1 END`, [ipHash])
+    .then(async () => {
+      const row = await get('SELECT attempts FROM password_recovery_rate_limits WHERE ip_hash = ?', [ipHash])
+      if (Number(row?.attempts) > RECOVERY_MAX_ATTEMPTS) return res.status(429).json({ message: 'Too many recovery attempts. Please try again later.' })
+      next()
+    }).catch(next)
+}
+
+async function sendRecoveryEmail(to, token, idempotencyKey) {
+  const apiKey = String(process.env.RESEND_API_KEY || '')
+  const from = String(process.env.RECOVERY_EMAIL_FROM || '')
+  const appUrl = String(process.env.APP_URL || '')
+  if (!apiKey || !from || !appUrl) return false
+  let parsedAppUrl
+  try { parsedAppUrl = new URL(appUrl) } catch { return false }
+  if (!['https:', ...(IS_PRODUCTION ? [] : ['http:'])].includes(parsedAppUrl.protocol)
+      || parsedAppUrl.username || parsedAppUrl.password || parsedAppUrl.pathname !== '/' || parsedAppUrl.search || parsedAppUrl.hash) return false
+  const resetUrl = `${parsedAppUrl.origin}/#reset-password?token=${encodeURIComponent(token)}`
+  let response
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Idempotency-Key': `admin-password-reset/${idempotencyKey}`,
+      },
+      signal: AbortSignal.timeout(10000),
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject: 'Reset your District Line admin password',
+        text: `Use this link to reset your District Line admin password. It expires in 20 minutes and can only be used once:\n\n${resetUrl}\n\nIf you did not request this, ignore this email.`,
+        html: `<p>Use this link to reset your District Line admin password. It expires in 20 minutes and can only be used once.</p><p><a href="${resetUrl}">Reset admin password</a></p><p>If you did not request this, ignore this email.</p>`,
+      }),
+    })
+  } catch (error) {
+    console.error(JSON.stringify({ kind: 'recovery_email_delivery_failed', reason: error.name || 'network_error' }))
+    return false
+  }
+  if (!response.ok) {
+    console.error(JSON.stringify({ kind: 'recovery_email_delivery_failed', status: response.status }))
+    return [400, 401, 403, 422].includes(response.status) ? 'configuration_error' : false
+  }
+  return true
+}
+
+app.post('/api/password-recovery/request', recoveryRateLimit, async (req, res, next) => {
+  const generic = { message: 'If this address belongs to an active admin account, the recovery request has been processed. If no email arrives, contact the system owner.' }
+  const email = String(req.body?.email || '').trim().toLowerCase()
+  if (!process.env.RESEND_API_KEY || !process.env.RECOVERY_EMAIL_FROM || !process.env.APP_URL) {
+    return res.status(503).json({ message: 'Email recovery is unavailable because server configuration is incomplete. Configure RESEND_API_KEY, RECOVERY_EMAIL_FROM, and APP_URL in the server environment.' })
+  }
+  let appUrl
+  try { appUrl = new URL(process.env.APP_URL) } catch { appUrl = null }
+  if (!appUrl || !['https:', ...(IS_PRODUCTION ? [] : ['http:'])].includes(appUrl.protocol)
+      || appUrl.username || appUrl.password || appUrl.pathname !== '/' || appUrl.search || appUrl.hash) {
+    return res.status(503).json({ message: 'Email recovery requires APP_URL to be a valid application origin (HTTPS in production). Configure it in the server environment.' })
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.json(generic)
+  try {
+    await exec('BEGIN IMMEDIATE')
+    const admin = await get("SELECT id FROM users WHERE LOWER(recovery_email) = ? AND role = 'admin' AND status = 'active'", [email])
+    if (admin) {
+      const recent = await get("SELECT id FROM password_recovery_tokens WHERE user_id = ? AND used_at IS NULL AND expires_at > CURRENT_TIMESTAMP AND created_at > CURRENT_TIMESTAMP - INTERVAL '15 minutes' LIMIT 1", [admin.id])
+      if (recent) {
+        console.info(JSON.stringify({ kind: 'recovery_request_skipped', reason: 'admin_cooldown' }))
+        await exec('COMMIT')
+        return res.json(generic)
+      }
+      const token = randomBytes(32).toString('base64url')
+      const tokenHash = createHash('sha256').update(token).digest('hex')
+      await run('UPDATE password_recovery_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL', [admin.id])
+      await run("INSERT INTO password_recovery_tokens (user_id, token_hash, recovery_code_hash, expires_at) VALUES (?, ?, '', CURRENT_TIMESTAMP + INTERVAL '20 minutes')", [admin.id, tokenHash])
+      await exec('COMMIT')
+      const delivery = await sendRecoveryEmail(email, token, tokenHash)
+      if (!delivery) {
+        await run('UPDATE password_recovery_tokens SET used_at = CURRENT_TIMESTAMP WHERE token_hash = ? AND used_at IS NULL', [tokenHash])
+        return res.json(generic)
+      }
+      if (delivery === 'configuration_error') {
+        await run('UPDATE password_recovery_tokens SET used_at = CURRENT_TIMESTAMP WHERE token_hash = ? AND used_at IS NULL', [tokenHash])
+        return res.status(503).json({ message: 'Resend rejected the email configuration. Verify RESEND_API_KEY, RECOVERY_EMAIL_FROM, and that the sender domain is verified in Resend.' })
+      }
+      console.info(JSON.stringify({ kind: 'recovery_email_accepted_by_resend' }))
+    } else {
+      console.info(JSON.stringify({ kind: 'recovery_request_skipped', reason: 'no_matching_active_admin' }))
+      await exec('COMMIT')
+    }
+    return res.json(generic)
+  } catch (error) {
+    try { await exec('ROLLBACK') } catch { /* preserve the original error */ }
+    return next(error)
+  }
+})
+
+app.post('/api/password-recovery/reset', recoveryRateLimit, async (req, res, next) => {
+  const token = String(req.body?.token || '')
+  const password = String(req.body?.password || '')
+  const confirmPassword = String(req.body?.confirmPassword || '')
+  const passwordError = validatePassword(password)
+  if (passwordError) return res.status(400).json({ message: passwordError })
+  if (password !== confirmPassword) return res.status(400).json({ message: 'Passwords do not match.' })
+  if (!token || token.length > 256) return res.status(400).json({ message: 'This password reset link is invalid or expired. Request a new link.' })
+  const tokenHash = createHash('sha256').update(token).digest('hex')
+  try {
+    await exec('BEGIN IMMEDIATE')
+    const recovery = await get(`SELECT recovery.id, recovery.user_id FROM password_recovery_tokens recovery
+      JOIN users ON users.id = recovery.user_id
+      WHERE recovery.token_hash = ? AND users.role = 'admin' AND users.status = 'active'
+        AND recovery.used_at IS NULL AND recovery.expires_at > CURRENT_TIMESTAMP
+      FOR UPDATE OF recovery`, [tokenHash])
+    if (!recovery) {
+      await exec('ROLLBACK')
+      return res.status(400).json({ message: 'This password reset link is invalid or expired. Request a new link.' })
+    }
+    const passwordHash = await bcrypt.hash(password, 12)
+    await run("UPDATE users SET password_hash = ? WHERE id = ? AND role = 'admin'", [passwordHash, recovery.user_id])
+    await run('UPDATE password_recovery_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL', [recovery.user_id])
+    await run('DELETE FROM auth_sessions WHERE user_id = ?', [recovery.user_id])
+    await audit({ id: recovery.user_id }, 'admin.password.recovery', 'user', recovery.user_id, 'Admin password reset through registered email link.')
+    await exec('COMMIT')
+    return res.json({ message: 'Password updated. Sign in with your new password.' })
+  } catch (error) {
+    try { await exec('ROLLBACK') } catch { /* preserve the original error */ }
+    return next(error)
+  }
+})
+
 app.get('/api/me', authMiddleware, (req, res) => {
   res.json({ user: req.user })
 })
@@ -1062,6 +1204,14 @@ app.patch('/api/profile', authMiddleware, requireAdmin, async (req, res) => {
   const next = await get('SELECT * FROM users WHERE id = ?', [req.user.id])
   await audit(req.user, 'profile.update', 'user', req.user.id, fullName)
   res.json({ user: publicUser(next) })
+})
+
+app.patch('/api/profile/recovery-email', authMiddleware, requireAdmin, async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase()
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: 'Enter a valid recovery email address.' })
+  await run("UPDATE users SET recovery_email = ? WHERE id = ? AND role = 'admin'", [email || null, req.user.id])
+  await run('UPDATE password_recovery_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL', [req.user.id])
+  res.json({ message: 'Recovery email saved.' })
 })
 
 app.post('/api/profile/photo', authMiddleware, requireAdmin, async (req, res) => {
