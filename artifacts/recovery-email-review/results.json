@@ -1,0 +1,42 @@
+{
+  "sizes": [
+    {
+      "width": 1440,
+      "inside": true,
+      "overflow": false,
+      "buttonInside": true
+    },
+    {
+      "width": 768,
+      "inside": true,
+      "overflow": false,
+      "buttonInside": true
+    },
+    {
+      "width": 390,
+      "inside": true,
+      "overflow": false,
+      "buttonInside": true
+    },
+    {
+      "width": 360,
+      "inside": true,
+      "overflow": false,
+      "buttonInside": true
+    }
+  ],
+  "unverifiedStatus": true,
+  "sendDoesNotVerify": true,
+  "cooldown": true,
+  "resend": true,
+  "backendVerifiedStatus": true,
+  "dirtyEmailBlocked": true,
+  "changedEmailClearsProof": true,
+  "statusFailureFailsClosed": true,
+  "confirmationExplicit": true,
+  "fragmentStripped": true,
+  "noReferrer": true,
+  "mobileConfirmation": true,
+  "allApisMocked": true,
+  "remoteOperations": 0
+}

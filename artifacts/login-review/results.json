@@ -1,0 +1,461 @@
+{
+  "results": [
+    {
+      "viewport": [
+        1920,
+        1080
+      ],
+      "card": {
+        "x": 1402.390625,
+        "y": 255.25,
+        "width": 460,
+        "height": 569.5,
+        "right": 1862.390625,
+        "bottom": 824.75
+      },
+      "username": {
+        "x": 1484.390625,
+        "y": 477.75,
+        "width": 340,
+        "height": 48,
+        "right": 1824.390625,
+        "bottom": 525.75
+      },
+      "password": {
+        "x": 1484.390625,
+        "y": 543.75,
+        "width": 296,
+        "height": 48,
+        "right": 1780.390625,
+        "bottom": 591.75
+      },
+      "field": {
+        "x": 1439.390625,
+        "y": 476.75,
+        "width": 386,
+        "height": 50,
+        "right": 1825.390625,
+        "bottom": 526.75
+      },
+      "button": {
+        "x": 1439.390625,
+        "y": 612.75,
+        "width": 386,
+        "height": 52,
+        "right": 1825.390625,
+        "bottom": 664.75
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 1080,
+      "background": "url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        1440,
+        900
+      ],
+      "card": {
+        "x": 976.8125,
+        "y": 172.125,
+        "width": 420,
+        "height": 555.734375,
+        "right": 1396.8125,
+        "bottom": 727.859375
+      },
+      "username": {
+        "x": 1054.484375,
+        "y": 385.1875,
+        "width": 308.65625,
+        "height": 48,
+        "right": 1363.140625,
+        "bottom": 433.1875
+      },
+      "password": {
+        "x": 1054.484375,
+        "y": 451.1875,
+        "width": 264.65625,
+        "height": 48,
+        "right": 1319.140625,
+        "bottom": 499.1875
+      },
+      "field": {
+        "x": 1009.484375,
+        "y": 384.1875,
+        "width": 354.65625,
+        "height": 50,
+        "right": 1364.140625,
+        "bottom": 434.1875
+      },
+      "button": {
+        "x": 1009.484375,
+        "y": 520.1875,
+        "width": 354.65625,
+        "height": 52,
+        "right": 1364.140625,
+        "bottom": 572.1875
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 900,
+      "background": "url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        1366,
+        768
+      ],
+      "card": {
+        "x": 905.03125,
+        "y": 108.578125,
+        "width": 420,
+        "height": 550.828125,
+        "right": 1325.03125,
+        "bottom": 659.40625
+      },
+      "username": {
+        "x": 981.078125,
+        "y": 318.359375,
+        "width": 311.90625,
+        "height": 48,
+        "right": 1292.984375,
+        "bottom": 366.359375
+      },
+      "password": {
+        "x": 981.078125,
+        "y": 384.359375,
+        "width": 267.90625,
+        "height": 48,
+        "right": 1248.984375,
+        "bottom": 432.359375
+      },
+      "field": {
+        "x": 936.078125,
+        "y": 317.359375,
+        "width": 357.90625,
+        "height": 50,
+        "right": 1293.984375,
+        "bottom": 367.359375
+      },
+      "button": {
+        "x": 936.078125,
+        "y": 453.359375,
+        "width": 357.90625,
+        "height": 52,
+        "right": 1293.984375,
+        "bottom": 505.359375
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 768,
+      "background": "url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        1024,
+        768
+      ],
+      "card": {
+        "x": 556,
+        "y": 115.625,
+        "width": 400,
+        "height": 536.75,
+        "right": 956,
+        "bottom": 652.375
+      },
+      "username": {
+        "x": 626,
+        "y": 317.375,
+        "width": 304,
+        "height": 48,
+        "right": 930,
+        "bottom": 365.375
+      },
+      "password": {
+        "x": 626,
+        "y": 383.375,
+        "width": 260,
+        "height": 48,
+        "right": 886,
+        "bottom": 431.375
+      },
+      "field": {
+        "x": 581,
+        "y": 316.375,
+        "width": 350,
+        "height": 50,
+        "right": 931,
+        "bottom": 366.375
+      },
+      "button": {
+        "x": 581,
+        "y": 452.375,
+        "width": 350,
+        "height": 52,
+        "right": 931,
+        "bottom": 504.375
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 768,
+      "background": "url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        768,
+        1024
+      ],
+      "card": {
+        "x": 376.5,
+        "y": 245.74391174316406,
+        "width": 352.5,
+        "height": 536.75,
+        "right": 729,
+        "bottom": 782.4939117431641
+      },
+      "username": {
+        "x": 446.5,
+        "y": 447.493896484375,
+        "width": 256.5,
+        "height": 48,
+        "right": 703,
+        "bottom": 495.493896484375
+      },
+      "password": {
+        "x": 446.5,
+        "y": 513.493896484375,
+        "width": 212.5,
+        "height": 48,
+        "right": 659,
+        "bottom": 561.493896484375
+      },
+      "field": {
+        "x": 401.5,
+        "y": 446.493896484375,
+        "width": 302.5,
+        "height": 50,
+        "right": 704,
+        "bottom": 496.493896484375
+      },
+      "button": {
+        "x": 401.5,
+        "y": 582.493896484375,
+        "width": 302.5,
+        "height": 52,
+        "right": 704,
+        "bottom": 634.493896484375
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 1024,
+      "background": "url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        430,
+        932
+      ],
+      "card": {
+        "x": 12.890625,
+        "y": 197.625,
+        "width": 404.21875,
+        "height": 536.75,
+        "right": 417.109375,
+        "bottom": 734.375
+      },
+      "username": {
+        "x": 78.890625,
+        "y": 399.375,
+        "width": 316.21875,
+        "height": 48,
+        "right": 395.109375,
+        "bottom": 447.375
+      },
+      "password": {
+        "x": 78.890625,
+        "y": 465.375,
+        "width": 272.21875,
+        "height": 48,
+        "right": 351.109375,
+        "bottom": 513.375
+      },
+      "field": {
+        "x": 33.890625,
+        "y": 398.375,
+        "width": 362.21875,
+        "height": 50,
+        "right": 396.109375,
+        "bottom": 448.375
+      },
+      "button": {
+        "x": 33.890625,
+        "y": 534.375,
+        "width": 362.21875,
+        "height": 52,
+        "right": 396.109375,
+        "bottom": 586.375
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 932,
+      "background": "linear-gradient(rgba(5, 17, 37, 0.38), rgba(5, 17, 37, 0.55)), url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "card": {
+        "x": 11.6875,
+        "y": 153.625,
+        "width": 366.625,
+        "height": 536.75,
+        "right": 378.3125,
+        "bottom": 690.375
+      },
+      "username": {
+        "x": 77.6875,
+        "y": 355.375,
+        "width": 278.625,
+        "height": 48,
+        "right": 356.3125,
+        "bottom": 403.375
+      },
+      "password": {
+        "x": 77.6875,
+        "y": 421.375,
+        "width": 234.625,
+        "height": 48,
+        "right": 312.3125,
+        "bottom": 469.375
+      },
+      "field": {
+        "x": 32.6875,
+        "y": 354.375,
+        "width": 324.625,
+        "height": 50,
+        "right": 357.3125,
+        "bottom": 404.375
+      },
+      "button": {
+        "x": 32.6875,
+        "y": 490.375,
+        "width": 324.625,
+        "height": 52,
+        "right": 357.3125,
+        "bottom": 542.375
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 844,
+      "background": "linear-gradient(rgba(5, 17, 37, 0.38), rgba(5, 17, 37, 0.55)), url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        375,
+        667
+      ],
+      "card": {
+        "x": 11.25,
+        "y": 65.125,
+        "width": 352.5,
+        "height": 536.75,
+        "right": 363.75,
+        "bottom": 601.875
+      },
+      "username": {
+        "x": 77.25,
+        "y": 266.875,
+        "width": 264.5,
+        "height": 48,
+        "right": 341.75,
+        "bottom": 314.875
+      },
+      "password": {
+        "x": 77.25,
+        "y": 332.875,
+        "width": 220.5,
+        "height": 48,
+        "right": 297.75,
+        "bottom": 380.875
+      },
+      "field": {
+        "x": 32.25,
+        "y": 265.875,
+        "width": 310.5,
+        "height": 50,
+        "right": 342.75,
+        "bottom": 315.875
+      },
+      "button": {
+        "x": 32.25,
+        "y": 401.875,
+        "width": 310.5,
+        "height": 52,
+        "right": 342.75,
+        "bottom": 453.875
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 667,
+      "background": "linear-gradient(rgba(5, 17, 37, 0.38), rgba(5, 17, 37, 0.55)), url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    },
+    {
+      "viewport": [
+        360,
+        800
+      ],
+      "card": {
+        "x": 10.796875,
+        "y": 131.625,
+        "width": 338.40625,
+        "height": 536.75,
+        "right": 349.203125,
+        "bottom": 668.375
+      },
+      "username": {
+        "x": 76.796875,
+        "y": 333.375,
+        "width": 250.40625,
+        "height": 48,
+        "right": 327.203125,
+        "bottom": 381.375
+      },
+      "password": {
+        "x": 76.796875,
+        "y": 399.375,
+        "width": 206.40625,
+        "height": 48,
+        "right": 283.203125,
+        "bottom": 447.375
+      },
+      "field": {
+        "x": 31.796875,
+        "y": 332.375,
+        "width": 296.40625,
+        "height": 50,
+        "right": 328.203125,
+        "bottom": 382.375
+      },
+      "button": {
+        "x": 31.796875,
+        "y": 468.375,
+        "width": 296.40625,
+        "height": 52,
+        "right": 328.203125,
+        "bottom": 520.375
+      },
+      "horizontalOverflow": false,
+      "scrollHeight": 800,
+      "background": "linear-gradient(rgba(5, 17, 37, 0.38), rgba(5, 17, 37, 0.55)), url(\"http://127.0.0.1:5178/login-tropical-sunset.png\")",
+      "empty": true
+    }
+  ],
+  "interactions": {
+    "show": true,
+    "hide": true,
+    "recovery": true,
+    "submission": true
+  },
+  "note": "API mocked as unauthorized for safe UI checks; real authentication and role redirects not exercised."
+}

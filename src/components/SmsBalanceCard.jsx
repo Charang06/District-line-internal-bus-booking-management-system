@@ -3,6 +3,7 @@ import { api } from '../api'
 
 const creditFormatter = new Intl.NumberFormat('en-LK', { maximumFractionDigits: 2 })
 const formatCredits = (value) => creditFormatter.format(value)
+let balanceCache = { value: null, fetchedAt: 0, pending: null }
 
 function sameBalance(current, incoming) {
   return Boolean(current && incoming
@@ -20,7 +21,7 @@ function sameBalance(current, incoming) {
 }
 
 export default function SmsBalanceCard({ token }) {
-  const [balance, setBalance] = useState(null)
+  const [balance, setBalance] = useState(() => balanceCache.value)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -31,13 +32,20 @@ export default function SmsBalanceCard({ token }) {
   const refresh = useCallback(async (automatic = false) => {
     if (!token || requestActive.current) return
     const now = Date.now()
+    if (automatic && balanceCache.value && now - balanceCache.fetchedAt < 60_000) {
+      setBalance(balanceCache.value)
+      setLoading(false)
+      return
+    }
     if (automatic && now - lastAutomaticRequestAt.current < 3_000) return
     if (automatic) lastAutomaticRequestAt.current = now
     requestActive.current = true
     if (balanceRef.current) setRefreshing(true)
     else setLoading(true)
     try {
-      const latest = await api.smsLenzBalance(token)
+      const pending = balanceCache.pending || (balanceCache.pending = api.smsLenzBalance(token))
+      const latest = await pending
+      balanceCache = { ...balanceCache, value: latest, fetchedAt: Date.now() }
       balanceRef.current = latest
       setBalance((current) => sameBalance(current, latest) ? current : latest)
       setError('')
@@ -46,6 +54,7 @@ export default function SmsBalanceCard({ token }) {
         ? 'Unable to refresh — showing last updated balance.'
         : requestError.message || 'Unable to retrieve the SMS balance.')
     } finally {
+      balanceCache.pending = null
       requestActive.current = false
       setLoading(false)
       setRefreshing(false)

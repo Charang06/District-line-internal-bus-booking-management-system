@@ -7,11 +7,13 @@ import AdminProfile from './components/AdminProfile'
 import AccountsRevenue from './components/AccountsRevenue'
 import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
 import SmsBalanceCard from './components/SmsBalanceCard'
+import UsernameRecoveryForm from './components/UsernameRecoveryForm'
 import { ROUTES, SEAT_LAYOUT, routeByCode } from './data/seatLayout'
 import { buildTripOverview, filterTripOverviewTrips } from './data/tripOverview'
 
 const TOKEN_KEY = 'district-line-token'
 const USER_KEY = 'district-line-user'
+const USERNAME_RECOVERY_ENABLED = import.meta.env.VITE_ENABLE_ADMIN_USERNAME_RECOVERY === 'true'
 const COPYRIGHT_YEAR = new Date().getFullYear()
 const DUTY_STATUS_LABELS = {
   in_progress: 'In Progress',
@@ -43,6 +45,38 @@ function measureDashboardChart(name, calculate) {
   return result
 }
 
+function AdminPageSkeleton({ label }) {
+  return (
+    <div className="admin-data-skeleton" role="status" aria-label={`Loading ${label}`}>
+      <span className="admin-skeleton-title" />
+      <span />
+      <span />
+      <span className="admin-skeleton-short" />
+    </div>
+  )
+}
+
+function FullSystemLoader() {
+  return (
+    <main className="auth-page full-system-loading" role="status" aria-live="polite">
+      <section className="login-panel">
+        <img className="brand-logo" src="/logo.png" alt="District Line" />
+        <span className="system-loading-spinner" aria-hidden="true" />
+        <p>Preparing District Line…</p>
+      </section>
+    </main>
+  )
+}
+
+function TripsLoadingState() {
+  return (
+    <div className="trips-loading-state" role="status" aria-label="Loading bus sections">
+      <span className="system-loading-spinner" aria-hidden="true" />
+      <span>Loading bus sections…</span>
+    </div>
+  )
+}
+
 function formatSmsDateTime(value) {
   if (!value) return ''
   const raw = String(value).trim()
@@ -66,6 +100,12 @@ function queryString(params) {
 }
 
 function App() {
+  const [initialUsernameRecoveryToken, setInitialUsernameRecoveryToken] = useState(() => USERNAME_RECOVERY_ENABLED && window.location.hash.startsWith('#recover-username?')
+    ? new URLSearchParams(window.location.hash.slice('#recover-username?'.length)).get('token') || '' : '')
+  const [showUsernameRecovery, setShowUsernameRecovery] = useState(Boolean(initialUsernameRecoveryToken))
+  useEffect(() => {
+    if (initialUsernameRecoveryToken) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
+  }, [initialUsernameRecoveryToken])
   const initialResetToken = window.location.hash.startsWith('#reset-password?')
     ? new URLSearchParams(window.location.hash.slice('#reset-password?'.length)).get('token') || ''
     : ''
@@ -73,14 +113,18 @@ function App() {
     if (initialResetToken) window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`)
   }, [initialResetToken])
   const adminDashboardRequestRef = useRef(null)
+  const adminDashboardRequestIdRef = useRef(0)
+  const profitLedgerRequestRef = useRef(null)
+  const adminStatsCacheRef = useRef({})
   const sessionCheckStartedRef = useRef(false)
+  const loginRequestInFlightRef = useRef(false)
   const [token, setToken] = useState('')
   const [user, setUser] = useState(null)
   const [authStatus, setAuthStatus] = useState('checking')
   const [authError, setAuthError] = useState('')
   const [activeTab, setActiveTab] = useState('Home')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
-  const [loginForm, setLoginForm] = useState({ username: 'admin_kt', password: '' })
+  const [loginForm, setLoginForm] = useState({ username: '', password: '' })
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
@@ -101,6 +145,7 @@ function App() {
   const [routeCode, setRouteCode] = useState('CMB_KTY')
   const [buses, setBuses] = useState([])
   const [trips, setTrips] = useState([])
+  const [tripsLoading, setTripsLoading] = useState(true)
   const [activeTripId, setActiveTripId] = useState(null)
   const [customerLogs, setCustomerLogs] = useState([])
   const [editingCustomerDetailsId, setEditingCustomerDetailsId] = useState(null)
@@ -124,10 +169,14 @@ function App() {
   const [busSaving, setBusSaving] = useState(false)
   const [editingBus, setEditingBus] = useState(null)
   const [adminStats, setAdminStats] = useState(null)
+  const [adminStatsScope, setAdminStatsScope] = useState('')
   const [adminDataLoading, setAdminDataLoading] = useState(false)
+  const [profitLedgerLoading, setProfitLedgerLoading] = useState(false)
   const [profitLedgerError, setProfitLedgerError] = useState('')
   const [profitLedgerLoaded, setProfitLedgerLoaded] = useState(false)
   const [staffList, setStaffList] = useState([])
+  const [staffPageLoading, setStaffPageLoading] = useState(false)
+  const [staffPageError, setStaffPageError] = useState('')
   const [crewList, setCrewList] = useState([])
   const [busContactList, setBusContactList] = useState([])
   const [revenueDate, setRevenueDate] = useState(todayIso())
@@ -494,15 +543,6 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!token || !isAdmin || activeTab !== 'Accounts') return undefined
-    let cancelled = false
-    api.adminCrew(token)
-      .then((result) => { if (!cancelled) setCrewList(result.crew || []) })
-      .catch((err) => { if (!cancelled) showMessage(err.message, true) })
-    return () => { cancelled = true }
-  }, [activeTab, token, isAdmin, showMessage])
-
-  useEffect(() => {
     if (!notice && !error) return undefined
     const timeoutId = window.setTimeout(() => {
       setNotice('')
@@ -524,9 +564,14 @@ function App() {
   }, [])
 
   const loadTrips = useCallback(async (authToken, date = selectedDate, routeValue = routeCode) => {
-    const data = await api.trips(authToken, queryString({ date, route: routeValue }))
-    setTrips(data.trips || [])
-    return data.trips || []
+    setTripsLoading(true)
+    try {
+      const data = await api.trips(authToken, queryString({ date, route: routeValue }))
+      setTrips(data.trips || [])
+      return data.trips || []
+    } finally {
+      setTripsLoading(false)
+    }
   }, [routeCode, selectedDate])
 
   const loadLogs = useCallback(async (authToken, selectedTrip) => {
@@ -584,6 +629,9 @@ function App() {
     setAuthStatus('unauthenticated')
     setAuthError('')
     setAdminStats(null)
+    setAdminStatsScope('')
+    adminStatsCacheRef.current = {}
+    setTripsLoading(false)
     setProfitLedger({ revenueEntries: [], expenseSubmissions: [] })
     setProfitLedgerLoaded(false)
   }, [])
@@ -674,6 +722,8 @@ function App() {
   }, [calendarCursor])
 
   const handleLogin = async () => {
+    if (loginRequestInFlightRef.current) return
+    loginRequestInFlightRef.current = true
     setLoginError('')
     setLoginLoading(true)
     try {
@@ -687,6 +737,7 @@ function App() {
     } catch (err) {
       setLoginError(err.message)
     } finally {
+      loginRequestInFlightRef.current = false
       setLoginLoading(false)
     }
   }
@@ -866,7 +917,7 @@ function App() {
         || Number(a.id) - Number(b.id)
       )))
       setActiveTripId(data.trip.id)
-      if (activeTab === 'Dashboard') await openAdminDashboard()
+      if (activeTab === 'Dashboard') await openAdminDashboard('dashboard', false, true)
     } catch (err) {
       showMessage(err.message, true)
     }
@@ -926,7 +977,7 @@ function App() {
       const nextActive = next.find((item) => item.id !== trip.id) || next[0] || null
       setActiveTripId(nextActive?.id || null)
       await loadLogs(token, nextActive)
-      if (activeTab === 'Dashboard' || activeTab === 'Accounts') await openAdminDashboard()
+      if (activeTab === 'Dashboard' || activeTab === 'Accounts') await openAdminDashboard(activeTab === 'Accounts' ? 'accounts' : 'dashboard', false, true)
       showMessage(result.archived
         ? `Bus section ${busLabel} deleted. Cancelled booking history was preserved.`
         : `Bus section ${busLabel} deleted.`)
@@ -977,8 +1028,7 @@ function App() {
       await loadFleet(token)
       const contacts = await api.adminBusContacts(token)
       setBusContactList(contacts.contacts || [])
-      if (activeTab === 'Dashboard') await openAdminDashboard()
-      else setAdminStats(await api.adminDashboard(token))
+      if (activeTab === 'Dashboard' || activeTab === 'Accounts') await openAdminDashboard(activeTab === 'Accounts' ? 'accounts' : 'dashboard', false, true)
     } catch (err) {
       showMessage(err.message, true)
     } finally {
@@ -996,7 +1046,7 @@ function App() {
       const data = await api.deleteBus(token, bus.id)
       showMessage(data.message || 'Bus updated.')
       await loadFleet(token)
-      if (activeTab === 'Dashboard') await openAdminDashboard()
+      if (activeTab === 'Dashboard') await openAdminDashboard('dashboard', false, true)
     } catch (err) {
       showMessage(err.message, true)
     }
@@ -1008,7 +1058,7 @@ function App() {
     try {
       await api.updateBus(token, bus.id, { status: 'active' })
       await loadFleet(token)
-      if (activeTab === 'Dashboard') await openAdminDashboard()
+      if (activeTab === 'Dashboard') await openAdminDashboard('dashboard', false, true)
       showMessage(`${bus.registration_no} is active again.`)
     } catch (err) {
       showMessage(err.message, true)
@@ -1029,43 +1079,79 @@ function App() {
     reader.readAsDataURL(file)
   }
 
-  const openAdminDashboard = async () => {
-    if (adminDashboardRequestRef.current) return adminDashboardRequestRef.current
+  const loadProfitLedger = (force = false) => {
+    if (profitLedgerLoaded && !force) return Promise.resolve()
+    if (profitLedgerRequestRef.current) return profitLedgerRequestRef.current
+    setProfitLedgerLoading(true)
+    setProfitLedgerError('')
+    const pending = Promise.all([
+      api.adminRevenueEntries(token, { summary: true }),
+      api.adminExpenseSubmissions(token),
+    ]).then(([revenueData, expenseData]) => {
+      setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+      setProfitLedgerLoaded(true)
+      setProfitLedgerError('')
+    }).catch((err) => {
+      setProfitLedgerError(err.message || 'Unable to load financial ledger data.')
+      setProfitLedgerLoaded(true)
+      showMessage(err.message || 'Unable to load financial ledger data.', true)
+    }).finally(() => {
+      setProfitLedgerLoading(false)
+      profitLedgerRequestRef.current = null
+    })
+    profitLedgerRequestRef.current = pending
+    return pending
+  }
+
+  const openAdminDashboard = async (scope = activeTab === 'Dashboard' ? 'dashboard' : activeTab === 'Accounts' ? 'accounts' : 'full', forceLedger = false, forceData = false) => {
+    if (adminDashboardRequestRef.current?.scope === scope) return adminDashboardRequestRef.current.promise
     if (!isAdmin) {
       showMessage('Admin access required.', true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
       return
     }
+    const cachedScope = adminStatsCacheRef.current[scope] ? scope : scope !== 'full' && adminStatsCacheRef.current.full ? 'full' : ''
+    if (cachedScope && !forceData) {
+      setAdminStats(adminStatsCacheRef.current[cachedScope])
+      setAdminStatsScope(cachedScope)
+      setAdminDataLoading(false)
+      return loadProfitLedger(forceLedger)
+    }
     const startedAt = performance.now()
+    const requestId = ++adminDashboardRequestIdRef.current
     const pending = (async () => {
       setAdminDataLoading(true)
       setProfitLedgerError('')
+      const ledgerPending = loadProfitLedger(forceLedger)
       try {
-        const [data, revenueData, expenseData] = await Promise.all([
-          api.adminDashboard(token),
-          api.adminRevenueEntries(token, { summary: true }),
-          api.adminExpenseSubmissions(token),
-        ])
-        setAdminStats(data)
-        setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
-        setProfitLedgerLoaded(true)
-        setProfitLedgerError('')
-        console.info(JSON.stringify({ kind: 'admin_dashboard_load_perf', duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          console.info(JSON.stringify({ kind: 'admin_dashboard_data_to_paint_perf', duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
-        }))
+        const data = await api.adminDashboard(token, scope === 'full' ? undefined : scope)
+        if (requestId === adminDashboardRequestIdRef.current) {
+          if (scope === 'full') adminStatsCacheRef.current = { full: data, dashboard: data, accounts: data }
+          else adminStatsCacheRef.current[scope] = data
+          setAdminStats(data)
+          setAdminStatsScope(scope)
+          setAdminDataLoading(false)
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            console.info(JSON.stringify({ kind: 'admin_dashboard_primary_to_paint_perf', scope, duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
+          }))
+        }
+        await ledgerPending
+        console.info(JSON.stringify({ kind: 'admin_dashboard_all_sections_perf', scope, duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
       } catch (err) {
-        setProfitLedgerError(err.message || 'Request failed')
-        showMessage(err.message, true)
+        if (requestId === adminDashboardRequestIdRef.current) {
+          setProfitLedgerError(err.message || 'Request failed')
+          showMessage(err.message, true)
+        }
+        await ledgerPending
       } finally {
-        setAdminDataLoading(false)
+        if (requestId === adminDashboardRequestIdRef.current) setAdminDataLoading(false)
       }
     })()
-    adminDashboardRequestRef.current = pending
+    adminDashboardRequestRef.current = { scope, promise: pending }
     try {
       await pending
     } finally {
-      if (adminDashboardRequestRef.current === pending) adminDashboardRequestRef.current = null
+      if (adminDashboardRequestRef.current?.promise === pending) adminDashboardRequestRef.current = null
     }
   }
 
@@ -1074,17 +1160,28 @@ function App() {
     setExpenseSaving(true)
     try {
       const expenseDate = expenseForm.expense_date
-      await api.createAdminExpense(token, { ...expenseForm, category: 'Monthly Expense', expense_date: expenseDate, amount: Number(expenseForm.amount), expense_source: 'monthly' })
+      const { expense } = await api.createAdminExpense(token, { ...expenseForm, category: 'Monthly Expense', expense_date: expenseDate, amount: Number(expenseForm.amount), expense_source: 'monthly' })
       setMonthlyExpenseMonth(expenseDate.slice(0, 7))
       setRevenueDate(expenseDate)
-      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
-      setAdminStats(data)
-      setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
-      setProfitLedgerLoaded(true)
-      setProfitLedgerError('')
-      setProfitLedger((current) => ({ ...current, monthlyExpenses: data.expenses || [] }))
+      setAdminStats((current) => {
+        if (!current) return current
+        const updated = { ...current, expenses: [expense, ...(current.expenses || [])] }
+        for (const [scope, cached] of Object.entries(adminStatsCacheRef.current)) {
+          adminStatsCacheRef.current[scope] = { ...cached, expenses: [expense, ...(cached.expenses || [])] }
+        }
+        if (adminStatsScope && !adminStatsCacheRef.current[adminStatsScope]) adminStatsCacheRef.current[adminStatsScope] = updated
+        return updated
+      })
       setExpenseForm((current) => ({ ...current, description: '', amount: '' }))
       showMessage('Monthly expense saved.')
+      try {
+        const data = await api.adminDashboard(token, 'accounts')
+        adminStatsCacheRef.current.accounts = data
+        setAdminStats(data)
+        setAdminStatsScope('accounts')
+      } catch {
+        showMessage('Monthly expense saved, but the account totals could not refresh.', true)
+      }
     } catch (err) {
       showMessage(err.message, true)
     } finally {
@@ -1095,7 +1192,9 @@ function App() {
   const refreshAccountsData = async () => {
     try {
       const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
+      adminStatsCacheRef.current = { full: data, dashboard: data, accounts: data }
       setAdminStats(data)
+      setAdminStatsScope('full')
       setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
       setProfitLedgerLoaded(true)
       setProfitLedgerError('')
@@ -1199,14 +1298,17 @@ function App() {
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
       return
     }
+    setStaffPageLoading(true)
+    setStaffPageError('')
     try {
       const [staffData, crewData, fleetData] = await Promise.all([api.adminStaff(token), api.adminCrew(token), api.buses(token, true)])
       setStaffList(staffData.staff || [])
       setCrewList(crewData.crew || [])
       setBuses(fleetData.buses || [])
     } catch (err) {
-      showMessage(err.message, true)
-      setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
+      setStaffPageError(err.message || 'Unable to load staff management data.')
+    } finally {
+      setStaffPageLoading(false)
     }
   }
 
@@ -1237,55 +1339,79 @@ function App() {
   }, [printMode])
 
   if (authStatus === 'checking') {
-    return <main className="auth-page" role="status" aria-live="polite"><section className="login-panel"><img className="brand-logo" src="/logo.png" alt="District Line" /><p>Checking your session…</p></section></main>
+    return <FullSystemLoader />
   }
 
   if (authStatus === 'error') {
     return <main className="auth-page"><section className="login-panel" role="alert"><img className="brand-logo" src="/logo.png" alt="District Line" /><h1>Unable to verify session</h1><p>{authError}</p><button type="button" className="primary-button wide" onClick={verifySession}>Retry</button></section></main>
   }
 
-  if (showRecovery || authStatus !== 'authenticated' || !token) {
+  if (showUsernameRecovery || showRecovery || authStatus !== 'authenticated' || !token) {
     return (
-      <div className="auth-page">
-        <div className="auth-backdrop" aria-hidden="true" />
-        <section className="login-panel" aria-labelledby="login-title">
-          <img className="brand-logo" src="/logo.png" alt="District Line" />
-          <h1 id="login-title">{showRecovery ? recoveryStep === 'reset' ? 'Set a new password' : 'Recover admin password' : 'District Line Admin'}</h1>
-          <p>{showRecovery ? recoveryStep === 'reset' ? 'Choose a new password for your administrator account.' : 'We will email a single-use reset link to your registered recovery address.' : 'Sign in to manage fleet bookings and operations'}</p>
-          {showRecovery ? <form onSubmit={handleAdminRecovery}>
-            {recoveryStep === 'request' ? <>
-              <label htmlFor="recovery-email">Registered recovery email</label>
-              <input id="recovery-email" required type="email" autoComplete="email" value={recoveryForm.email} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, email: event.target.value }))} />
-            </> : null}
-            {recoveryStep === 'reset' ? <>
-              <label htmlFor="recovery-new-password">New password (at least 12 characters)</label>
-              <input id="recovery-new-password" required minLength={12} type="password" autoComplete="new-password" value={recoveryForm.password} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, password: event.target.value }))} />
-              <label htmlFor="recovery-confirm-password">Confirm new password</label>
-              <input id="recovery-confirm-password" required minLength={12} type="password" autoComplete="new-password" value={recoveryForm.confirmPassword} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} />
-            </> : null}
-            {recoveryError ? <div className="banner error" role="alert">{recoveryError}</div> : null}
-            {recoveryMessage ? <div className="banner success" role="status">{recoveryMessage}</div> : null}
-            <button type="submit" className="primary-button wide login-submit" disabled={recoveryLoading}>{recoveryLoading ? 'Please wait…' : recoveryStep === 'request' ? 'Send reset link' : 'Reset password'}</button>
-            <button type="button" className="recovery-back" onClick={() => { setShowRecovery(false); setRecoveryError(''); setRecoveryMessage(''); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryStep('request') }}>Back to sign in</button>
-          </form> : <form onSubmit={(event) => { event.preventDefault(); handleLogin() }}>
-            <label htmlFor="login-username">Username / Admin ID</label>
-            <input id="login-username" required autoComplete="username" autoFocus value={loginForm.username} onChange={(event) => setLoginForm((prev) => ({ ...prev, username: event.target.value }))} />
-            <label htmlFor="login-password">Password</label>
-            <div className="login-password-field">
-              <input id="login-password" required type={showLoginPassword ? 'text' : 'password'} autoComplete="current-password" value={loginForm.password} onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))} />
-              <button type="button" className="login-password-toggle" aria-label={showLoginPassword ? 'Hide password' : 'Show password'} aria-pressed={showLoginPassword} onClick={() => setShowLoginPassword((visible) => !visible)}>
-                {showLoginPassword ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.2A10.8 10.8 0 0112 5c5.2 0 8.8 4.5 10 7-.4.9-1.2 2-2.3 3M6.2 6.2C3.9 7.7 2.5 10 2 12c1.2 2.5 4.8 7 10 7 1.4 0 2.6-.3 3.7-.8" /></svg> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>}
-              </button>
+      <main className={`auth-page auth-redesign login-page${showRecovery ? ' auth-recovery-mode' : ''}`}>
+        <div className="auth-layout login-stage">
+          <section className="auth-branding" aria-label="District Line">
+            <img className="brand-logo" src="/logo-transparent.png" alt="District Line by CityLink, 077 90 40 300" />
+            <span className="auth-brand-eyebrow">DISTRICT LINE · INTERNAL SYSTEM</span>
+            <h1>Internal Bus <span>Booking System</span></h1>
+            <p>Admin &amp; Staff Portal</p>
+            <div className="auth-brand-bottom">
+              <div className="auth-service-points" aria-label="Travel, Book, Manage"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 16V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10M5 12h14m-12 4v2m10-2v2M5 16l-1 2v2h16v-2l-1-2M8 8h8" /><circle cx="8" cy="14" r=".7" /><circle cx="16" cy="14" r=".7" /></svg>Travel</span><i /><span><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M7.5 3v4m9-4v4M4 9h16M8 13h2m4 0h2m-8 4h2m4 0h2" /></svg>Book</span><i /><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3" /><circle cx="17" cy="9" r="2.2" /><path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1h-13Zm13.2-6.5a5 5 0 0 1 5.8 5V20h-4" /></svg>Manage</span></div>
+              <span className="auth-brand-note">Colombo · Kattankudy Express Service</span>
             </div>
-            {loginError ? <div className="banner error" role="alert">{loginError}</div> : null}
-            <button type="submit" className="primary-button wide login-submit" disabled={loginLoading}>{loginLoading ? 'Signing in…' : 'Sign In'}</button>
-            <button type="button" className="recovery-link" onClick={() => { setShowRecovery(true); setRecoveryStep('request'); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryError(''); setRecoveryMessage('') }}>Forgot password?</button>
-            <p className="login-hint">Staff: contact your administrator to reset your password.</p>
-          </form>
-          }
-          <p className="login-hint">Colombo | Kattankudy Express Service</p>
-        </section>
-      </div>
+          </section>
+
+          <section className="login-panel" aria-labelledby="login-title">
+            <div className="auth-login-card login-card">
+            <div className="auth-login-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 16c0 .9.4 1.7 1 2.2V20a1 1 0 001 1h1a1 1 0 001-1v-1h8v1a1 1 0 001 1h1a1 1 0 001-1v-1.8c.6-.5 1-1.3 1-2.2V6c0-3-3-4-8-4S4 3 4 6v10zm3.5 1a1.5 1.5 0 110-3 1.5 1.5 0 010 3zm9 0a1.5 1.5 0 110-3 1.5 1.5 0 010 3zM6 11V6h12v5H6z" /></svg></div>
+            <span className="auth-login-eyebrow">SECURE STAFF ACCESS</span>
+            <h2 id="login-title">{showUsernameRecovery ? 'Recover admin username' : showRecovery ? recoveryStep === 'reset' ? 'Set a new password' : 'Recover admin password' : 'Staff & Admin Login'}</h2>
+            <p className="auth-login-subtitle">{showUsernameRecovery ? 'Recover your username through your registered email.' : showRecovery ? recoveryStep === 'reset' ? 'Choose a new password for your administrator account.' : 'We will email a single-use reset link to your registered recovery address.' : 'For Authorized Staff Members'}</p>
+            {!showRecovery && <div className="auth-login-rule" aria-hidden="true" />}
+            {showUsernameRecovery ? <UsernameRecoveryForm initialToken={initialUsernameRecoveryToken} onBack={() => { setShowUsernameRecovery(false); setInitialUsernameRecoveryToken('') }} /> : showRecovery ? <form className="auth-form" onSubmit={handleAdminRecovery}>
+              {recoveryStep === 'request' ? <>
+                <label htmlFor="recovery-email">Registered recovery email</label>
+                <div className="auth-input-wrap"><span className="auth-input-icon" aria-hidden="true">@</span><input id="recovery-email" required type="email" autoComplete="email" value={recoveryForm.email} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, email: event.target.value }))} /></div>
+              </> : null}
+              {recoveryStep === 'reset' ? <>
+                <label htmlFor="recovery-new-password">New password (at least 12 characters)</label>
+                <div className="auth-input-wrap"><span className="auth-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></span><input id="recovery-new-password" required minLength={12} type="password" autoComplete="new-password" value={recoveryForm.password} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, password: event.target.value }))} /></div>
+                <label htmlFor="recovery-confirm-password">Confirm new password</label>
+                <div className="auth-input-wrap"><span className="auth-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></span><input id="recovery-confirm-password" required minLength={12} type="password" autoComplete="new-password" value={recoveryForm.confirmPassword} onChange={(event) => setRecoveryForm((prev) => ({ ...prev, confirmPassword: event.target.value }))} /></div>
+              </> : null}
+              {recoveryError ? <div className="banner error" role="alert">{recoveryError}</div> : null}
+              {recoveryMessage ? <div className="banner success" role="status">{recoveryMessage}</div> : null}
+              <button type="submit" className="primary-button wide login-submit" disabled={recoveryLoading}>{recoveryLoading ? 'Please wait…' : recoveryStep === 'request' ? 'Send reset link' : 'Reset password'}</button>
+              <button type="button" className="recovery-back" onClick={() => { setShowRecovery(false); setRecoveryError(''); setRecoveryMessage(''); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryStep('request') }}>Back to sign in</button>
+            </form> : <form className="auth-form" onSubmit={(event) => { event.preventDefault(); handleLogin() }}>
+              <label className="auth-visually-hidden" htmlFor="login-username">Username / Admin ID</label>
+              <div className="auth-input-wrap"><span className="auth-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg></span><input id="login-username" required autoComplete="username" placeholder="Username / Admin ID" value={loginForm.username} onChange={(event) => setLoginForm((prev) => ({ ...prev, username: event.target.value }))} /></div>
+              <label className="auth-visually-hidden" htmlFor="login-password">Password</label>
+              <div className="login-password-field auth-input-wrap">
+                <span className="auth-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg></span>
+                <input id="login-password" required type={showLoginPassword ? 'text' : 'password'} autoComplete="current-password" placeholder="Password" value={loginForm.password} onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))} />
+                <button type="button" className="login-password-toggle" aria-label={showLoginPassword ? 'Hide password' : 'Show password'} aria-pressed={showLoginPassword} onClick={() => setShowLoginPassword((visible) => !visible)}>
+                  {showLoginPassword ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.2A10.8 10.8 0 0112 5c5.2 0 8.8 4.5 10 7-.4.9-1.2 2-2.3 3M6.2 6.2C3.9 7.7 2.5 10 2 12c1.2 2.5 4.8 7 10 7 1.4 0 2.6-.3 3.7-.8" /></svg> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>}
+                </button>
+              </div>
+              {loginError ? <div className="banner error" role="alert">{loginError}</div> : null}
+              <button type="submit" className="primary-button wide login-submit" disabled={loginLoading} aria-busy={loginLoading}>
+                {loginLoading ? <><span className="login-submit-spinner" aria-hidden="true" />Signing in…</> : 'Sign In'}
+              </button>
+              <button type="button" className="recovery-link" onClick={() => { setShowRecovery(true); setRecoveryStep('request'); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryError(''); setRecoveryMessage('') }}>Forgot Password?</button>
+              {USERNAME_RECOVERY_ENABLED && <button type="button" className="recovery-link" onClick={() => setShowUsernameRecovery(true)}>Forgot Username?</button>}
+              <div className="auth-support"><strong>Need help?</strong><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-1a8 8 0 0 1 16 0v1M4 12h3v6H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 1-2Zm16 0h-3v6h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-1-2Zm-2 7a6 6 0 0 1-6 2" /></svg>Contact IT Support</span></div>
+              <p className="login-hint">Staff password resets are managed by your administrator.</p>
+            </form>}
+            <footer className="login-developer-credit">
+              <span>Developed by <strong>Cintex</strong></span>
+              <a href="mailto:cintextechpersonal@gmail.com" aria-label="Email Cintex technical support">cintextechpersonal@gmail.com</a>
+            </footer>
+            </div>
+            <footer className="auth-login-footer">District Line <span /> Internal Booking System</footer>
+          </section>
+        </div>
+      </main>
     )
   }
 
@@ -1322,7 +1448,10 @@ function App() {
                 }
                 setActiveTab(tab)
                 setMobileNavOpen(false)
-                if ((tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') && (!adminStats || !profitLedgerLoaded)) openAdminDashboard()
+                if (tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') {
+                  const scope = tab === 'Dashboard' ? 'dashboard' : tab === 'Accounts' ? 'accounts' : 'full'
+                  if ((!adminStats || (adminStatsScope !== scope && adminStatsScope !== 'full')) || !profitLedgerLoaded) openAdminDashboard(scope)
+                }
                 if (tab === 'Staff') openStaffManagement()
                 if (tab === 'Log') loadLogs(token, activeTrip)
               }}
@@ -1430,7 +1559,7 @@ function App() {
             </div>
 
             <div className="home-bus-banner">
-              <img src="/bus.png" alt="District Line coach travelling along the coast" loading="lazy" />
+              <img src="/bus.webp" alt="District Line coach travelling along the coast" loading="lazy" />
               <div className="home-bus-banner-label">
                 <span>District Line · Express Service</span>
                 <strong>{route.label}</strong>
@@ -1458,7 +1587,7 @@ function App() {
                 />
               </article>
             ))}
-            {trips.length === 0 ? (
+            {tripsLoading ? <TripsLoadingState /> : trips.length === 0 ? (
               <div className="empty-trip-state">
                 <p>No bus sections are set up for this date and route.</p>
                 {staffPermissions.trips ? <button type="button" className="primary-button small add-another-bus" onClick={handleAddBus}>+ Add bus section</button> : null}
@@ -1544,6 +1673,7 @@ function App() {
                   <span className="customer-log-code">C-1</span>
                   <h2>Customer Log · C1</h2>
                   <span className="booked-seat-count">{bookedSeatCount} Seats Booked</span>
+                  {logsLoading && <span className="logs-loading-indicator" role="status"><span className="system-loading-spinner" aria-hidden="true" /> Loading logs…</span>}
                 </div>
                 <div className="customer-log-details">
                   <span>Date: {selectedDate}</span>
@@ -1784,7 +1914,7 @@ function App() {
       )}
 
       {activeTab === 'Staff' && isAdmin && (
-        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} onRegisterBus={() => { setEditingBus(null); setBusForm({ registration_no: '', mobile_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} onActivateBus={handleActivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
+        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} loading={staffPageLoading} loadError={staffPageError} onRetry={openStaffManagement} onRegisterBus={() => { setEditingBus(null); setBusForm({ registration_no: '', mobile_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} onActivateBus={handleActivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
           if (result.id === user?.id && result.permissions?.home === false && activeTab === 'Home') {
             const nextTab = result.permissions?.log !== false ? 'Log' : 'Info'
             setActiveTab(nextTab)
@@ -1797,7 +1927,7 @@ function App() {
         <main className="content-page dashboard-page">
           <SmsBalanceCard token={token} />
           {adminStats ? <>
-          <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={adminDataLoading} error={profitLedgerError} />
+          <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={profitLedgerLoading} error={profitLedgerError} />
           <section className="content-card dashboard-seat-chart-section">
             <div className="dashboard-section-heading">
               <div><h2>Seats booked by travel date</h2><p>Confirmed seats for each route in the selected month.</p></div>
@@ -1886,8 +2016,8 @@ function App() {
             </section>
           </section>
           </> : <section className="content-card" role="status" aria-live="polite">
-            {adminDataLoading ? 'Loading account data…' : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
-            {!adminDataLoading && profitLedgerError && <button type="button" className="primary-button small" onClick={openAdminDashboard}>Retry dashboard load</button>}
+            {adminDataLoading ? <AdminPageSkeleton label={activeTab === 'Accounts' ? 'account information' : 'customer analytics'} /> : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
+            {!adminDataLoading && profitLedgerError && <button type="button" className="primary-button small" onClick={() => openAdminDashboard(activeTab === 'Accounts' ? 'accounts' : 'dashboard', true)}>Retry dashboard load</button>}
           </section>}
         </main>
       )}
@@ -1895,8 +2025,16 @@ function App() {
       {(activeTab === 'Accounts' || activeTab === 'Customers') && isAdmin && !adminStats && (
         <main className="content-page dashboard-page">
           <section className="content-card" role="status" aria-live="polite">
-            {adminDataLoading ? 'Loading account data…' : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
-            {!adminDataLoading && profitLedgerError && <button type="button" className="primary-button small" onClick={openAdminDashboard}>Retry dashboard load</button>}
+            {adminDataLoading ? <AdminPageSkeleton label="dashboard" /> : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
+            {!adminDataLoading && profitLedgerError && <button type="button" className="primary-button small" onClick={() => openAdminDashboard(activeTab === 'Accounts' ? 'accounts' : 'dashboard', true)}>Retry dashboard load</button>}
+          </section>
+        </main>
+      )}
+
+      {activeTab === 'Customers' && isAdmin && adminStats && adminStatsScope !== 'full' && (
+        <main className="content-page dashboard-page">
+          <section className="content-card" role="status" aria-live="polite">
+            {adminDataLoading ? 'Loading customer analytics…' : 'Customer analytics are not available.'}
           </section>
         </main>
       )}
@@ -1908,7 +2046,7 @@ function App() {
         onRefresh={refreshAccountsData}
         revenueEntries={profitLedger.revenueEntries}
         expenseSubmissionEntries={profitLedger.expenseSubmissions}
-        ledgerLoading={adminDataLoading}
+        ledgerLoading={profitLedgerLoading}
         onRevenueEntrySaved={(entry) => setProfitLedger((current) => ({ ...current, revenueEntries: [entry, ...current.revenueEntries].slice(0, 100) }))}
         onExpenseSubmissionSaved={(submission) => setProfitLedger((current) => ({ ...current, expenseSubmissions: [submission, ...current.expenseSubmissions].slice(0, 100) }))}
         monthlyExpenseForm={expenseForm}

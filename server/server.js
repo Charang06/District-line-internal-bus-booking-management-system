@@ -8,6 +8,9 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { AsyncLocalStorage } from 'async_hooks'
 import { loadEnv } from './env.js'
+import { createUsernameRecoveryRouter } from './admin-username-recovery.js'
+import { createAdminUsernameHandler } from './admin-profile-username.js'
+import { createEmailVerificationRouter, createRecoveryEmailUpdateHandler } from './admin-recovery-email-verification.js'
 import { sendSms, buildConfirmationMessage, buildCancellationMessage, smsConfig } from './sms.js'
 import { getSmsLenzBalance, SmsLenzBalanceError } from './smslenz-balance.js'
 
@@ -1038,6 +1041,12 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, sms: { configured: sms.configured, provider: sms.provider } })
 })
 
+// Disabled unless explicitly enabled AFTER the separately approved manual migration.
+// Migration 005 is deliberately absent from DATABASE_MIGRATIONS.
+app.use('/api/username-recovery', createUsernameRecoveryRouter({ pool }))
+// Disabled by default; the router rejects before touching auth/storage when off.
+app.use('/api/recovery-email-verification', createEmailVerificationRouter({ pool, authMiddleware, requireAdmin }))
+
 app.post('/api/login', async (req, res, next) => {
   const { username, password } = req.body || {}
   if (!username || !password) return res.status(400).json({ message: 'Username and password are required' })
@@ -1196,6 +1205,8 @@ app.get('/api/me', authMiddleware, (req, res) => {
   res.json({ user: req.user })
 })
 
+app.patch('/api/profile/username', authMiddleware, requireAdmin, createAdminUsernameHandler({ pool, publicUser }))
+
 app.patch('/api/profile', authMiddleware, requireAdmin, async (req, res) => {
   const fullName = String(req.body?.fullName || req.body?.full_name || '').trim()
   const nameError = validateFullName(fullName)
@@ -1206,13 +1217,7 @@ app.patch('/api/profile', authMiddleware, requireAdmin, async (req, res) => {
   res.json({ user: publicUser(next) })
 })
 
-app.patch('/api/profile/recovery-email', authMiddleware, requireAdmin, async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase()
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ message: 'Enter a valid recovery email address.' })
-  await run("UPDATE users SET recovery_email = ? WHERE id = ? AND role = 'admin'", [email || null, req.user.id])
-  await run('UPDATE password_recovery_tokens SET used_at = CURRENT_TIMESTAMP WHERE user_id = ? AND used_at IS NULL', [req.user.id])
-  res.json({ message: 'Recovery email saved.' })
-})
+app.patch('/api/profile/recovery-email', authMiddleware, requireAdmin, createRecoveryEmailUpdateHandler({ pool }))
 
 app.post('/api/profile/photo', authMiddleware, requireAdmin, async (req, res) => {
   const decoded = decodeImageDataUrl(req.body?.image)
@@ -2762,6 +2767,63 @@ app.delete('/api/cargo/:id', authMiddleware, requireStaffPermission('cargo'), as
 
 app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) => {
   const dashboardStartedAt = monotonicMs()
+  const scope = String(req.query.scope || '')
+  if (scope === 'dashboard' || scope === 'accounts') {
+    const [trips, buses, expenses, passengerDaily, cargoDaily] = await Promise.all([
+      all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`),
+      all('SELECT id, registration_no, status, driver_name, conductor_name FROM buses ORDER BY id'),
+      all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source, bus_no FROM daily_expenses ORDER BY expense_date DESC, id DESC'),
+      all(`
+        SELECT t.id as trip_id, t.trip_code, t.travel_date, t.route_code, t.route_label,
+          COALESCE(t.bus_no, b.registration_no) as registration_no,
+          COUNT(*) as passenger_count, COALESCE(SUM(bk.fare), 0) as passenger_revenue
+        FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id
+        WHERE bk.status = 'confirmed' AND bk.confirmation_status = 'confirmed'
+        GROUP BY t.id, t.trip_code, t.travel_date, t.route_code, t.route_label, t.bus_no, b.registration_no
+      `),
+      all(`
+        SELECT trip_id, travel_date, route_code, route_label, bus_registration,
+          COUNT(*) as cargo_count, COALESCE(SUM(charge), 0) as cargo_revenue
+        FROM cargo WHERE travel_date IS NOT NULL AND TRIM(travel_date) != ''
+        GROUP BY trip_id, travel_date, route_code, route_label, bus_registration
+      `),
+    ])
+    const dailyRevenueMap = new Map()
+    for (const row of passengerDaily) {
+      const key = row.trip_id ? `trip:${row.trip_id}` : `${row.travel_date}|${row.route_code || ''}|${row.registration_no || ''}`
+      dailyRevenueMap.set(key, {
+        trip_id: row.trip_id, trip_code: row.trip_code, registration_no: row.registration_no,
+        travel_date: row.travel_date, route_code: row.route_code, route_label: row.route_label,
+        passenger_count: Number(row.passenger_count) || 0, passenger_revenue: Number(row.passenger_revenue) || 0,
+        cargo_count: 0, cargo_revenue: 0,
+      })
+    }
+    for (const row of cargoDaily) {
+      const key = row.trip_id ? `trip:${row.trip_id}` : `${row.travel_date}|${row.route_code || ''}|${row.bus_registration || ''}`
+      const daily = dailyRevenueMap.get(key) || {
+        trip_id: row.trip_id, trip_code: null, registration_no: row.bus_registration,
+        travel_date: row.travel_date, route_code: row.route_code, route_label: row.route_label,
+        passenger_count: 0, passenger_revenue: 0, cargo_count: 0, cargo_revenue: 0,
+      }
+      daily.cargo_count = Number(row.cargo_count) || 0
+      daily.cargo_revenue = Number(row.cargo_revenue) || 0
+      dailyRevenueMap.set(key, daily)
+    }
+    const dailyRevenue = [...dailyRevenueMap.values()]
+      .map((row) => ({ ...row, total_revenue: row.passenger_revenue + row.cargo_revenue }))
+      .sort((a, b) => b.travel_date.localeCompare(a.travel_date) || String(a.trip_code || '').localeCompare(String(b.trip_code || '')))
+    const context = transactionContext.getStore()
+    if (context) context.dashboardMs += monotonicMs() - dashboardStartedAt
+    console.info(JSON.stringify({
+      kind: 'admin_dashboard_response', request_id: context?.requestId || null, scope,
+      duration_ms: Number((monotonicMs() - dashboardStartedAt).toFixed(1)),
+      trip_count: trips.length, bus_count: buses.length, revenue_row_count: dailyRevenue.length,
+    }))
+    return res.json({
+      scope, trips: await Promise.all(trips.map(hydrateTrip)), buses, expenses,
+      dailyRevenue, smsGateway: { configured: smsConfig().configured, provider: smsConfig().provider },
+    })
+  }
   const [trips, dutyData, buses, crewMembers, expenses, passengerRecords, regularCustomers, cargoRecords,
     passengerTotals, cargoTotals, passengerDaily, cargoDaily, smsTotals] = await Promise.all([
     all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`),

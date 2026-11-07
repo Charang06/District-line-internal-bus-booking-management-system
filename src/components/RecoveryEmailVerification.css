@@ -1,0 +1,12 @@
+.recovery-email-page { min-height: 100dvh; display: grid; place-items: center; padding: 24px; background: #08182b; color: #f8fafc; font-family: Arial, sans-serif; }
+.recovery-email-page .recovery-email-card { width: min(100%, 480px); min-width: 0; padding: 32px; border: 1px solid #344b63; border-radius: 18px; background: #10243b; box-shadow: 0 20px 60px #0004; }
+.recovery-email-page .recovery-email-brand { color: #d8aa5b; font-size: 13px; letter-spacing: .16em; font-weight: 700; }
+.recovery-email-page h1 { margin: 18px 0; color: #f8fafc; font-size: clamp(23px, 5vw, 30px); line-height: 1.25; }
+.recovery-email-page p { line-height: 1.6; overflow-wrap: anywhere; }
+.recovery-email-page button { min-height: 44px; width: 100%; padding: 12px 18px; white-space: normal; background: #d8aa5b; color: #08182b; border: 1px solid #d8aa5b; border-radius: 10px; font: inherit; font-weight: 600; cursor: pointer; }
+.recovery-email-page button:disabled { opacity: .6; cursor: default; }
+.recovery-email-page button:focus-visible { outline: 2px solid #f5d69c; outline-offset: 4px; }
+.recovery-email-page .recovery-email-back { margin-top: 8px; color: #e6c48e; background: transparent; }
+.recovery-email-page .recovery-email-success { color: #83d8ad; }
+.recovery-email-page .recovery-email-error { color: #ffd1d1; }
+@media (max-width: 480px) { .recovery-email-page { padding: 12px; } .recovery-email-page .recovery-email-card { padding: 24px 18px; } }

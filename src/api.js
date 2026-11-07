@@ -71,6 +71,12 @@ async function timedRequest(name, url, options) {
 }
 
 export const api = {
+  requestAdminUsernameRecovery: (body) => request(`${API_BASE}/username-recovery/request`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
+  confirmAdminUsernameRecovery: (body) => request(`${API_BASE}/username-recovery/confirm`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
   login: (body) => request(`${API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -107,10 +113,14 @@ export const api = {
   deleteCargo: (token, id) => apiFetch(`${API_BASE}/cargo/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
   me: (token) => apiFetch(`${API_BASE}/me`, { headers: authHeaders(token) }).then(parse),
   updateProfile: (token, body) => apiFetch(`${API_BASE}/profile`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
+  changeUsername: (token, body) => apiFetch(`${API_BASE}/profile/username`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   updateRecoveryEmail: (token, email) => apiFetch(`${API_BASE}/profile/recovery-email`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ email }) }).then(parse),
+  recoveryEmailVerificationStatus: () => apiFetch(`${API_BASE}/recovery-email-verification/status`).then(parse),
+  requestRecoveryEmailVerification: () => apiFetch(`${API_BASE}/recovery-email-verification/request`, { method: 'POST', headers: authHeaders() }).then(parse),
+  confirmRecoveryEmailVerification: (token) => apiFetch(`${API_BASE}/recovery-email-verification/confirm`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ token }) }).then(parse),
   uploadProfilePhoto: (token, image) => apiFetch(`${API_BASE}/profile/photo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
   changePassword: (token, body) => apiFetch(`${API_BASE}/profile/password`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
-  adminDashboard: (token) => timedRequest('admin_dashboard', `${API_BASE}/admin/dashboard`, { headers: authHeaders(token) }),
+  adminDashboard: (token, scope) => timedRequest('admin_dashboard', `${API_BASE}/admin/dashboard${scope ? `?scope=${encodeURIComponent(scope)}` : ''}`, { headers: authHeaders(token) }),
   smsLenzBalance: (token) => apiFetch(`${API_BASE}/admin/smslenz/balance`, { headers: authHeaders(token) }).then(parse),
   adminRevenueEntries: (token, { summary = false } = {}) => timedRequest(
     'admin_revenue_entries',

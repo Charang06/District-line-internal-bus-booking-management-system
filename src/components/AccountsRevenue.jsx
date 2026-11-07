@@ -345,8 +345,15 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
       showMessage('Choose a bus or enter its registration number.', true)
       return
     }
-    if (expenseTotal <= 0) {
+    const submittedItems = expenseItems
+      .filter((item) => Number(item.amount) > 0)
+      .map((item) => ({ category: String(item.category || '').trim(), description: String(item.description || '').trim(), amount: Number(item.amount) }))
+    if (!submittedItems.length || expenseTotal <= 0) {
       showMessage('Enter at least one expense amount greater than zero.', true)
+      return
+    }
+    if (submittedItems.some((item) => !item.category || item.category.length > 80 || item.description.length > 200 || !Number.isSafeInteger(item.amount) || item.amount > 100000000)) {
+      showMessage('Enter a valid category, note, and whole-rupee amount for each expense.', true)
       return
     }
     setSavingExpense(true)
@@ -361,7 +368,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
         return_leg_date: returnLegDate,
         first_trip_id: selectedExpenseTrip?.id || null,
         return_trip_id: selectedExpenseReturnTrip?.id || pairedExpenseTrip?.id || null,
-        items: expenseItems.filter((item) => Number(item.amount) > 0).map((item) => ({ category: item.category, description: item.description, amount: Number(item.amount) || 0 })),
+        items: submittedItems,
         gross_revenue: roundRevenue,
         divide_expense: divideExpenses,
       })
@@ -513,7 +520,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
           })}
         </section>
 
-        <form className="accounts-expense-main-form" onSubmit={handleExpenseSubmit}>
+        <form className="accounts-expense-main-form" noValidate onSubmit={handleExpenseSubmit}>
           <section className="content-card accounts-expense-items-card">
             <div className="accounts-expense-items-heading"><div><h2>Highway Transit Expense Items</h2><p>Enter expense amounts for this bus and operating date.</p></div><span>Currency: Sri Lankan Rupee (LKR)</span></div>
             <div className="accounts-expense-items-grid">
@@ -543,7 +550,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
           <section className="content-card accounts-expense-actions">
             <div><button type="button" className="ghost-button" onClick={resetExpenseForm}>Reset to Defaults</button><button type="button" className="secondary-button" onClick={onPrint}>Print Voucher</button><button type="button" className="secondary-button" onClick={exportExpenseCsv}>Export CSV</button></div>
-            <div><button type="button" className="secondary-button" onClick={saveExpenseDraft}>Save Draft</button><button type="submit" className="primary-button" disabled={savingExpense || expenseTotal <= 0 || !expenseBusNo.trim()}>{savingExpense ? 'Saving expenses...' : '🔒 Submit & Lock Expenses'}</button></div>
+            <div><button type="button" className="secondary-button" onClick={saveExpenseDraft}>Save Draft</button><button type="submit" className="primary-button" disabled={savingExpense}>{savingExpense ? 'Saving expenses...' : '🔒 Submit & Lock Expenses'}</button></div>
           </section>
         </form>
 

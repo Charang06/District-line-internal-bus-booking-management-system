@@ -31,7 +31,7 @@ function permissionSummary(permissions = {}) {
   return STAFF_PERMISSION_OPTIONS.filter((item) => permissions[item.key]).map((item) => item.label.replace(' page', '')).join(' · ') || 'No access assigned'
 }
 
-export default function StaffManagement({ token, staffList, setStaffList, crewList, setCrewList, buses, onRegisterBus, onDeleteBus, onActivateBus, showMessage, onSaved, requestConfirmation }) {
+export default function StaffManagement({ token, staffList, setStaffList, crewList, setCrewList, buses, loading = false, loadError = '', onRetry, onRegisterBus, onDeleteBus, onActivateBus, showMessage, onSaved, requestConfirmation }) {
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -227,8 +227,9 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
             <button type="button" className="primary-button staff-add-button" onClick={openCreate}><span aria-hidden="true">＋</span> Add staff account</button>
           </div>
         </div>
+        {loadError && <div className="staff-empty-state" role="alert">Unable to load staff data: {loadError} <button type="button" className="ghost-button small" onClick={onRetry}>Retry</button></div>}
         <div className="staff-card-grid">
-          {visibleStaff.map((person) => (
+          {loading && !staffList.length ? <div className="admin-data-skeleton" role="status" aria-label="Loading staff accounts"><span /><span /><span /></div> : visibleStaff.map((person) => (
             <article key={person.id} className="staff-account-card">
               <div className="staff-card-top">
                 <div>
@@ -271,7 +272,7 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
               </div>
             </article>
           ))}
-          {!visibleStaff.length && <div className="staff-empty-state">{query ? 'No staff accounts match your search.' : 'No staff accounts yet. Add an account to get started.'}</div>}
+          {!loading && !loadError && !visibleStaff.length && <div className="staff-empty-state">{query ? 'No staff accounts match your search.' : 'No staff accounts yet. Add an account to get started.'}</div>}
         </div>
       </section>
 
@@ -285,7 +286,7 @@ export default function StaffManagement({ token, staffList, setStaffList, crewLi
           <button type="submit" className="primary-button" disabled={busy}>Add crew member</button>
         </form>
         <div className="staff-crew-list">
-          {['driver', 'conductor'].map((role) => <div className="staff-crew-group" key={role}>
+          {loading && !crewList.length ? <div className="admin-data-skeleton" role="status" aria-label="Loading crew directory"><span /><span /><span /></div> : ['driver', 'conductor'].map((role) => <div className="staff-crew-group" key={role}>
             <h3>{role === 'driver' ? 'Drivers' : 'Conductors'}</h3>
             <div>{(crewList || []).filter((member) => member.role === role).map((member) => <span className="staff-crew-chip" key={member.id}>{member.full_name}<button type="button" aria-label={`Remove ${member.full_name}`} onClick={() => handleRemoveCrew(member)}>×</button></span>)}
               {!(crewList || []).some((member) => member.role === role) && <small>No names added.</small>}
