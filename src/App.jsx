@@ -851,9 +851,8 @@ function App() {
     const contact = customerContactDraft.trim()
     const fare = Number(customerFareDraft)
     const notes = customerNotesDraft.trim()
-    if (!passengerName) return showMessage('Enter a customer name.', true)
+    if (!passengerName && !contact) return showMessage('Enter a customer name or mobile number.', true)
     if (passengerName.length > 120) return showMessage('Customer names must be 120 characters or fewer.', true)
-    if (!contact) return showMessage('Enter a customer mobile number.', true)
     if (contact.length > 30) return showMessage('Customer mobile numbers must be 30 characters or fewer.', true)
     if (!Number.isSafeInteger(fare) || fare < 0 || fare > 1_000_000_000) return showMessage('Enter a whole-number fare from Rs. 0 to Rs. 1,000,000,000.', true)
     if (notes.length > 1000) return showMessage('Customer notes must be 1,000 characters or fewer.', true)
@@ -2161,12 +2160,12 @@ function App() {
             <p>Update the customer details for seat{editingCustomerLog.seat_numbers.length === 1 ? '' : 's'} {editingCustomerLog.seat_numbers.join(', ')}.</p>
             <form onSubmit={(event) => { event.preventDefault(); handleSaveCustomerDetails(editingCustomerLog) }}>
               <div className="customer-details-form-grid">
-                <label>Customer name<input autoFocus required maxLength={120} value={customerNameDraft} onChange={(event) => setCustomerNameDraft(event.target.value)} /></label>
-                <label>Contact number<input type="tel" required maxLength={30} value={customerContactDraft} onChange={(event) => setCustomerContactDraft(event.target.value)} /></label>
+                <label>Customer name<input autoFocus maxLength={120} value={customerNameDraft} onChange={(event) => setCustomerNameDraft(event.target.value)} /></label>
+                <label>Contact number<input type="tel" maxLength={30} value={customerContactDraft} onChange={(event) => setCustomerContactDraft(event.target.value)} /></label>
                 <label>Gender<select value={customerGenderDraft} onChange={(event) => setCustomerGenderDraft(event.target.value)}><option value="">Not specified</option><option value="Male">Male</option><option value="Female">Female</option>{customerGenderDraft && !['Male', 'Female'].includes(customerGenderDraft) && <option value={customerGenderDraft}>{customerGenderDraft}</option>}</select></label>
                 <label>From<select value={customerFromDraft} onChange={(event) => setCustomerFromDraft(event.target.value)}><option value="">Select boarding point</option>{routeByCode(editingCustomerLog.route_code).boarding.map((point) => <option key={point} value={point}>{point}</option>)}{customerFromDraft && !routeByCode(editingCustomerLog.route_code).boarding.includes(customerFromDraft) && <option value={customerFromDraft}>{customerFromDraft}</option>}</select></label>
                 <label>To<select value={customerToDraft} onChange={(event) => setCustomerToDraft(event.target.value)}><option value="">Select destination</option>{routeByCode(editingCustomerLog.route_code).alighting.map((point) => <option key={point} value={point}>{point}</option>)}{customerToDraft && !routeByCode(editingCustomerLog.route_code).alighting.includes(customerToDraft) && <option value={customerToDraft}>{customerToDraft}</option>}</select></label>
-                <label>Fare per seat (Rs.)<input type="number" min="0" max="1000000000" step="1" required value={customerFareDraft} onChange={(event) => setCustomerFareDraft(event.target.value)} /></label>
+                <label>Fare per seat (Rs.)<input type="number" min="0" max="1000000000" step="1" value={customerFareDraft} onChange={(event) => setCustomerFareDraft(event.target.value)} /></label>
                 <label className="customer-details-notes-field">Remark / Note<textarea maxLength={1000} value={customerNotesDraft} onChange={(event) => setCustomerNotesDraft(event.target.value)} /></label>
               </div>
               <div className="reservation-actions">

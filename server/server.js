@@ -2497,10 +2497,11 @@ app.patch('/api/bookings/:id/details', authMiddleware, requireStaffPermission('p
   const destination = hasDestination ? String(body.destination || '').trim() : ''
   const fare = hasFare ? Number(body.fare) : null
   const notes = hasNotes ? String(body.notes ?? '').trim() : ''
-  if (hasName && (!passengerName || passengerName.length > 120)) {
+  if ((hasName || hasContact) && !passengerName && !contact) return res.status(400).json({ message: 'Enter a customer name or mobile number.' })
+  if (hasName && passengerName.length > 120) {
     return res.status(400).json({ message: 'Enter a customer name up to 120 characters.' })
   }
-  if (hasContact && (!isValidPhone(contact) || contact.length > 30)) return res.status(400).json({ message: 'Enter a valid customer mobile number (up to 30 characters).' })
+  if (hasContact && contact && (!isValidPhone(contact) || contact.length > 30)) return res.status(400).json({ message: 'Enter a valid customer mobile number (up to 30 characters).' })
   if (hasGender && gender.length > 30) return res.status(400).json({ message: 'Gender must be 30 characters or fewer.' })
   if (hasBoardingPoint && boardingPoint.length > 120) return res.status(400).json({ message: 'Boarding point must be 120 characters or fewer.' })
   if (hasDestination && destination.length > 120) return res.status(400).json({ message: 'Destination must be 120 characters or fewer.' })
@@ -2517,7 +2518,7 @@ app.patch('/api/bookings/:id/details', authMiddleware, requireStaffPermission('p
   const assignments = []
   const values = []
   if (hasName) { assignments.push('passenger_name = ?'); values.push(passengerName) }
-  if (hasContact) { assignments.push('contact = ?'); values.push(normalizePhone(contact)) }
+  if (hasContact) { assignments.push('contact = ?'); values.push(contact ? normalizePhone(contact) : '') }
   if (hasGender) { assignments.push('gender = ?'); values.push(gender) }
   if (hasBoardingPoint) { assignments.push('boarding_point = ?'); values.push(boardingPoint) }
   if (hasDestination) { assignments.push('destination = ?'); values.push(destination) }
