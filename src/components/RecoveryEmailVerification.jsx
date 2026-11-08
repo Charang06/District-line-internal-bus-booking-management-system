@@ -15,6 +15,11 @@ export default function RecoveryEmailVerification({ initialToken, enabled }) {
     try {
       await api.confirmRecoveryEmailVerification(token.current)
       token.current = ''; setVerified(true)
+      if (typeof BroadcastChannel === 'function') {
+        const channel = new BroadcastChannel('recovery-email-verification')
+        channel.postMessage('confirmed')
+        channel.close()
+      }
     } catch (failure) { setError(failure.message || 'Could not verify the recovery email. Please try again.') }
     finally { submitting.current = false; setBusy(false) }
   }

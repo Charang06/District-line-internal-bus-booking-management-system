@@ -151,7 +151,10 @@ export default function AdminProfile({ token, user, onUserUpdate, onClose, showM
   useEffect(() => {
     if (!verificationEnabled || tab !== 'recovery') return
     let active = true
+    let refreshing = false
     const refresh = async () => {
+      if (!active || refreshing || document.visibilityState === 'hidden' || busyRef.current) return
+      refreshing = true
       const version = ++verificationVersion.current
       try {
         const result = await api.recoveryEmailVerificationStatus()
@@ -160,11 +163,22 @@ export default function AdminProfile({ token, user, onUserUpdate, onClose, showM
         setCooldownUntil(Date.now() + (result.retryAfter || 0) * 1000); setNow(Date.now())
       } catch (error) {
         if (active && version === verificationVersion.current) { setVerification(null); setVerificationError(error.message || 'Verification status unavailable.') }
-      }
+      } finally { refreshing = false }
     }
+    // Confirmations can happen in another tab or on another device.
+    const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('recovery-email-verification') : null
+    if (channel) channel.onmessage = refresh
+    const interval = window.setInterval(refresh, 5000)
     refresh()
     window.addEventListener('focus', refresh)
-    return () => { active = false; window.removeEventListener('focus', refresh) }
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      channel?.close()
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
   }, [verificationEnabled, tab, savedEmail])
   useEffect(() => {
     if (!cooldownUntil) return
