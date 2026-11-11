@@ -71,6 +71,18 @@ async function timedRequest(name, url, options) {
 }
 
 export const api = {
+  replaceMfaRecoveryCodes: (body) => request(`${API_BASE}/admin-mfa/recovery-codes`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
+  enrollAdminMfa: (body) => request(`${API_BASE}/admin-mfa/enroll`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
+  confirmAdminMfa: (body) => request(`${API_BASE}/admin-mfa/confirm`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
+  verifyAdminMfa: (body) => request(`${API_BASE}/admin-mfa/verify`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  }),
   requestAdminUsernameRecovery: (body) => request(`${API_BASE}/username-recovery/request`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   }),

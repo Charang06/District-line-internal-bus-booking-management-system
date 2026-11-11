@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-08T09:37:45.087Z",
+  "projectFingerprint": "868295d24a51",
+  "scope": "Full pg_dump logical database archive, excluding external Storage bytes and role/provider credentials",
+  "archiveSha256": "49e3653609c3b2d128acaf1094bdc9a0de4f3c6a6baeb45bc8e615f08fc013b2",
+  "bytes": 476689,
+  "encrypted": true,
+  "plaintextArchiveWritten": false,
+  "archiveTocValidated": true,
+  "archiveFullReadbackValidated": true,
+  "restorationVerified": false,
+  "productionWrites": false,
+  "recipientSha256": "e48031e3c986fbc0f5d3ad5de1c561d7163811c8422c155618544f121c1b5b5e",
+  "archiveRelativePath": ".private-security\\backups\\2026-11-08T09-36-35.844Z\\database.dump.age"
+}

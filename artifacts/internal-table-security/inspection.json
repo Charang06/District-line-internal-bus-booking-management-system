@@ -1,0 +1,471 @@
+{
+  "at": "2026-11-08T07:14:36.481Z",
+  "projectFingerprint": "868295d24a51",
+  "productionMapping": "Owner confirmed; independently reading deployed Vercel configuration still unavailable",
+  "privateRecordsRead": false,
+  "productionWrites": false,
+  "tlsVerified": true,
+  "tables": [
+    {
+      "name": "admin_recovery_email_verification_limits",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": false,
+      "anon_write": false,
+      "authenticated_read": false,
+      "authenticated_write": false
+    },
+    {
+      "name": "admin_recovery_email_verification_tokens",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": false,
+      "anon_write": false,
+      "authenticated_read": false,
+      "authenticated_write": false
+    },
+    {
+      "name": "admin_username_recovery_limits",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": false,
+      "anon_write": false,
+      "authenticated_read": false,
+      "authenticated_write": false
+    },
+    {
+      "name": "admin_username_recovery_tokens",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": false,
+      "anon_write": false,
+      "authenticated_read": false,
+      "authenticated_write": false
+    },
+    {
+      "name": "audit_logs",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "auth_sessions",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "bookings",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "bus_contacts",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "bus_duties",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "buses",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "cargo",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "crew_members",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "daily_expenses",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "duty_adjustments",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "expense_submissions",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "password_recovery_rate_limits",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "password_recovery_tokens",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "revenue_entries",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "schema_meta",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "sms_attempts",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "trips",
+      "rls": false,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": true,
+      "anon_write": true,
+      "authenticated_read": true,
+      "authenticated_write": true
+    },
+    {
+      "name": "users",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "anon_read": false,
+      "anon_write": false,
+      "authenticated_read": false,
+      "authenticated_write": false
+    }
+  ],
+  "affectedCount": 17,
+  "runtime": {
+    "role": "postgres",
+    "rolsuper": false,
+    "rolbypassrls": true,
+    "rolcreaterole": true,
+    "rolcreatedb": true
+  },
+  "dataApiSchemaSettings": [],
+  "zeroRowSqlProbes": [
+    {
+      "role": "anon",
+      "table": "audit_logs",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "auth_sessions",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "bookings",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "bus_contacts",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "bus_duties",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "buses",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "cargo",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "crew_members",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "daily_expenses",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "duty_adjustments",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "expense_submissions",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "password_recovery_rate_limits",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "password_recovery_tokens",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "revenue_entries",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "schema_meta",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "sms_attempts",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "anon",
+      "table": "trips",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "audit_logs",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "auth_sessions",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "bookings",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "bus_contacts",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "bus_duties",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "buses",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "cargo",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "crew_members",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "daily_expenses",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "duty_adjustments",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "expense_submissions",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "password_recovery_rate_limits",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "password_recovery_tokens",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "revenue_entries",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "schema_meta",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "sms_attempts",
+      "readAllowed": true,
+      "rowsReturned": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "trips",
+      "readAllowed": true,
+      "rowsReturned": 0
+    }
+  ],
+  "dataApi": {
+    "externallyVerified": false,
+    "reason": "No publishable/anon API key or authenticated dashboard access configured; SQL grants alone do not prove HTTP exposure"
+  }
+}

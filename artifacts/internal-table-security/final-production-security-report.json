@@ -1,0 +1,52 @@
+{
+  "verifiedAt": "2026-11-08T13:39:28.650Z",
+  "projectFingerprint": "868295d24a51",
+  "migrationVersion": 7,
+  "migrationSha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde",
+  "approvedMigrationExecutedOnce": true,
+  "migrationCommitted": true,
+  "versions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "tablesProtected": 22,
+  "sequencesProtected": 18,
+  "anonymousHttp": {
+    "checked": 22,
+    "denied": 22,
+    "status": 401,
+    "sqlstate": "42501",
+    "accessible": 0,
+    "unverified": 0,
+    "customerRecordsReturned": 0
+  },
+  "runtimePrivilegesPreserved": true,
+  "serviceRolePrivilegesPreserved": true,
+  "isolatedCompatibilityPassed": true,
+  "encryptedRestorePassed": true,
+  "liveBrowserSmokeTest": "AWAITING_OWNER_CONFIRMATION",
+  "applicationCodeDeployed": false,
+  "keysRotated": false,
+  "backupSchedulesEnabled": false,
+  "insecureRollbackPerformed": false,
+  "additionalProductionPermissionChanges": false,
+  "verificationNote": "Initial schema-ACL expectation omitted the explicit postgres CREATE grant made by the approved SQL to preserve existing owner-derived capability. Read-only diagnosis verified browser CREATE denial; only the local verifier was corrected.",
+  "remainingRisks": [
+    "Owner-controlled live administrator/staff browser confirmation is pending.",
+    "Future-object default grants remain unchanged; review grants/RLS for every future migration.",
+    "Runtime retains existing owner/BYPASSRLS privileges.",
+    "Recovery drill covers the application schema, not managed Supabase schemas or external Storage files."
+  ],
+  "evidence": {
+    "deployment": "production-deployment.json",
+    "catalog": "post-deployment-catalog.json",
+    "effectivePermissions": "production-effective-permissions.json",
+    "http": "post-deployment-http.json",
+    "restore": "encrypted-restore-drill.json"
+  }
+}

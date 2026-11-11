@@ -1,0 +1,377 @@
+{
+  "at": "2026-11-08T13:38:31.967Z",
+  "tables": [
+    {
+      "name": "admin_recovery_email_verification_limits",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "admin_recovery_email_verification_tokens",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "admin_username_recovery_limits",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "admin_username_recovery_tokens",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "audit_logs",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "auth_sessions",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "bookings",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "bus_contacts",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "bus_duties",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "buses",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "cargo",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "crew_members",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "daily_expenses",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "duty_adjustments",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "expense_submissions",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "password_recovery_rate_limits",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "password_recovery_tokens",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "revenue_entries",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "schema_meta",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "sms_attempts",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "trips",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    },
+    {
+      "name": "users",
+      "rls": true,
+      "force_rls": false,
+      "owner": "postgres",
+      "policy_count": 0,
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_crud": true
+    }
+  ],
+  "sequences": [
+    {
+      "name": "admin_recovery_email_verification_tokens_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "admin_username_recovery_tokens_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "audit_logs_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "auth_sessions_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "bookings_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "bus_contacts_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "bus_duties_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "buses_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "cargo_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "crew_members_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "daily_expenses_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "duty_adjustments_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "expense_submissions_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "password_recovery_tokens_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "revenue_entries_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "sms_attempts_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "trips_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    },
+    {
+      "name": "users_id_seq",
+      "anon_access": false,
+      "authenticated_access": false,
+      "public_grants": false,
+      "runtime_access": true
+    }
+  ],
+  "passed": true,
+  "productionWrites": false
+}

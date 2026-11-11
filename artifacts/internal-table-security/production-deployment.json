@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-08T13:34:51.879Z",
+  "projectFingerprint": "868295d24a51",
+  "migrationSha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde",
+  "applied": true,
+  "automaticRetry": false,
+  "automaticInsecureRollback": false,
+  "stage": "committed"
+}

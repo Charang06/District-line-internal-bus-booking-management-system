@@ -1,0 +1,9 @@
+{
+  "at": "2026-11-08T09:40:54.790Z",
+  "sourceConnected": false,
+  "committed": false,
+  "productionMigrationSha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde",
+  "exactAclRlsRollbackPassed": true,
+  "originalRestoreCatalogPreserved": true,
+  "passed": true
+}

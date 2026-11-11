@@ -8,7 +8,8 @@
     "server": "node server/server.js",
     "start": "node server/server.js",
     "build": "vite build",
-    "test": "node --test",
+    "test": "node --test server/*.test.js src/data/*.test.js scripts/*.test.cjs scripts/backups/*.test.mjs",
+    "test:browser:security": "node scripts/security/browser-local.cjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

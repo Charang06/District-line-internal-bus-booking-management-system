@@ -1,0 +1,35 @@
+{
+  "at": "2026-11-08T09:43:00.450Z",
+  "productionChangesApplied": false,
+  "backupSchedulesEnabled": false,
+  "files": [
+    {
+      "file": "scripts/security/007_internal_application_security.sql",
+      "sha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde"
+    },
+    {
+      "file": "scripts/security/internal-tables.sql",
+      "sha256": "ae06b51315b72ef202ba6a7c4d69f68f7f0ddecacc46c50224fd0c9c6e22f261"
+    },
+    {
+      "file": "artifacts/internal-table-security/rollback-baseline.sql.review",
+      "sha256": "b2483280b3df88c29d279529078468e7c51af32fd0e6a2e9116c63e077534d3e"
+    },
+    {
+      "file": "scripts/security/rehearse.mjs",
+      "sha256": "4f25c015c5bafaa1eb096b6cf56c42e5325859062a8994e9e75dead6ceb54a24"
+    },
+    {
+      "file": "scripts/security/test-rollback.mjs",
+      "sha256": "1942b72fc6987c7e340ced13eb1e6e520e7c5a886d1bcdb7fc297d90b2ecebe5"
+    },
+    {
+      "file": "scripts/security/encrypted-backup.mjs",
+      "sha256": "b1fb8b00e074d3feea9ed9459639ae8e8f1ffe05581697569475148752805e10"
+    },
+    {
+      "file": "scripts/backups/run.mjs",
+      "sha256": "c3792587ca3f3fa43dc8c288d1ad6b42bb121b774ee1306c0d4f3c11113b38c7"
+    }
+  ]
+}

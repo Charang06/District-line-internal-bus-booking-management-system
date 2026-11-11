@@ -1,0 +1,117 @@
+{
+  "at": "2026-11-08T07:32:26.590Z",
+  "projectFingerprint": "868295d24a51",
+  "method": "GET",
+  "limit": 0,
+  "role": "anon",
+  "customerRecordsReturned": 0,
+  "productionMutations": false,
+  "probes": [
+    {
+      "table": "audit_logs",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "auth_sessions",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "bookings",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "bus_contacts",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "bus_duties",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "buses",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "cargo",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "crew_members",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "daily_expenses",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "duty_adjustments",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "expense_submissions",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "password_recovery_rate_limits",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "password_recovery_tokens",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "revenue_entries",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "schema_meta",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "sms_attempts",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    },
+    {
+      "table": "trips",
+      "status": 200,
+      "result": "EXPOSED_ZERO_ROWS"
+    }
+  ],
+  "successful": [
+    "audit_logs",
+    "auth_sessions",
+    "bookings",
+    "bus_contacts",
+    "bus_duties",
+    "buses",
+    "cargo",
+    "crew_members",
+    "daily_expenses",
+    "duty_adjustments",
+    "expense_submissions",
+    "password_recovery_rate_limits",
+    "password_recovery_tokens",
+    "revenue_entries",
+    "schema_meta",
+    "sms_attempts",
+    "trips"
+  ],
+  "denied": [],
+  "unverified": []
+}

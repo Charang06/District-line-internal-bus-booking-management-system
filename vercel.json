@@ -5,7 +5,7 @@
   "regions": ["sin1"],
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "server/migrations/**/*.sql"
+      "includeFiles": "{server/migrations/**/*.sql,certs/*.crt,scripts/lib/supabase-verified-tls.cjs}"
     }
   },
   "rewrites": [

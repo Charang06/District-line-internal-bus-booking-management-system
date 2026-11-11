@@ -1,0 +1,119 @@
+{
+  "baseline": [
+    {
+      "grantee": "PUBLIC",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "anon",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "pg_database_owner",
+      "grantor": "pg_database_owner",
+      "privilege_type": "CREATE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "pg_database_owner",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    }
+  ],
+  "actual": [
+    {
+      "grantee": "PUBLIC",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "anon",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "pg_database_owner",
+      "grantor": "pg_database_owner",
+      "privilege_type": "CREATE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "pg_database_owner",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "pg_database_owner",
+      "privilege_type": "CREATE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    }
+  ],
+  "effective": [
+    {
+      "role": "anon",
+      "can_use": true,
+      "can_create": false
+    },
+    {
+      "role": "authenticated",
+      "can_use": true,
+      "can_create": false
+    },
+    {
+      "role": "postgres",
+      "can_use": true,
+      "can_create": true
+    },
+    {
+      "role": "service_role",
+      "can_use": true,
+      "can_create": false
+    }
+  ],
+  "productionWrites": false
+}

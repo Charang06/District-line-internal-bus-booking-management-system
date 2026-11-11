@@ -4,7 +4,6 @@
   flex-direction: column;
   background: #edf2f7;
   color: #17212d;
-  font-family: 'Segoe UI', sans-serif;
 }
 
 .app-shell > main {
@@ -73,7 +72,7 @@ textarea {
 .login-eyebrow {
   color: #a87939;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.16em;
 }
 
@@ -85,7 +84,7 @@ textarea {
   margin: 18px 0 14px;
   color: #fff;
   font-size: clamp(2.4rem, 4.5vw, 3.5rem);
-  font-weight: 650;
+  font-weight: var(--font-semibold);
   letter-spacing: -0.045em;
   line-height: 1.08;
 }
@@ -105,7 +104,7 @@ textarea {
   margin-top: 34px;
   color: #f0d7a7;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .auth-route-dot {
@@ -152,7 +151,7 @@ textarea {
   margin: 10px 0 8px;
   color: #1d2d3b;
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   letter-spacing: -0.04em;
 }
 
@@ -236,7 +235,7 @@ textarea {
   flex-wrap: wrap;
   color: #46586d;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .footer-meta {
@@ -257,7 +256,7 @@ textarea {
 .footer-meta strong {
   color: #243346;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .login-hint {
@@ -271,7 +270,7 @@ textarea {
   padding: 10px 14px;
   border-radius: 10px;
   font-size: 0.88rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .banner.ok {
@@ -320,7 +319,7 @@ textarea {
   background: #d5f1e1;
   color: #167347;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: var(--font-semibold);
 }
 
 .action-toast.error .action-toast-icon {
@@ -331,7 +330,7 @@ textarea {
 .action-toast-text {
   flex: 1;
   font-size: 0.86rem;
-  font-weight: 650;
+  font-weight: var(--font-semibold);
   line-height: 1.4;
 }
 
@@ -368,7 +367,7 @@ textarea {
   margin: 0 0 8px;
   color: #344458;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .login-panel input,
@@ -474,7 +473,7 @@ textarea {
   background: transparent;
   color: #d4a755;
   padding: 0;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .wide {
@@ -484,7 +483,7 @@ textarea {
 .primary-button {
   background: linear-gradient(135deg, #cca66b 0%, #d8b87a 100%);
   color: #1d2530;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   padding: 12px 18px;
   border-radius: 10px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4);
@@ -509,7 +508,7 @@ textarea {
 
 .topbar-left {
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.14em;
   color: #4b5b6c;
   text-transform: uppercase;
@@ -529,7 +528,7 @@ textarea {
   color: #2f3c4c;
   border-radius: 10px;
   padding: 8px 14px;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   font-size: 0.8rem;
 }
 
@@ -565,7 +564,7 @@ textarea {
   place-items: center;
   color: #fff;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .dashboard {
@@ -603,7 +602,7 @@ textarea {
   justify-content: space-between;
   margin-bottom: 12px;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   color: #293a49;
 }
 
@@ -624,7 +623,7 @@ textarea {
 
 .calendar-day-name {
   color: #5d6c7a;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .calendar-date {
@@ -662,14 +661,14 @@ textarea {
   color: #29435a;
   background: #e8edf3;
   border-radius: 999px;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
 .route-title {
   font-size: 0.8rem;
   letter-spacing: 0.08em;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   color: #2d475d;
   text-transform: uppercase;
 }
@@ -684,7 +683,7 @@ textarea {
   background: #f5f7fb;
   color: #2a455f;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   margin: 0 0 18px;
 }
 
@@ -693,7 +692,7 @@ textarea {
   align-items: center;
   gap: 6px;
   color: #5b7148;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .trip-workspaces {
@@ -742,7 +741,7 @@ textarea {
   padding: 4px 6px;
   border-radius: 5px;
   font-size: 0.58rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .add-another-bus {
@@ -802,7 +801,7 @@ textarea {
   align-items: center;
   justify-content: center;
   background: rgba(255,255,255,0.25);
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   font-size: 1.1rem;
 }
 
@@ -846,7 +845,7 @@ textarea {
 .trip-date-block small {
   color: #42566b;
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .seat-layout {
@@ -913,7 +912,7 @@ textarea {
   display: grid;
   place-items: center;
   width: 30px;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   color: #6c7d8d;
   font-size: 0.7rem;
 }
@@ -951,7 +950,7 @@ textarea {
 
 .panel-title {
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -966,7 +965,7 @@ textarea {
   background: #1d2b36;
   color: #f6f9fc;
   font-size: 0.66rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.08em;
 }
 
@@ -984,7 +983,7 @@ textarea {
   border-radius: 5px;
   border: 1px solid transparent;
   cursor: pointer;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   font-size: 0.62rem;
   line-height: 1;
   background: #e7edf2;
@@ -1041,7 +1040,7 @@ textarea {
 
 .panel-header h2 {
   font-size: 0.98rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   margin-bottom: 8px;
 }
 
@@ -1091,7 +1090,7 @@ label span {
   margin-bottom: 4px;
   font-size: 0.8rem;
   color: #425b74;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .gender-row {
@@ -1151,7 +1150,7 @@ label span {
 .ghost-button {
   padding: 10px 16px;
   border-radius: 9px;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .secondary-button {
@@ -1252,7 +1251,7 @@ label span {
   background: #fff1f0;
   color: #b42318;
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .danger-button {
@@ -1262,7 +1261,7 @@ label span {
   background: #b42318;
   color: #fff;
   font: inherit;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   cursor: pointer;
   transition: background 0.2s ease, transform 0.2s ease;
 }
@@ -1387,7 +1386,7 @@ label span {
   background: #111827;
   color: #fff;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .booked-seat-count {
@@ -1396,14 +1395,13 @@ label span {
   background: #fff0dc;
   color: #49311d;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .customer-log-details {
   column-gap: 10px;
   row-gap: 5px;
   color: #111827;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.69rem;
   letter-spacing: 0.01em;
 }
@@ -1426,7 +1424,7 @@ label span {
   border: 0 !important;
   border-radius: 3px !important;
   font-size: 0.75rem !important;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   box-shadow: none !important;
 }
 
@@ -1440,7 +1438,7 @@ label span {
   background: #edf8f0;
   color: #286242;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   white-space: nowrap;
 }
 
@@ -1488,7 +1486,6 @@ label span {
 .customer-print-button span,
 .customer-entry-button span {
   margin-right: 6px;
-  font-family: 'Segoe UI Symbol', sans-serif;
   font-size: 0.9rem;
   vertical-align: -1px;
 }
@@ -1510,7 +1507,7 @@ label span {
   background: #dfe6f6;
   color: #24304a;
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .cargo-log-toolbar .toolbar-actions {
@@ -1523,17 +1520,7 @@ label span {
   padding: 7px 12px !important;
   border-radius: 3px !important;
   font-size: 0.75rem !important;
-  font-weight: 700;
-}
-
-.cargo-print-button {
-  background: #080808 !important;
-  color: #fff !important;
-}
-
-.cargo-print-button::before {
-  content: '▣';
-  margin-right: 8px;
+  font-weight: var(--font-semibold);
 }
 
 .cargo-entry-button {
@@ -1555,9 +1542,8 @@ label span {
   padding: 9px 8px;
   background: #e8edff;
   color: #111827;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.61rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.08em;
   white-space: nowrap;
 }
@@ -1581,9 +1567,8 @@ label span {
 
 .cargo-log-table .cargo-bill-number {
   color: #805000;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.62rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .cargo-goods-description strong,
@@ -1598,13 +1583,12 @@ label span {
 
 .cargo-goods-description small {
   color: #344054;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.61rem;
 }
 
 .cargo-log-table .cargo-fee {
   text-align: center;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .cargo-payment-badge {
@@ -1612,9 +1596,8 @@ label span {
   padding: 4px 8px;
   border-radius: 2px;
   color: #1b1b1b;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.59rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
   white-space: nowrap;
 }
@@ -1666,7 +1649,6 @@ label span {
   padding: 8px 12px;
   background: #eef2ff;
   color: #111827;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.62rem;
   white-space: nowrap;
 }
@@ -1738,7 +1720,7 @@ label span {
   align-items: center;
   gap: 8px;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   color: #304a64;
   margin-right: 10px;
 }
@@ -1786,7 +1768,7 @@ th {
   padding: 5px 8px;
   background: rgba(28, 165, 103, 0.12);
   color: #1a6f4f;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .content-page {
@@ -1858,7 +1840,6 @@ th {
 }
 
 .log-calendar-controls .log-today-button {
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.62rem;
 }
 
@@ -1884,7 +1865,6 @@ th {
 
 .log-calendar-weekday {
   color: #5c6675;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.54rem;
   text-transform: uppercase;
 }
@@ -1900,7 +1880,7 @@ th {
 .log-calendar-date.selected {
   background: #a96c18;
   color: #fff;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   box-shadow: 0 1px 3px rgba(96, 57, 7, 0.22);
 }
 
@@ -1909,7 +1889,6 @@ th {
   padding-top: 6px;
   border-top: 1px solid #edf0f5;
   color: #4c5665;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.56rem;
 }
 
@@ -1939,7 +1918,6 @@ th {
 
 .corridor-allocation-heading > span {
   color: #94620e;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.58rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1950,9 +1928,8 @@ th {
   border-radius: 2px;
   background: #e8edff;
   color: #1c2738;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.57rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .log-corridor-options {
@@ -1985,7 +1962,6 @@ th {
   gap: 6px;
   margin-bottom: 5px;
   color: #94620e;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.53rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -2024,7 +2000,6 @@ th {
   gap: 4px;
   margin-top: 6px;
   color: inherit;
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.55rem;
 }
 
@@ -2120,7 +2095,7 @@ th {
   display: inline-block;
   color: #a87532;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -2132,9 +2107,8 @@ th {
 .info-hero h1 {
   max-width: 560px;
   margin: 16px 0 14px;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(2.5rem, 5vw, 4.3rem);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   letter-spacing: -0.045em;
   line-height: 1.04;
 }
@@ -2172,7 +2146,6 @@ th {
 
 .info-route-point strong {
   color: #fff;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(1rem, 1.7vw, 1.35rem);
 }
 
@@ -2228,9 +2201,8 @@ th {
 .info-booking-strip h2 {
   margin: 9px 0 0;
   color: #152337;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(1.65rem, 3vw, 2.35rem);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   letter-spacing: -0.025em;
 }
 
@@ -2271,7 +2243,7 @@ th {
 .info-direction-kicker {
   color: #9a6a2e;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.15em;
 }
 
@@ -2280,13 +2252,11 @@ th {
   align-items: center;
   gap: 12px;
   color: #17283d;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: clamp(1.15rem, 2.2vw, 1.65rem);
 }
 
 .info-direction-cities i {
   color: #b18443;
-  font-family: Arial, sans-serif;
   font-size: 1rem;
   font-style: normal;
 }
@@ -2330,7 +2300,7 @@ th {
   color: #8b6128;
   background: #f6edda;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .info-feature-card h3 {
@@ -2387,7 +2357,7 @@ th {
   color: #815721;
   background: #efe2c4;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .info-booking-strip li div {
@@ -2422,9 +2392,8 @@ th {
 .info-fleet-section .logs-toolbar h2 {
   margin: 5px 0 4px;
   color: #152337;
-  font-family: Georgia, 'Times New Roman', serif;
   font-size: 1.75rem;
-  font-weight: 500;
+  font-weight: var(--font-medium);
 }
 
 .info-fleet-section .logs-toolbar p {
@@ -2540,7 +2509,7 @@ th {
   padding: 6px 10px;
   color: #1d2a37;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -2699,7 +2668,7 @@ th {
 .sms-balance-icon svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
 .sms-balance-heading h2 { margin: 0; color: #1b2d3d; font-size: 1.05rem; }
 .sms-balance-heading p { margin: 5px 0 0; color: #5a6c7f; font-size: .82rem; }
-.sms-balance-refresh { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 5px 10px; border: 1px solid #d7dde5; border-radius: 8px; background: #fff; color: #344767; font: inherit; font-size: .78rem; font-weight: 650; cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+.sms-balance-refresh { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 6px; min-height: 36px; padding: 5px 10px; border: 1px solid #d7dde5; border-radius: 8px; background: #fff; color: #344767; font: inherit; font-size: .78rem; font-weight: var(--font-semibold); cursor: pointer; transition: background .15s ease, border-color .15s ease, color .15s ease; }
 .sms-balance-refresh:hover:not(:disabled) { border-color: #b8c6d8; background: #f7f9fc; color: #1b2d3d; }
 .sms-balance-refresh:focus-visible { outline: 2px solid #6b91c6; outline-offset: 2px; }
 .sms-balance-refresh:disabled { cursor: wait; opacity: .72; }
@@ -2709,7 +2678,7 @@ th {
 .sms-balance-main { display: grid; gap: 3px; margin-top: 14px; }
 .sms-balance-main span, .sms-balance-meta, .sms-balance-message { color: #5a6c7f; font-size: .84rem; }
 .sms-balance-main strong { color: #1b2d3d; font-size: clamp(1.2rem, 2vw, 1.65rem); font-variant-numeric: tabular-nums; line-height: 1.2; overflow-wrap: anywhere; }
-.sms-balance-main strong small { color: #667487; font-size: .74rem; font-weight: 600; }
+.sms-balance-main strong small { color: #667487; font-size: .74rem; font-weight: var(--font-semibold); }
 .sms-balance-main small, .sms-balance-meta small { color: #748092; font-size: .75rem; overflow-wrap: anywhere; }
 .sms-balance-meta { display: grid; gap: 7px; margin-top: 12px; }
 .sms-balance-meta ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
@@ -2860,12 +2829,12 @@ th {
 
 .duty-income-amount {
   color: #14733d;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .duty-loss-amount {
   color: #b42318;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .duty-neutral-amount {
@@ -3095,7 +3064,7 @@ th {
   gap: 4px;
   color: #667085;
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .dashboard-seat-chart-period select {
@@ -3206,7 +3175,7 @@ th {
   gap: 4px;
   color: #536174;
   font-size: 0.76rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .customer-analytics-heading select {
@@ -3282,7 +3251,7 @@ th {
   background: transparent;
   font: inherit;
   font-size: 0.8rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -3387,7 +3356,7 @@ th {
   display: block;
   color: #19304e;
   font-size: 0.66rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.1em;
   line-height: 1.4;
   text-transform: uppercase;
@@ -3403,7 +3372,7 @@ th {
 .staff-page-heading h2 {
   color: #121b2c;
   font-size: clamp(1.65rem, 2.2vw, 2.05rem);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   letter-spacing: -0.035em;
 }
 
@@ -3499,7 +3468,7 @@ th {
   margin: 11px 0 0;
   color: #111b2b;
   font-size: 1rem;
-  font-weight: 650;
+  font-weight: var(--font-semibold);
 }
 
 .staff-account-card .staff-username {
@@ -3577,7 +3546,7 @@ th {
   content: '✓';
   color: #102a52;
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   transform: scale(0);
 }
 
@@ -3614,7 +3583,7 @@ th {
   color: #183150;
   background: #fbfcfe;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .staff-activate-button.small {
@@ -3632,7 +3601,7 @@ th {
   color: #a3312c;
   background: #fff8f7;
   font-size: 0.72rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -3743,7 +3712,7 @@ th {
   padding: 4px 8px;
   border-radius: 999px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -3788,7 +3757,7 @@ th {
 .staff-permission-group > span {
   width: 70px;
   color: #667787;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .admin-profile-hero {
@@ -3811,7 +3780,7 @@ th {
   display: grid;
   place-items: center;
   color: #fff;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .admin-profile-hero small {
@@ -3890,7 +3859,7 @@ th {
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -4015,7 +3984,6 @@ th {
 .app-shell {
   background: #f5f7fb;
   color: var(--ink);
-  font-family: Consolas, 'Courier New', monospace;
   font-size: 12px;
 }
 
@@ -4099,7 +4067,7 @@ th {
 .footer-eyebrow {
   color: #d6b878;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -4200,7 +4168,7 @@ th {
   border-radius: 7px;
   color: #1f2937;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: var(--font-medium);
   outline: none;
 }
 
@@ -4238,7 +4206,7 @@ th {
 .topbar-user small {
   color: #7a3e0f;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .user-avatar {
@@ -4357,16 +4325,17 @@ img.user-avatar-photo {
 .calendar-day-name {
   color: #9aa6b2;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .calendar-date {
+  padding-inline: 0;
   min-height: 24px;
   border: 0;
   background: transparent;
   color: #111827;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .calendar-date.selected {
@@ -4487,17 +4456,17 @@ img.user-avatar-photo {
 .schedule-strip::before {
   content: "ⓘ";
   color: #9d4d04;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .schedule-badge {
   color: #344054;
-  font-weight: 500;
+  font-weight: var(--font-medium);
 }
 
 .schedule-strip span:last-child {
   color: #9d2f07;
-  font-weight: 900;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -4658,7 +4627,7 @@ img.user-avatar-photo {
   width: 72px;
   color: #a3adb8;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: var(--font-medium);
 }
 
 .seat {
@@ -4790,7 +4759,7 @@ img.user-avatar-photo {
   margin: 0;
   color: #111827;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .form-badge {
@@ -4799,7 +4768,7 @@ img.user-avatar-photo {
   color: #9d2f07;
   padding: 3px 7px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .reservation-grid,
@@ -4828,7 +4797,7 @@ img.user-avatar-photo {
 label span {
   color: #344054;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .reservation-panel input,
@@ -4852,7 +4821,7 @@ label span {
 
 .reservation-grid input {
   text-align: center;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .reservation-grid .ghost-button {
@@ -4905,7 +4874,7 @@ label span {
 
 .fare-row:last-of-type input {
   text-align: right;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .reservation-panel textarea,
@@ -4993,7 +4962,7 @@ label span {
 .cargo-payment-control > span {
   color: #111827;
   font-size: 9px;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .cargo-panel input,
@@ -5034,7 +5003,7 @@ label span {
   color: #344054;
   font-style: normal;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
 }
 
 .cargo-description-field {
@@ -5092,7 +5061,7 @@ label span {
   background: #813000;
   color: #fff;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 /* Balanced home workspace: bus map equals passenger + cargo column height. */
@@ -5264,7 +5233,7 @@ label span {
   margin: 0;
   color: #f4f6f8;
   font-size: 2.1rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   text-align: center;
 }
 
@@ -5280,7 +5249,7 @@ label span {
   margin-bottom: 14px;
   color: #e9edf4;
   font-size: 0.83rem;
-  font-weight: 400;
+  font-weight: var(--font-regular);
 }
 
 .login-panel input {
@@ -5603,7 +5572,6 @@ label span {
 }
 
 .home-bus-banner-label span {
-  font-family: 'Consolas', 'Courier New', monospace;
   font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -5762,7 +5730,6 @@ label span {
     width: 100%;
     background: #fff;
     color: #17212d;
-    font-family: 'Segoe UI', Arial, sans-serif;
     page: cargoManifest;
   }
 
@@ -5834,7 +5801,6 @@ label span {
 
   .cargo-manifest-brand strong {
     color: #17212d;
-    font-family: 'Arial Black', 'Segoe UI', sans-serif;
     font-size: 20px;
     letter-spacing: 1.2px;
   }
@@ -5850,7 +5816,7 @@ label span {
     background: #8a5a00;
     color: #fff;
     font-size: 12px;
-    font-weight: 800;
+    font-weight: var(--font-semibold);
   }
 
   .cargo-manifest-meta {
@@ -5938,12 +5904,12 @@ label span {
 
   .cargo-manifest-table .cargo-manifest-bill {
     color: #805000;
-    font-weight: 800;
+    font-weight: var(--font-semibold);
   }
 
   .cargo-manifest-table .cargo-manifest-amount {
     text-align: right;
-    font-weight: 800;
+    font-weight: var(--font-semibold);
   }
 
   .cargo-manifest-table .cargo-manifest-empty {
@@ -5995,10 +5961,9 @@ label span {
 
   .manifest-logo {
     font-size: 24px;
-    font-weight: 900;
+    font-weight: var(--font-semibold);
     letter-spacing: 2px;
     color: #bd2f47;
-    font-family: 'Arial Black', 'Segoe UI', sans-serif;
   }
 
   .manifest-tagline {
@@ -6012,7 +5977,7 @@ label span {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 10px 18px;
     font-size: 12px;
-    font-weight: 700;
+    font-weight: var(--font-semibold);
     color: #1d2b39;
     border-top: 2px solid #d06c7d;
     border-bottom: 2px solid #d06c7d;
@@ -6066,14 +6031,14 @@ label span {
     display: grid;
     place-items: center;
     font-size: 12px;
-    font-weight: 900;
+    font-weight: var(--font-semibold);
     margin-bottom: 4px;
   }
 
   .manifest-seat-customer {
     min-height: 18px;
     font-size: 9px;
-    font-weight: 700;
+    font-weight: var(--font-semibold);
     color: #1f2d39;
     margin-bottom: 4px;
     word-break: break-word;
@@ -6093,7 +6058,7 @@ label span {
     align-items: center;
     gap: 4px;
     font-size: 8px;
-    font-weight: 700;
+    font-weight: var(--font-semibold);
     color: #1d2b39;
     margin-bottom: 3px;
     min-height: 16px;
@@ -6105,11 +6070,11 @@ label span {
 
   .manifest-seat-contact span {
     color: #c64a5d;
-    font-weight: 900;
+    font-weight: var(--font-semibold);
   }
 
   .manifest-seat-contact strong {
-    font-weight: 700;
+    font-weight: var(--font-semibold);
     color: #1d2b39;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6127,13 +6092,13 @@ label span {
   }
 
   .manifest-seat-field span {
-    font-weight: 800;
+    font-weight: var(--font-semibold);
     color: #c64a5d;
     min-width: 16px;
   }
 
   .manifest-seat-field strong {
-    font-weight: 600;
+    font-weight: var(--font-semibold);
     font-size: 10px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -6143,7 +6108,7 @@ label span {
   }
 
   .manifest-aisle {
-    font-weight: 900;
+    font-weight: var(--font-semibold);
     font-size: 11px;
     color: #5d7388;
     text-align: center;
@@ -6226,7 +6191,7 @@ label span {
 .accounts-total-card > div > span {
   color: #9a7b43;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.08em;
 }
 
@@ -6245,7 +6210,7 @@ label span {
   border-radius: 9px;
   background: transparent;
   color: #536174;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -6301,7 +6266,7 @@ label span {
   gap: 7px;
   color: #344154;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -6316,14 +6281,14 @@ label span {
   background: #f6f8fa;
   color: #26364b;
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   text-transform: none;
 }
 
 .accounts-trip-details label small {
   color: #667085;
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   text-transform: none;
 }
 
@@ -6366,7 +6331,7 @@ label span {
   background: #fff3cf;
   color: #80652f;
   font-size: 0.66rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.04em;
 }
 
@@ -6458,7 +6423,7 @@ label span {
   background: #edf2f7;
   color: #526176;
   font-size: 0.66rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   text-align: center;
   overflow-wrap: anywhere;
 }
@@ -6469,7 +6434,7 @@ label span {
   background: transparent;
   color: #775e2d;
   font: inherit;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -6490,7 +6455,7 @@ label span {
   margin-top: auto;
   padding-top: 18px;
   color: #334155;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-subtotal strong,
@@ -6548,7 +6513,7 @@ label span {
   background: #f1ece3;
   color: #66583f;
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-total-main > div {
@@ -6558,7 +6523,7 @@ label span {
 .accounts-total-main > div > span {
   color: #718096;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.07em;
 }
 
@@ -6592,14 +6557,14 @@ label span {
 .profit-report-card { display: grid; gap: 16px; padding: 20px; }
 .profit-report-card > .dashboard-section-heading { margin: 0; }
 .profit-report-filters { display: flex; align-items: end; gap: 10px; }
-.profit-report-filters label { display: grid; gap: 5px; color: #536174; font-size: .76rem; font-weight: 750; }
+.profit-report-filters label { display: grid; gap: 5px; color: #536174; font-size: .76rem; font-weight: var(--font-semibold); }
 .profit-report-filters input, .profit-report-filters select { min-height: 38px; padding: 7px 10px; border: 1px solid #dce3eb; border-radius: 8px; background: #fff; color: #17253a; font: inherit; }
 .profit-report-totals { margin: 0; }
 .profit-chart-wrap { padding: 15px; border: 1px solid #e5e9ef; border-radius: 12px; background: #fbfcfd; }
 .profit-chart-wrap h3 { margin: 0 0 12px; color: #344154; font-size: .9rem; }
 .profit-chart-layout { display: grid; grid-template-columns: 54px minmax(0, 1fr); min-height: 250px; }
 .profit-chart-y-axis { display: flex; flex-direction: column; justify-content: space-between; align-items: end; padding: 0 7px 26px 0; color: #748092; }
-.profit-chart-y-axis span { position: absolute; transform: translate(-29px, 95px) rotate(-90deg); transform-origin: center; color: #536174; font-size: .65rem; font-weight: 700; white-space: nowrap; }
+.profit-chart-y-axis span { position: absolute; transform: translate(-29px, 95px) rotate(-90deg); transform-origin: center; color: #536174; font-size: .65rem; font-weight: var(--font-semibold); white-space: nowrap; }
 .profit-chart-y-axis small { font-size: .62rem; }
 .profit-chart-plot { position: relative; min-width: 0; }
 .profit-chart-gridlines { position: absolute; inset: 0 0 26px; display: flex; flex-direction: column; justify-content: space-between; }
@@ -6610,7 +6575,7 @@ label span {
 .profit-chart-bar { width: min(22px, 75%); min-height: 0; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, #4cb58a, #16805d); }
 .profit-chart-bar.negative { background: linear-gradient(180deg, #e18a80, #b84e4e); }
 .profit-chart-column small { color: #748092; font-size: .62rem; white-space: nowrap; }
-.profit-chart-x-axis { padding-top: 5px; color: #536174; font-size: .65rem; font-weight: 700; text-align: center; }
+.profit-chart-x-axis { padding-top: 5px; color: #536174; font-size: .65rem; font-weight: var(--font-semibold); text-align: center; }
 @media (max-width: 680px) { .profit-report-filters { width: 100%; } .profit-report-filters label { flex: 1; min-width: 0; } .profit-report-totals { grid-template-columns: 1fr; } }
 
 /* Responsive shell and shared layout safeguards. */
@@ -7228,7 +7193,7 @@ button,
   background: #dcf5e9;
   color: #17714e;
   font-size: 0.68rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   white-space: nowrap;
 }
 
@@ -7245,7 +7210,7 @@ button,
   margin-right: auto;
   color: #32836a;
   font-size: 0.76rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-recent-card {
@@ -7290,7 +7255,7 @@ button,
   gap: 6px;
   color: #344154;
   font-size: 0.78rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-monthly-expenses-form input {
@@ -7324,7 +7289,7 @@ button,
   color: #536174;
   font: inherit;
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -7347,7 +7312,7 @@ button,
   gap: 5px;
   color: #536174;
   font-size: 0.76rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-revenue-ledger-filters input {
@@ -7375,7 +7340,7 @@ button,
   color: #536174;
   font: inherit;
   font-size: 0.8rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -7407,7 +7372,7 @@ button,
   gap: 7px;
   color: #344154;
   font-size: 0.76rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -7494,7 +7459,7 @@ button,
   background: #fffdf6;
   color: #836a38;
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-expense-details {
@@ -7512,7 +7477,7 @@ button,
   gap: 7px;
   color: #655b49;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
 }
 
@@ -7566,7 +7531,7 @@ button,
 .accounts-expense-sector small {
   color: #8a806f;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.06em;
 }
 
@@ -7596,7 +7561,7 @@ button,
   color: #26364b;
   font: inherit;
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-expense-sector p {
@@ -7684,7 +7649,7 @@ button,
   min-height: 30px;
   color: #625c51;
   font-size: 0.62rem;
-  font-weight: 850;
+  font-weight: var(--font-semibold);
   line-height: 1.25;
   text-transform: uppercase;
 }
@@ -7721,7 +7686,7 @@ button,
   border: 0;
   background: transparent;
   font-size: 0.8rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   text-align: right;
 }
 
@@ -7770,7 +7735,7 @@ button,
 .accounts-expense-grand-total small {
   color: #d0ad6d;
   font-size: 0.67rem;
-  font-weight: 850;
+  font-weight: var(--font-semibold);
   letter-spacing: 0.1em;
 }
 
@@ -7778,7 +7743,7 @@ button,
   margin-top: 18px;
   color: #c8d2dc;
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-expense-grand-total > strong {
@@ -7823,7 +7788,7 @@ button,
   color: #766440;
   font: inherit;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -7904,7 +7869,7 @@ button,
 .accounts-expense-balance small {
   color: #85775f;
   font-size: 0.57rem;
-  font-weight: 800;
+  font-weight: var(--font-semibold);
 }
 
 .accounts-expense-balance strong {
@@ -8168,7 +8133,7 @@ button,
   gap: 6px;
   color: #344154;
   font-size: 0.78rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
 }
 
 .staff-crew-add-form input,
@@ -8263,7 +8228,7 @@ button,
 
 .staff-bus-contact-list a {
   color: #8d6030;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   text-decoration: none;
 }
 
@@ -8275,7 +8240,7 @@ button,
   color: #9a4751;
   font: inherit;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 
@@ -8601,7 +8566,7 @@ button,
 .trip-overview-trip-heading > span { color: #768397; font-size: .72rem; }
 .trip-overview-trip-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; padding: 12px 0; }
 .trip-overview-trip-details > div, .trip-overview-revenue > div { display: grid; gap: 3px; min-width: 0; }
-.trip-overview-trip-details strong { overflow-wrap: anywhere; color: #29384b; font-size: .78rem; font-weight: 650; }
+.trip-overview-trip-details strong { overflow-wrap: anywhere; color: #29384b; font-size: .78rem; font-weight: var(--font-semibold); }
 .trip-overview-revenue { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 11px; border-top: 1px solid #edf0f4; }
 .trip-overview-revenue strong { color: #29384b; font-size: .83rem; font-variant-numeric: tabular-nums; }
 .trip-overview-revenue .total strong { color: #247751; }
@@ -8694,24 +8659,69 @@ button,
 
 /* Passenger manifests print in landscape and keep all seat rows together. */
 @media print {
-  @page passengerManifest { size: A4 landscape; margin: 6mm; }
+  @page passengerManifest { size: A4 landscape; margin: 8mm; }
   .site-footer { display: none !important; }
-  .print-passenger-manifest { page: passengerManifest; break-inside: avoid; page-break-inside: avoid; }
+  .app-shell.print-passengers {
+    display: block !important;
+    width: auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .app-shell.print-passengers > :not(.print-passenger-manifest) { display: none !important; }
+  .app-shell.print-passengers .print-passenger-manifest {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    page: passengerManifest;
+    break-inside: auto;
+    page-break-inside: auto;
+    break-after: auto;
+    page-break-after: auto;
+  }
   .print-cargo-manifest .cargo-manifest-summary { display: none !important; }
-  .manifest-paper { min-height: 0; padding: 3mm; page-break-after: avoid; break-inside: avoid; page-break-inside: avoid; }
-  .manifest-topbar { gap: 4px; margin-bottom: 5px; }
-  .manifest-brand-logo { width: 150px; height: 34px; object-fit: contain; }
-  .manifest-tagline { font-size: 8px; }
-  .manifest-meta-row { gap: 4px 12px; font-size: 9px; padding: 3px 0; }
-  .manifest-seat-layout { gap: 2px; break-inside: avoid; page-break-inside: avoid; }
-  .manifest-row { gap: 4px; break-inside: avoid; page-break-inside: avoid; }
-  .manifest-seat-pair { gap: 4px; }
-  .manifest-seat-card { min-height: 42px; padding: 2px 4px; break-inside: avoid; page-break-inside: avoid; }
-  .manifest-seat-number { width: 17px; height: 17px; font-size: 8px; margin-bottom: 1px; }
-  .manifest-seat-contact { gap: 3px; font-size: 6px; margin-bottom: 0; min-height: 8px; padding-bottom: 0; }
-  .manifest-seat-field { gap: 4px; font-size: 7px; min-height: 8px; margin-top: 0; }
-  .manifest-seat-field strong { font-size: 7px; }
-  .manifest-rear-row { gap: 6px; margin-top: 2px; break-inside: avoid; page-break-inside: avoid; }
+  .app-shell.print-passengers .manifest-paper {
+    width: 100%;
+    min-height: 0;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    box-sizing: border-box;
+    break-inside: auto;
+    page-break-inside: auto;
+    break-after: auto;
+    page-break-after: auto;
+  }
+  .app-shell.print-passengers .manifest-topbar {
+    display: grid;
+    grid-template-columns: minmax(125px, .7fr) minmax(0, 2.3fr);
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 5px;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  .app-shell.print-passengers .manifest-brand-wrap { align-items: flex-start; gap: 2px; }
+  .app-shell.print-passengers .manifest-brand-logo { width: 132px; height: auto; max-height: 30px; object-fit: contain; object-position: left center; }
+  .app-shell.print-passengers .manifest-tagline { font-size: 8px; }
+  .app-shell.print-passengers .manifest-meta-row { gap: 3px 8px; font-size: 9px; line-height: 1.2; padding: 4px 0; }
+  .app-shell.print-passengers .manifest-seat-layout { gap: 3px; break-inside: auto; page-break-inside: auto; }
+  .app-shell.print-passengers .manifest-row { grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr); gap: 4px; break-inside: avoid; page-break-inside: avoid; }
+  .app-shell.print-passengers .manifest-seat-pair { gap: 4px; }
+  .app-shell.print-passengers .manifest-seat-card { min-height: 0; padding: 2px 3px; border-width: 1px; border-radius: 4px; overflow: visible; break-inside: avoid; page-break-inside: avoid; }
+  .app-shell.print-passengers .manifest-seat-number { width: 17px; height: 17px; font-size: 8px; margin-bottom: 1px; }
+  .app-shell.print-passengers .manifest-seat-contact { gap: 3px; font-size: 8px; line-height: 1.05; margin: 0; min-height: 0; padding: 0; white-space: normal; overflow: visible; }
+  .app-shell.print-passengers .manifest-seat-contact strong { overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+  .app-shell.print-passengers .manifest-seat-field { align-items: flex-start; gap: 3px; font-size: 8px; line-height: 1.05; min-height: 0; margin-top: 1px; }
+  .app-shell.print-passengers .manifest-seat-field span { min-width: 12px; }
+  .app-shell.print-passengers .manifest-seat-field strong { flex: 1 1 auto; min-width: 0; font-size: 8px; line-height: inherit; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
+  .app-shell.print-passengers .manifest-aisle { font-size: 9px; }
+  .app-shell.print-passengers .manifest-rear-row { gap: 4px; margin-top: 2px; break-inside: avoid; page-break-inside: avoid; }
 }
 
 /* Trip Overview panels share a row height that follows the bus chart count. */
@@ -8754,7 +8764,7 @@ button,
   color: #344767;
   font: inherit;
   font-size: .8rem;
-  font-weight: 700;
+  font-weight: var(--font-semibold);
   cursor: pointer;
 }
 .profit-ledger-reset:hover { background: #f4f7fa; }
@@ -9118,7 +9128,7 @@ button,
 .auth-redesign .auth-login-eyebrow {
   color: #f2cc83;
   font-size: .68rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   letter-spacing: .18em;
 }
 
@@ -9127,7 +9137,7 @@ button,
   margin: 18px 0 12px;
   color: #fff;
   font-size: clamp(2.4rem, 4.25vw, 4.1rem);
-  font-weight: 680;
+  font-weight: var(--font-semibold);
   letter-spacing: -.045em;
   line-height: 1.04;
   text-wrap: balance;
@@ -9137,7 +9147,7 @@ button,
   margin: 0;
   color: #e2e7ed;
   font-size: clamp(1rem, 1.35vw, 1.16rem);
-  font-weight: 500;
+  font-weight: var(--font-medium);
   letter-spacing: .035em;
 }
 
@@ -9154,7 +9164,7 @@ button,
   gap: 18px;
   color: #f3dba9;
   font-size: .75rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   letter-spacing: .19em;
   text-transform: uppercase;
 }
@@ -9219,7 +9229,7 @@ button,
   margin: 10px 0 7px;
   color: #fff;
   font-size: clamp(1.7rem, 2.5vw, 2.2rem);
-  font-weight: 650;
+  font-weight: var(--font-semibold);
   letter-spacing: -.035em;
   line-height: 1.18;
 }
@@ -9243,7 +9253,7 @@ button,
   margin: 0 0 8px;
   color: #e7edf4;
   font-size: .8rem;
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   line-height: 1.35;
 }
 
@@ -9327,7 +9337,7 @@ button,
   background-size: 180% 100%;
   color: #101c2a;
   font-size: .95rem;
-  font-weight: 750;
+  font-weight: var(--font-semibold);
   box-shadow: 0 8px 24px rgba(217, 170, 85, .18), inset 0 1px 0 rgba(255, 255, 255, .42);
   transition: transform .2s ease, box-shadow .2s ease, background-position .3s ease, opacity .2s ease;
 }
@@ -9347,7 +9357,7 @@ button,
   padding: 10px 14px;
   color: #f2cc83;
   font-size: .85rem;
-  font-weight: 650;
+  font-weight: var(--font-semibold);
   text-decoration: none;
   transition: color .18s ease, background .18s ease;
 }
@@ -9542,7 +9552,7 @@ button,
   gap: 7px;
   color: #fff;
   font-size: .71rem;
-  font-weight: 550;
+  font-weight: var(--font-medium);
   text-shadow: 0 1px 8px rgba(0, 0, 0, .7);
 }
 
@@ -9578,7 +9588,7 @@ button,
   margin: 0;
   color: #fff;
   font-size: clamp(1.45rem, 2.35vw, 2rem);
-  font-weight: 680;
+  font-weight: var(--font-semibold);
   letter-spacing: -.025em;
   line-height: 1.25;
   text-shadow: 0 2px 8px rgba(0, 0, 0, .65);
@@ -9657,7 +9667,7 @@ button,
   margin: 3px 0 3px;
   color: #fff;
   font-size: clamp(1.2rem, 1.8vw, 1.55rem);
-  font-weight: 680;
+  font-weight: var(--font-semibold);
   letter-spacing: -.02em;
   line-height: 1.25;
   text-align: center;
@@ -9706,7 +9716,7 @@ button,
   background: transparent;
   color: #f5f6f8;
   font-size: .78rem;
-  font-weight: 650;
+  font-weight: var(--font-semibold);
   cursor: pointer;
   transition: background .2s ease, color .2s ease, box-shadow .2s ease;
 }
@@ -9748,7 +9758,7 @@ button,
 .auth-redesign .recovery-back:focus-visible { border-radius: 5px; outline: 2px solid #ffc45c; outline-offset: 1px; }
 
 .auth-redesign .auth-support { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; margin: 0; padding: 4px 0 0; border: 0; border-radius: 0; background: transparent; text-align: center; }
-.auth-redesign .auth-support strong { display: block; color: #b9c3cf; font-size: .64rem; font-weight: 550; }
+.auth-redesign .auth-support strong { display: block; color: #b9c3cf; font-size: .64rem; font-weight: var(--font-medium); }
 .auth-redesign .auth-support span { display: inline-flex; align-items: center; gap: 7px; color: #f5f6f8; font-size: .71rem; }
 .auth-redesign .auth-support svg { width: 18px; height: 18px; fill: none; stroke: #ffc45c; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
 .auth-redesign .login-panel .login-hint { display: none; }
@@ -10087,7 +10097,7 @@ button,
   .auth-redesign .login-panel .login-submit { min-height: 4.1cqw; margin-top: .6cqw; border-radius: 1cqw; font-size: 1.5cqw; }
   .auth-redesign .recovery-link { min-height: 0; margin: 1.6cqw 0 0; padding: 0; font-size: 1.15cqw; }
   .auth-redesign .auth-support { margin-top: auto; padding: 0; background: transparent; }
-  .auth-redesign .auth-support strong { display: flex; align-items: center; gap: .8cqw; width: 100%; font-size: 1.1cqw; font-weight: 500; }
+  .auth-redesign .auth-support strong { display: flex; align-items: center; gap: .8cqw; width: 100%; font-size: 1.1cqw; font-weight: var(--font-medium); }
   .auth-redesign .auth-support strong::before,
   .auth-redesign .auth-support strong::after { height: .1cqw; flex: 1; background: #e8b84a; content: ''; opacity: .7; }
   .auth-redesign .auth-support span { margin-top: .8cqw; font-size: 1.1cqw; }
@@ -10244,7 +10254,7 @@ button,
     visibility: visible;
     color: #fff;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: var(--font-semibold);
   }
 
   .auth-login-card {
@@ -10275,7 +10285,7 @@ button,
     visibility: visible;
     color: #fff;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: var(--font-semibold);
   }
 }
 
@@ -10595,7 +10605,7 @@ button,
   line-height: 1.5;
   text-align: center;
 }
-.login-page .login-developer-credit strong { color: #d4b478; font-weight: 600; }
+.login-page .login-developer-credit strong { color: #d4b478; font-weight: var(--font-semibold); }
 .login-page .login-developer-credit a { color: inherit; overflow-wrap: anywhere; max-width: 100%; text-underline-offset: 3px; }
 .login-page .login-developer-credit a:hover { color: #d4b478; }
 .login-page .login-developer-credit a:focus-visible { outline: 2px solid #d4b478; outline-offset: 3px; border-radius: 2px; }

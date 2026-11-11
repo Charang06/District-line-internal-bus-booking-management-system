@@ -1,0 +1,175 @@
+[
+  {
+    "name": "fixed date changes clear an obsolete trip selection",
+    "passed": true
+  },
+  {
+    "name": "fixed date query retrieves trips absent from the 200-trip summary",
+    "passed": true
+  },
+  {
+    "name": "fixed combined date/bus/route/trip result",
+    "passed": true
+  },
+  {
+    "name": "fixed reset and route selection",
+    "passed": true
+  },
+  {
+    "name": "fixed API failure is shown and retry recovers",
+    "passed": true
+  },
+  {
+    "name": "fixed registration invalidates cached dashboard bus numbers",
+    "passed": true
+  },
+  {
+    "name": "fixed failed registration leaves bus list unchanged",
+    "passed": true
+  },
+  {
+    "name": "fixed staff dropdown refreshes when opened",
+    "passed": true
+  },
+  {
+    "name": "fixed valid selected bus preserved and suggestions deduplicated",
+    "passed": true
+  },
+  {
+    "name": "fixed authorized edit uses the selected bus ID",
+    "passed": true
+  },
+  {
+    "name": "restricted staff cannot see trip actions",
+    "passed": true
+  },
+  {
+    "name": "administrator can create and edit a synthetic staff account",
+    "passed": true
+  },
+  {
+    "name": "administrator logout returns to sign-in",
+    "passed": true
+  },
+  {
+    "name": "booking form validates missing seats and saves synthetic selection",
+    "passed": true
+  },
+  {
+    "name": "cargo form validates missing goods and submits only synthetic data",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 360",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 390",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 768",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 1440",
+    "passed": true
+  },
+  {
+    "name": "staff logout returns to sign-in",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 360",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 390",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 768",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 1440",
+    "passed": true
+  },
+  {
+    "name": "mobile MFA challenge withholds admin UI, displays failure and completes synthetic verification",
+    "passed": true
+  },
+  {
+    "name": "dashboard layout, KPI columns and contained charts/tables 1440",
+    "passed": true
+  },
+  {
+    "name": "dashboard layout, KPI columns and contained charts/tables 768",
+    "passed": true
+  },
+  {
+    "name": "dashboard layout, KPI columns and contained charts/tables 390",
+    "passed": true
+  },
+  {
+    "name": "dashboard layout, KPI columns and contained charts/tables 320",
+    "passed": true
+  },
+  {
+    "name": "SMS credit refresh bypasses automatic cache and retains last value on an error",
+    "passed": true
+  },
+  {
+    "name": "seat KPI cards and donut use the active filtered trip totals",
+    "passed": true
+  },
+  {
+    "name": "Trip Details keeps trip fields and locked Accounts revenue",
+    "passed": true
+  },
+  {
+    "name": "both monthly travel-date charts preserve counts and titles and Month filtering",
+    "passed": true
+  },
+  {
+    "name": "Trip and Route Profit Report totals agree with Net Profit KPI and retain locked rows",
+    "passed": true
+  },
+  {
+    "name": "financial filters, negative profit, monthly costs and reset keep the original rules",
+    "passed": true
+  },
+  {
+    "name": "trip date errors and API failures suppress misleading KPI values and Retry recovers",
+    "passed": true
+  },
+  {
+    "name": "new synthetic bus appears once without refresh and preserves a valid Bus No selection",
+    "passed": true
+  },
+  {
+    "name": "opaque sticky header stays above content and preserves mobile navigation",
+    "passed": false,
+    "error": "Expected values to be strictly equal:\n\nfalse !== true\n"
+  },
+  {
+    "name": "footer logo loads and keyboard focus/table semantics remain accessible",
+    "passed": true
+  },
+  {
+    "name": "empty dashboard shows genuine empty trip/chart/ledger states",
+    "passed": true
+  },
+  {
+    "name": "primary dashboard and ledger loading do not display stale totals",
+    "passed": true
+  },
+  {
+    "name": "primary API error is announced and dashboard Retry fetches fresh data",
+    "passed": true
+  },
+  {
+    "name": "ledger failure hides financial rows and Net Profit until an explicit Retry succeeds",
+    "passed": true
+  }
+]

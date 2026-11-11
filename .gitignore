@@ -8,10 +8,12 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+handover/
 dist
 dist-ssr
 *.local
 .env
+.private-security/
 .env.*
 !.env.example
 server/*.db

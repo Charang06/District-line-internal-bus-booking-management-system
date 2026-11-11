@@ -1,0 +1,86 @@
+{
+  "branch": "ui/customers-page-handover",
+  "committed": false,
+  "merged": false,
+  "deployed": false,
+  "sourceFiles": [
+    {
+      "path": "src/App.jsx",
+      "sha256": "eddb32440edf56d94452418b08258b9abd9a4bca9a4b43bcbe55ee6e19e2fb5e"
+    },
+    {
+      "path": "src/components/CustomersPage.jsx",
+      "sha256": "a29cb15a6f4633bf6600436fe904afa49801846f4071630897cf3dd8ded6c4b6"
+    },
+    {
+      "path": "src/components/CustomersPage.css",
+      "sha256": "4d84df54e0c9c4ce6e7b6b6ae79f8837803f90c5af047c38c95efa2212100389"
+    },
+    {
+      "path": "src/data/customerAnalytics.test.js",
+      "sha256": "f592d4c239583c6fde030f007a9f7ae1236dd4abc4ce2bc14cee71756a8465f8"
+    },
+    {
+      "path": "scripts/customers-ui-browser.cjs",
+      "sha256": "e91758a989fb17a774356952bbe0008c4281cf669cc83d6ffe4201ee7e73585f"
+    }
+  ],
+  "customersBrowser": {
+    "passed": 41,
+    "failed": 0
+  },
+  "existingStaffBrowser": {
+    "passed": 54,
+    "failed": 0
+  },
+  "generatedFiles": [
+    "artifacts/customers-ui-review/README.md",
+    "artifacts/customers-ui-review/after-customers-1440.png",
+    "artifacts/customers-ui-review/after-customers-320.png",
+    "artifacts/customers-ui-review/after-customers-390.png",
+    "artifacts/customers-ui-review/after-customers-768.png",
+    "artifacts/customers-ui-review/after-empty-mobile.png",
+    "artifacts/customers-ui-review/after-error.png",
+    "artifacts/customers-ui-review/after-loading.png",
+    "artifacts/customers-ui-review/baseline-browser.txt",
+    "artifacts/customers-ui-review/baseline-build/Inter-LICENSE.txt",
+    "artifacts/customers-ui-review/baseline-build/InterVariable.woff2",
+    "artifacts/customers-ui-review/baseline-build/assets/index-CxJnZCSK.js",
+    "artifacts/customers-ui-review/baseline-build/assets/index-DK7kAjJz.css",
+    "artifacts/customers-ui-review/baseline-build/bus.png",
+    "artifacts/customers-ui-review/baseline-build/bus.webp",
+    "artifacts/customers-ui-review/baseline-build/favicon.svg",
+    "artifacts/customers-ui-review/baseline-build/icons.svg",
+    "artifacts/customers-ui-review/baseline-build/index.html",
+    "artifacts/customers-ui-review/baseline-build/login-bg-1920x1080.jpg",
+    "artifacts/customers-ui-review/baseline-build/login-bg-clean-v2.jpg",
+    "artifacts/customers-ui-review/baseline-build/login-bg-clean-v2.png",
+    "artifacts/customers-ui-review/baseline-build/login-bg.png",
+    "artifacts/customers-ui-review/baseline-build/login-reference.jpg",
+    "artifacts/customers-ui-review/baseline-build/login-tropical-sunset.png",
+    "artifacts/customers-ui-review/baseline-build/logo-transparent.png",
+    "artifacts/customers-ui-review/baseline-build/logo.png",
+    "artifacts/customers-ui-review/baseline-build/uploads/profiles/profile-1-1791954557237.jpg",
+    "artifacts/customers-ui-review/baseline-build/uploads/profiles/profile-1-1793992016053.jpg",
+    "artifacts/customers-ui-review/baseline-build/uploads/profiles/profile-3-1792611007337.jpg",
+    "artifacts/customers-ui-review/baseline-source/App.jsx.txt",
+    "artifacts/customers-ui-review/baseline-source/customer-calculations.txt",
+    "artifacts/customers-ui-review/before-customers-1440.png",
+    "artifacts/customers-ui-review/before-customers-320.png",
+    "artifacts/customers-ui-review/before-customers-390.png",
+    "artifacts/customers-ui-review/before-customers-768.png",
+    "artifacts/customers-ui-review/booking-mobile.png",
+    "artifacts/customers-ui-review/browser-results.json",
+    "artifacts/customers-ui-review/browser.txt",
+    "artifacts/customers-ui-review/build.txt",
+    "artifacts/customers-ui-review/existing-staff-browser-results.json",
+    "artifacts/customers-ui-review/existing-staff-browser.txt",
+    "artifacts/customers-ui-review/lint.txt",
+    "artifacts/customers-ui-review/login-mobile.png",
+    "artifacts/customers-ui-review/manifest.json",
+    "artifacts/customers-ui-review/protected-file-hashes.json",
+    "artifacts/customers-ui-review/scope-verification.json",
+    "artifacts/customers-ui-review/task-changes.patch",
+    "artifacts/customers-ui-review/tests.txt"
+  ]
+}

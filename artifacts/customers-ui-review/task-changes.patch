@@ -1,0 +1,134 @@
+diff --git a/artifacts/customers-ui-review/baseline-source/App.jsx.txt b/src/App.jsx
+index d80ff75..7ca3c2d 100644
+--- a/artifacts/customers-ui-review/baseline-source/App.jsx.txt
++++ b/src/App.jsx
+@@ -4,6 +4,7 @@ import { api, assetUrl } from './api'
+ import TripWorkspace from './components/TripWorkspace'
+ import StaffManagement from './components/StaffManagement'
+ import StaffDialog from './components/StaffDialog'
++import CustomersPage from './components/CustomersPage'
+ import AdminProfile from './components/AdminProfile'
+ import AccountsRevenue from './components/AccountsRevenue'
+ import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
+@@ -201,6 +202,7 @@ function App() {
+   const [profitLedger, setProfitLedger] = useState({ revenueEntries: [], expenseSubmissions: [] })
+   const [customerPeriod, setCustomerPeriod] = useState('6')
+   const [customerChartPeriod, setCustomerChartPeriod] = useState('6')
++  const [customerDataError, setCustomerDataError] = useState('')
+   const [customerToday] = useState(() => todayIso())
+   const [monthlyExpenseMonth, setMonthlyExpenseMonth] = useState(() => todayIso().slice(0, 7))
+   const [expenseForm, setExpenseForm] = useState({ expense_date: todayIso(), bus_no: '', category: 'Fuel', description: '', amount: '' })
+@@ -1186,6 +1188,7 @@ function App() {
+     }
+     const cachedScope = adminStatsCacheRef.current[scope] ? scope : scope !== 'full' && adminStatsCacheRef.current.full ? 'full' : ''
+     if (cachedScope && !forceData) {
++      if (scope === 'full') setCustomerDataError('')
+       setAdminStats(adminStatsCacheRef.current[cachedScope])
+       setAdminStatsScope(cachedScope)
+       setAdminDataLoading(false)
+@@ -1195,6 +1198,7 @@ function App() {
+     const requestId = ++adminDashboardRequestIdRef.current
+     const pending = (async () => {
+       setAdminDataLoading(true)
++      if (scope === 'full') setCustomerDataError('')
+       setProfitLedgerError('')
+       const ledgerPending = loadProfitLedger(forceLedger)
+       try {
+@@ -1213,6 +1217,7 @@ function App() {
+         console.info(JSON.stringify({ kind: 'admin_dashboard_all_sections_perf', scope, duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
+       } catch (err) {
+         if (requestId === adminDashboardRequestIdRef.current) {
++          if (scope === 'full') setCustomerDataError(err.message || 'Unable to load customer analytics.')
+           setProfitLedgerError(err.message || 'Request failed')
+           showMessage(err.message, true)
+         }
+@@ -2102,7 +2107,7 @@ function App() {
+         </main>
+       )}
+ 
+-      {(activeTab === 'Accounts' || activeTab === 'Customers') && isAdmin && !adminStats && (
++      {activeTab === 'Accounts' && isAdmin && !adminStats && (
+         <main className="content-page dashboard-page">
+           <section className="content-card" role="status" aria-live="polite">
+             {adminDataLoading ? <AdminPageSkeleton label="dashboard" /> : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
+@@ -2111,14 +2116,6 @@ function App() {
+         </main>
+       )}
+ 
+-      {activeTab === 'Customers' && isAdmin && adminStats && adminStatsScope !== 'full' && (
+-        <main className="content-page dashboard-page">
+-          <section className="content-card" role="status" aria-live="polite">
+-            {adminDataLoading ? 'Loading customer analytics…' : 'Customer analytics are not available.'}
+-          </section>
+-        </main>
+-      )}
+-
+       {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue
+         data={{ ...adminStats, crewMembers: crewList }}
+         token={token}
+@@ -2136,53 +2133,18 @@ function App() {
+         onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }}
+       />}
+ 
+-      {activeTab === 'Customers' && isAdmin && adminStats && (
+-        <main className="content-page dashboard-page">
+-          <section className="customer-destination-section">
+-            <div className="customer-analytics-heading">
+-              <div><h2>Popular departure</h2><p>Confirmed bookings by departure point within each route.</p></div>
+-              <label>Period<select value={customerChartPeriod} onChange={(event) => setCustomerChartPeriod(event.target.value)}><option value="week">Last week</option><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option></select></label>
+-            </div>
+-            <div className="customer-destination-grid">
+-              {[{ code: 'KTY_CMB', title: 'Kattankudy to Colombo' }, { code: 'CMB_KTY', title: 'Colombo to Kattankudy' }].map((route) => {
+-                const departures = popularDeparturesByRoute[route.code] || []
+-                const maxCount = Math.max(1, ...departures.map((item) => item.count))
+-                return <section className="content-card customer-destination-chart" key={route.code}>
+-                  <h3>{route.title}</h3>
+-                  {departures.length ? <div className="customer-destination-bars" role="img" aria-label={`Departure booking counts for ${route.title}`}>
+-                    {departures.map((item) => <div className="customer-destination-bar-row" key={item.departure}>
+-                      <span title={item.departure}>{item.departure}</span><div className="customer-destination-bar-track"><div className="customer-destination-bar" style={{ width: `${(item.count / maxCount) * 100}%` }} /></div><strong>{item.count}</strong>
+-                    </div>)}
+-                  </div> : <p className="daily-revenue-empty">No confirmed departure bookings in this period.</p>}
+-                </section>
+-              })}
+-            </div>
+-          </section>
+-          <section className="content-card">
+-            <div className="dashboard-section-heading">
+-              <div>
+-                <h2>Regular customers</h2>
+-                <p>Customers are grouped by mobile number. Counts and rankings use confirmed trips in the selected period; multiple seats on one trip count once. “Months travelled” is the number of different calendar months in that period with a trip.</p>
+-              </div>
+-              <div className="revenue-filter-controls">
+-                <label>Period<select value={customerPeriod} onChange={(event) => setCustomerPeriod(event.target.value)}><option value="week">Last week</option><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option></select></label>
+-                <strong>{sortedRegularCustomers.length} regular customer{sortedRegularCustomers.length === 1 ? '' : 's'}</strong>
+-              </div>
+-            </div>
+-            <div className="daily-revenue-table-wrap"><table>
+-              <thead><tr><th>Rank</th><th>Customer</th><th>Mobile No.</th><th>Confirmed trips</th><th>Months travelled</th><th>Most recent trip</th></tr></thead>
+-              <tbody>
+-                {sortedRegularCustomers.map((customer, index) => (
+-                  <tr key={`${customer.contact || customer.passenger_name}-${index}`}>
+-                    <td>{index + 1}</td><td>{customer.passenger_name || 'Unknown'}</td><td>{customer.contact || '—'}</td>
+-                    <td><strong>{customer.trip_count}</strong></td><td>{customer.month_count}</td><td>{customer.last_trip_date || '—'}</td>
+-                  </tr>
+-                ))}
+-                {!sortedRegularCustomers.length && <tr><td colSpan="6" className="daily-revenue-empty">No repeat customers with a mobile number found.</td></tr>}
+-              </tbody>
+-            </table></div>
+-          </section>
+-        </main>
++      {activeTab === 'Customers' && isAdmin && (
++        <CustomersPage
++          departuresByRoute={popularDeparturesByRoute}
++          customers={sortedRegularCustomers}
++          departurePeriod={customerChartPeriod}
++          onDeparturePeriodChange={setCustomerChartPeriod}
++          customerPeriod={customerPeriod}
++          onCustomerPeriodChange={setCustomerPeriod}
++          loading={adminDataLoading || !adminStats || adminStatsScope !== 'full'}
++          error={customerDataError}
++          onRetry={() => openAdminDashboard('full', false, true)}
++        />
+       )}
+ 
+       {showProfile && isAdmin && (

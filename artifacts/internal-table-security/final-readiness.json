@@ -1,0 +1,44 @@
+{
+  "at": "2026-11-08T13:34:47.512Z",
+  "mode": "pre-deployment",
+  "productionWrites": false,
+  "projectFingerprint": "868295d24a51",
+  "checks": {
+    "migrationIntegrity": true,
+    "bodyIntegrity": true,
+    "rollbackIntegrity": true,
+    "scopedCompatibilityPassed": true,
+    "exactRollbackPassed": true,
+    "authenticatedEncryptedRestorePassed": true,
+    "productionObjectSecurityUnchanged": true,
+    "productionGrantsUnchanged": true,
+    "productionSchemaGrantsUnchanged": true,
+    "noUnexpectedColumnGrants": true,
+    "noUnexpectedPolicies": true,
+    "expectedMigrationVersions": true,
+    "noForcedRls": true
+  },
+  "migrationSha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde",
+  "rollbackSha256": "b2483280b3df88c29d279529078468e7c51af32fd0e6a2e9116c63e077534d3e",
+  "compatibilityChecks": [
+    "Restore prerequisites 1–6 available inside rollback transaction",
+    "Schema CREATE, all sequence privileges and absence of browser policies verified",
+    "22 tables deny browser roles; zero-row SELECT probes read no private records",
+    "Synthetic staff cookie login, admin finance denial and logout invalidation",
+    "Synthetic staff booking creation, confirmation, filtered read and cancellation",
+    "Synthetic staff cargo create, trip-filtered read and delete",
+    "Synthetic admin login, expense and locked revenue creation",
+    "Email verification, username recovery and password reset use real DB adapters with mocked delivery; reset revokes sessions and rejects replay",
+    "Idle and absolute session expiry reject expired synthetic sessions",
+    "Independent post-rollback catalog and sequence state match baseline"
+  ],
+  "versions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "passed": true
+}

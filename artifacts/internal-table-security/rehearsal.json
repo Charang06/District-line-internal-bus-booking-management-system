@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-08T09:41:08.207Z",
+  "sourceConnected": false,
+  "committed": false,
+  "realEmailsSent": false,
+  "checks": [
+    "Restore prerequisites 1–6 available inside rollback transaction",
+    "Schema CREATE, all sequence privileges and absence of browser policies verified",
+    "22 tables deny browser roles; zero-row SELECT probes read no private records",
+    "Synthetic staff cookie login, admin finance denial and logout invalidation",
+    "Synthetic staff booking creation, confirmation, filtered read and cancellation",
+    "Synthetic staff cargo create, trip-filtered read and delete",
+    "Synthetic admin login, expense and locked revenue creation",
+    "Email verification, username recovery and password reset use real DB adapters with mocked delivery; reset revokes sessions and rejects replay",
+    "Idle and absolute session expiry reject expired synthetic sessions",
+    "Independent post-rollback catalog and sequence state match baseline"
+  ],
+  "passed": true,
+  "rollbackVerified": true
+}

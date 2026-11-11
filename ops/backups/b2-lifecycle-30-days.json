@@ -1,0 +1,10 @@
+{
+  "lifecycleRules": [
+    {
+      "fileNamePrefix": "district-line/",
+      "daysFromUploadingToHiding": 30,
+      "daysFromHidingToDeleting": 1,
+      "daysFromStartingToCancelingUnfinishedLargeFiles": 1
+    }
+  ]
+}
