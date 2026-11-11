@@ -1,0 +1,137 @@
+/* Revenue-only styling; the Expenses branch and other application pages retain their own styles. */
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view { min-height: 92px; padding: 16px 22px; border-color: #102b46; border-radius: 12px; background: #102b46; color: #fff; box-shadow: 0 3px 10px rgb(16 43 70 / 10%); }
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-revenue-banner-title { display: flex; align-items: center; gap: 12px; }
+.accounts-revenue-page .accounts-revenue-banner-icon { display: grid; flex: 0 0 42px; place-items: center; width: 42px; height: 42px; border: 1px solid rgb(201 154 69 / 45%); border-radius: 10px; background: rgb(255 255 255 / 6%); color: #c99a45; }
+.accounts-revenue-page .accounts-revenue-banner-icon .accounts-revenue-icon { width: 22px; height: 22px; }
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-kicker { color: #d5b16f; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view h1 { margin: 2px 0 0; color: #fff; font-size: 21px; line-height: 1.25; }
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-route-switch { border: 1px solid rgb(255 255 255 / 14%); background: rgb(255 255 255 / 8%); }
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-route-switch button { min-height: 38px; color: #e1e8f0; }
+.accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-route-switch button.active { background: #c99a45; color: #102b46; box-shadow: none; }
+.accounts-revenue-page .accounts-revenue-mode { gap: 12px; }
+.accounts-revenue-page .accounts-revenue-mode .accounts-revenue-heading { grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 14px 18px; border: 1px solid #e0e6ef; border-radius: 10px; background: #fff; box-shadow: 0 2px 7px rgb(16 43 70 / 4%); }
+.accounts-revenue-page .accounts-revenue-heading .accounts-kicker { display: inline-flex; align-items: center; gap: 9px; color: #80652f; font-size: 10px; letter-spacing: .06em; }
+.accounts-revenue-page .accounts-revenue-heading .accounts-kicker b { padding: 4px 7px; border: 1px solid #eadbbd; border-radius: 5px; background: #faf5e9; color: #80652f; font-size: 9px; letter-spacing: .04em; }
+.accounts-revenue-page .accounts-revenue-heading h2 { margin: 4px 0 0; color: #102b46; font-size: 18px; line-height: 1.3; }
+.accounts-revenue-page .accounts-revenue-heading p { margin: 3px 0 0; color: #64748b; font-size: 12px; }
+.accounts-revenue-page .accounts-expense-route-tools { justify-self: end; }
+.accounts-revenue-page .accounts-revenue-heading .accounts-expense-draft-badge { max-width: 300px; padding: 7px 9px; border: 1px solid #e5eaf1; border-radius: 7px; background: #f7f9fc; color: #53657b; font-size: 10px; line-height: 1.35; }
+.accounts-revenue-page .accounts-route-revenue-stack { gap: 12px; }
+.accounts-revenue-page .accounts-revenue-entry-card { display: grid; gap: 12px; padding: 14px; border: 1px solid #dce4ed; border-radius: 12px; background: #fff; box-shadow: 0 2px 8px rgb(16 43 70 / 5%); }
+.accounts-revenue-page .accounts-revenue-route-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; padding: 8px 12px; border-radius: 8px; background: #102b46; }
+.accounts-revenue-page .accounts-revenue-route-heading h2 { display: flex; align-items: center; gap: 8px; margin: 0; color: #fff; font-size: 15px; line-height: 1.3; }
+.accounts-revenue-page .accounts-revenue-route-heading h2 .accounts-revenue-icon { width: 17px; height: 17px; color: #c99a45; }
+.accounts-revenue-page .accounts-revenue-route-heading .ghost-button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 9px; border: 1px solid rgb(255 255 255 / 25%); border-radius: 6px; background: transparent; color: #fff; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-route-heading .ghost-button:hover { background: rgb(255 255 255 / 10%); }
+.accounts-revenue-page .accounts-revenue-route-heading .accounts-revenue-icon { width: 14px; height: 14px; color: #e1c27f; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0 0 12px; border: 0; border-bottom: 1px solid #e7ecf2; border-radius: 0; background: transparent; box-shadow: none; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details label { min-width: 0; gap: 4px; color: #42536b; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details :is(input, select) { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid #cfd9e5; border-radius: 7px; background: #fff; color: #102b46; font-size: 12px; }
+.accounts-revenue-page .accounts-revenue-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-revenue-panel { min-width: 0; padding: 13px; border: 1px solid #dce4ed; border-radius: 9px; background: #fff; box-shadow: 0 2px 7px rgb(16 43 70 / 4%); }
+.accounts-revenue-page .accounts-expense-items-heading { align-items: center; gap: 8px; min-height: 38px; margin: 0 0 9px; }
+.accounts-revenue-page .accounts-expense-items-heading > div { min-width: 0; }
+.accounts-revenue-page .accounts-expense-items-heading h2 { display: flex; align-items: center; gap: 7px; margin: 0; color: #102b46; font-size: 14px; line-height: 1.3; }
+.accounts-revenue-page .accounts-expense-items-heading h2 .accounts-revenue-icon { width: 17px; height: 17px; color: #c99a45; }
+.accounts-revenue-page .accounts-expense-items-heading p { margin: 3px 0 0; color: #64748b; font-size: 10px; line-height: 1.4; }
+.accounts-revenue-page .accounts-expense-items-heading > span { flex: 0 0 auto; padding: 4px 6px; border: 1px solid #e4eaf1; border-radius: 5px; background: #f7f9fc; color: #64748b; font-size: 8px; letter-spacing: .04em; }
+.accounts-revenue-page .accounts-revenue-panel .daily-revenue-table-wrap { max-width: 100%; margin: 0; overflow-x: auto; border: 1px solid #e1e7ef; border-radius: 7px; }
+.accounts-revenue-page .accounts-revenue-panel .daily-revenue-table-wrap table { width: 100%; min-width: 390px; table-layout: fixed; border-collapse: collapse; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-panel .daily-revenue-table-wrap th { padding: 8px; border-bottom: 1px solid #dce4ed; background: #eef3f8; color: #42536b; font-size: 9px; line-height: 1.3; text-align: left; }
+.accounts-revenue-page .accounts-revenue-panel .daily-revenue-table-wrap td { padding: 7px 8px; border-bottom: 1px solid #edf1f5; color: #34445c; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-panel .daily-revenue-table-wrap tbody tr:last-child td { border-bottom: 0; }
+.accounts-revenue-page .accounts-seat-table th:nth-child(1) { width: 46%; }
+.accounts-revenue-page .accounts-seat-table th:nth-child(2), .accounts-revenue-page .accounts-seat-table th:nth-child(3) { width: 27%; text-align: right; }
+.accounts-revenue-page .accounts-cargo-table { min-width: 320px !important; }
+.accounts-revenue-page .accounts-cargo-table th:last-child, .accounts-revenue-page .accounts-cargo-table td:last-child { width: 34%; text-align: right; }
+.accounts-revenue-page .accounts-revenue-panel table input { min-height: 34px; padding: 5px 7px; border: 1px solid #d3dce7; border-radius: 6px; background: #fff; color: #102b46; font-size: 12px; }
+.accounts-revenue-page .accounts-seat-count-cell { gap: 8px; }
+.accounts-revenue-page .accounts-seat-count-cell span { color: #42536b; font-size: 10px; }
+.accounts-revenue-page .accounts-seat-count-cell input { flex-basis: 54px; width: 54px !important; }
+.accounts-revenue-page .accounts-seat-table .accounts-seat-count-cell.has-extra { display: grid; grid-template-columns: minmax(0, 1fr) 54px auto; align-items: center; gap: 6px; }
+.accounts-revenue-page .accounts-seat-count-cell .accounts-seat-remove { flex: 0 0 26px; width: 26px; min-height: 26px; padding: 2px; }
+.accounts-revenue-page .accounts-seat-add-row:disabled { cursor: not-allowed; opacity: .55; }
+.accounts-revenue-page .accounts-revenue-panel td:last-child { color: #102b46; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.accounts-revenue-page .accounts-cargo-description { display: flex; align-items: center; gap: 6px; }
+.accounts-revenue-page .accounts-cargo-description input { flex: 1 1 auto; min-width: 80px; }
+.accounts-revenue-page .accounts-cargo-description .accounts-remove-row { flex: 0 0 28px; width: 28px; min-height: 28px; border-radius: 6px; }
+.accounts-revenue-page .accounts-add-row { align-self: flex-start; min-height: 34px; padding: 6px 9px; border: 1px dashed #c99a45; border-radius: 6px; background: #fffaf0; color: #80652f; font-size: 11px; }
+.accounts-revenue-page .accounts-subtotal { min-height: 36px; margin-top: 9px; padding: 7px 9px; border: 1px solid #eadbbd; border-radius: 6px; background: #fbf4e5; color: #42536b; font-size: 11px; }
+.accounts-revenue-page .accounts-subtotal strong { padding: 0; border: 0; background: transparent; color: #102b46; font-size: 13px; font-variant-numeric: tabular-nums; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-total-card { display: grid; gap: 12px; margin: 0; padding: 12px 14px; border: 1px solid #102b46; border-radius: 9px; background: #102b46; }
+.accounts-revenue-page .accounts-total-main { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; margin: 0; padding: 0 0 10px; border-bottom: 1px solid rgb(255 255 255 / 16%); background: transparent; color: #fff; }
+.accounts-revenue-page .accounts-currency-badge { display: grid; width: 38px; height: 34px; place-items: center; border: 1px solid rgb(255 255 255 / 25%); border-radius: 7px; background: #c99a45; color: #102b46; font-size: 12px; font-weight: 700; }
+.accounts-revenue-page .accounts-total-main > div > span { color: #e0c17f; font-size: 9px; letter-spacing: .08em; }
+.accounts-revenue-page .accounts-total-main h2 { margin: 2px 0 0; color: #fff; font-size: 14px; }
+.accounts-revenue-page .accounts-total-main > strong { padding: 7px 10px; border: 1px solid rgb(255 255 255 / 18%); border-radius: 7px; background: rgb(255 255 255 / 8%); color: #fff; font-size: 20px; font-variant-numeric: tabular-nums; }
+.accounts-revenue-page .accounts-total-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.accounts-revenue-page .accounts-draft-status { display: grid; gap: 2px; color: #fff; font-size: 11px; }
+.accounts-revenue-page .accounts-draft-status strong { justify-self: start; padding: 4px 8px; border: 1px solid #e8ce91; border-radius: 6px; background: #fff4d6; color: #854d0e; line-height: 1.35; }
+.accounts-revenue-page .accounts-draft-status span { color: #ccd7e3; font-size: 10px; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-lock-submit { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 8px 12px; border: 1px solid #c99a45; border-radius: 7px; background: #c99a45; color: #102b46; font-size: 12px; font-weight: 700; }
+.accounts-revenue-page .accounts-lock-submit .accounts-revenue-icon { width: 15px; height: 15px; }
+.accounts-revenue-page .accounts-lock-submit:disabled { opacity: .65; }
+.accounts-revenue-page .accounts-submit-hint { flex-basis: 100%; color: #d6e0ea; font-size: 10px; }
+.accounts-revenue-page .accounts-recent-card { padding: 0; border: 1px solid #dce4ed; border-radius: 11px; background: #fff; box-shadow: 0 2px 8px rgb(16 43 70 / 5%); }
+.accounts-revenue-page .accounts-revenue-ledger > .accounts-panel-heading { align-items: center; padding: 14px 16px; border-bottom: 1px solid #e3e9f0; }
+.accounts-revenue-page .accounts-revenue-ledger-title { display: flex; align-items: center; gap: 9px; }
+.accounts-revenue-page .accounts-revenue-small-icon { display: grid; flex: 0 0 30px; width: 30px; height: 30px; place-items: center; border: 1px solid #eadbbd; border-radius: 7px; background: #fbf4e5; color: #a47a31; }
+.accounts-revenue-page .accounts-revenue-small-icon .accounts-revenue-icon { width: 16px; height: 16px; }
+.accounts-revenue-page .accounts-revenue-ledger .accounts-panel-heading h2 { color: #102b46; font-size: 14px; }
+.accounts-revenue-page .accounts-revenue-ledger .accounts-panel-heading p { margin: 3px 0 0; color: #64748b; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-ledger .accounts-panel-heading > span { border: 1px solid #eadbbd; background: #fbf4e5; color: #80652f; font-size: 9px; }
+.accounts-revenue-page .accounts-revenue-ledger-filters { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(170px, 1.2fr) auto; align-items: end; gap: 10px; margin: 0; padding: 12px 16px; }
+.accounts-revenue-page .accounts-revenue-ledger-filters label { min-width: 0; gap: 4px; color: #42536b; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-ledger-filters input { min-height: 38px; padding: 7px 9px; border: 1px solid #cfd9e5; border-radius: 7px; background: #fff; color: #102b46; font-size: 12px; }
+.accounts-revenue-page .accounts-revenue-period-filters { align-self: end; min-height: 38px; padding: 3px; border-color: #dce4ed; border-radius: 7px; background: #f2f5f9; }
+.accounts-revenue-page .accounts-revenue-period-filters button { min-height: 30px; padding: 5px 9px; border-radius: 5px; color: #526278; font-size: 10px; }
+.accounts-revenue-page .accounts-revenue-period-filters button.active { background: #c99a45; color: #102b46; }
+.accounts-revenue-page .accounts-revenue-ledger .daily-revenue-table-wrap { max-width: 100%; margin: 0; overflow-x: auto; border-top: 1px solid #dce4ed; border-radius: 0 0 10px 10px; }
+.accounts-revenue-page .accounts-revenue-ledger table { min-width: 850px; border-collapse: collapse; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-ledger thead th { padding: 10px 11px; border-bottom: 1px solid #dce4ed; background: #eef3f8; color: #42536b; font-size: 9px; text-align: left; }
+.accounts-revenue-page .accounts-revenue-ledger tbody td { padding: 10px 11px; border-bottom: 1px solid #edf1f5; color: #34445c; font-size: 11px; }
+.accounts-revenue-page .accounts-revenue-ledger tbody tr:last-child td { border-bottom: 0; }
+.accounts-revenue-page .accounts-revenue-ledger tbody td:last-child { color: #102b46; font-weight: 700; white-space: nowrap; }
+@media (max-width: 900px) {
+  .accounts-revenue-page .accounts-revenue-mode .accounts-revenue-heading { grid-template-columns: minmax(0, 1fr); }
+  .accounts-revenue-page .accounts-expense-route-tools { justify-self: start; }
+}
+@media (max-width: 700px) {
+  .accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view { align-items: flex-start; flex-direction: column; padding: 14px; }
+  .accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view h1 { font-size: 19px; }
+  .accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-route-switch { align-self: stretch; }
+  .accounts-revenue-page .accounts-revenue-titlebar.is-revenue-view .accounts-route-switch button { flex: 1 1 0; }
+  .accounts-revenue-page .accounts-revenue-entry-card { gap: 10px; padding: 10px; }
+  .accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .accounts-revenue-page .accounts-revenue-columns { grid-template-columns: minmax(0, 1fr); }
+  .accounts-revenue-page .accounts-total-main > strong { font-size: 17px; }
+  .accounts-revenue-page .accounts-total-controls { align-items: stretch; flex-direction: column; }
+  .accounts-revenue-page .accounts-revenue-entry-card .accounts-lock-submit { width: 100%; }
+  .accounts-revenue-page .accounts-revenue-ledger-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .accounts-revenue-page .accounts-revenue-period-filters { grid-column: 1 / -1; justify-self: start; flex-wrap: wrap; }
+}
+@media (max-width: 420px) {
+  .accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details { grid-template-columns: minmax(0, 1fr); }
+  .accounts-revenue-page .accounts-revenue-ledger-filters { grid-template-columns: minmax(0, 1fr); }
+  .accounts-revenue-page .accounts-revenue-period-filters { grid-column: 1; }
+  .accounts-revenue-page .accounts-revenue-route-heading { align-items: flex-start; }
+  .accounts-revenue-page .accounts-revenue-route-heading h2 { font-size: 13px; }
+  .accounts-revenue-page .accounts-total-main { grid-template-columns: auto minmax(0, 1fr); }
+  .accounts-revenue-page .accounts-total-main > strong { grid-column: 1 / -1; justify-self: stretch; text-align: right; }
+}
+.accounts-revenue-page.is-read-only .accounts-revenue-heading,
+.accounts-revenue-page.is-read-only .accounts-route-revenue-stack,
+.accounts-revenue-page.is-read-only .accounts-expense-mode > .accounts-expense-heading,
+.accounts-revenue-page.is-read-only .accounts-expense-details,
+.accounts-revenue-page.is-read-only .accounts-expense-sector-grid,
+.accounts-revenue-page.is-read-only .accounts-expense-main-form,
+.accounts-revenue-page.is-read-only .accounts-monthly-expenses-form {
+  display: none;
+}
+
+.accounts-revenue-page.is-read-only .accounts-read-only-notice {
+  align-self: center;
+  margin: 0;
+  color: #5d6c80;
+  font-size: 13px;
+}

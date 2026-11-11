@@ -1,15 +1,43 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import './components/HomePage.css'
+import './components/LogPage.css'
+import './components/InfoGuide.css'
 import { api, assetUrl } from './api'
 import TripWorkspace from './components/TripWorkspace'
 import StaffManagement from './components/StaffManagement'
+import StaffDialog from './components/StaffDialog'
+import CustomersPage from './components/CustomersPage'
 import AdminProfile from './components/AdminProfile'
 import AccountsRevenue from './components/AccountsRevenue'
 import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
+import InfoGuide from './components/InfoGuide'
 import SmsBalanceCard from './components/SmsBalanceCard'
+import { DashboardIcon, DashboardKpi } from './components/DashboardWidgets'
+import { resolveStaffPageAccess } from './data/staffPageAccess'
+
+function TripVisualIcon({ name }) {
+  const paths = {
+    sliders: <><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><path d="M13 4v6M7 14v6"/></>,
+    analytics: <><path d="M4 19h16M6 15l4-4 3 3 6-7"/><path d="M15 7h4v4"/></>,
+    chart: <><path d="M4 19h16M6 16l4-5 3 3 5-8"/><path d="M15 6h3v3"/></>,
+    bus: <><path d="M5 17V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v11M5 11h14M7 17h10"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></>,
+    date: <><rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 4v4m8-4v4M4 10h16"/></>,
+    route: <><circle cx="6" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 6h4a3 3 0 0 1 3 3v2a3 3 0 0 0 3 3"/></>,
+    trip: <><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></>,
+    person: <><circle cx="12" cy="8" r="3"/><path d="M5 20a7 7 0 0 1 14 0"/></>,
+    seats: <><path d="M7 4v8a3 3 0 0 0 3 3h8M8 15l-2 5m11-5 2 5M11 5v6h7"/></>,
+    revenue: <><path d="M12 3v18m4-14H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H7"/></>,
+    cargo: <><path d="M4 7h16v13H4zM8 7V4h8v3M4 12h16"/></>,
+    reset: <><path d="M4 11a8 8 0 1 1 2 6M4 5v6h6"/></>,
+  }
+  return <svg className="trip-visual-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{paths[name] || paths.trip}</svg>
+}
+import './components/AdminDashboard.css'
 import UsernameRecoveryForm from './components/UsernameRecoveryForm'
 import { ROUTES, SEAT_LAYOUT, routeByCode } from './data/seatLayout'
 import { buildTripOverview, filterTripOverviewTrips } from './data/tripOverview'
+import { busRegistrations } from './data/busRegistrations'
 
 const TOKEN_KEY = 'district-line-token'
 const USER_KEY = 'district-line-user'
@@ -28,6 +56,12 @@ function todayIso() {
   const month = String(now.getMonth() + 1).padStart(2, '0')
   const day = String(now.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+function firstAuthorizedPage(user) {
+  if (user?.role === 'admin') return 'Home'
+  const pages = [['Home', 'home'], ['Log', 'log'], ['Info', 'info'], ['Dashboard', 'dashboard'], ['Accounts', 'accounts'], ['Customers', 'customers'], ['Staff', 'staff']]
+  return pages.find(([, key]) => user?.permissions?.[key] === true)?.[0] || 'Home'
 }
 
 function lkr(value) {
@@ -116,6 +150,7 @@ function App() {
   const adminDashboardRequestIdRef = useRef(0)
   const profitLedgerRequestRef = useRef(null)
   const adminStatsCacheRef = useRef({})
+  const fleetRequestIdRef = useRef(0)
   const sessionCheckStartedRef = useRef(false)
   const loginRequestInFlightRef = useRef(false)
   const [token, setToken] = useState('')
@@ -123,8 +158,11 @@ function App() {
   const [authStatus, setAuthStatus] = useState('checking')
   const [authError, setAuthError] = useState('')
   const [activeTab, setActiveTab] = useState('Home')
+  const [infoTopic, setInfoTopic] = useState('overview')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [loginForm, setLoginForm] = useState({ username: '', password: '' })
+  const [mfaChallenge, setMfaChallenge] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
   const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
@@ -142,7 +180,7 @@ function App() {
     const now = new Date()
     return { year: now.getFullYear(), month: now.getMonth() }
   })
-  const [routeCode, setRouteCode] = useState('CMB_KTY')
+  const [routeCode, setRouteCode] = useState('KTY_CMB')
   const [buses, setBuses] = useState([])
   const [trips, setTrips] = useState([])
   const [tripsLoading, setTripsLoading] = useState(true)
@@ -163,14 +201,20 @@ function App() {
   const [smsBusyId, setSmsBusyId] = useState(null)
   const [cancelTarget, setCancelTarget] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [logoutBusy, setLogoutBusy] = useState(false)
+  const logoutInFlightRef = useRef(false)
   const [showCrewForm, setShowCrewForm] = useState(false)
   const [editingTrip, setEditingTrip] = useState(null)
   const [showBusForm, setShowBusForm] = useState(false)
   const [busSaving, setBusSaving] = useState(false)
+  const [busFormError, setBusFormError] = useState('')
   const [editingBus, setEditingBus] = useState(null)
   const [adminStats, setAdminStats] = useState(null)
   const [adminStatsScope, setAdminStatsScope] = useState('')
   const [adminDataLoading, setAdminDataLoading] = useState(false)
+  const [dashboardDataError, setDashboardDataError] = useState('')
+  const [dashboardProfitTarget, setDashboardProfitTarget] = useState(null)
   const [profitLedgerLoading, setProfitLedgerLoading] = useState(false)
   const [profitLedgerError, setProfitLedgerError] = useState('')
   const [profitLedgerLoaded, setProfitLedgerLoaded] = useState(false)
@@ -184,6 +228,10 @@ function App() {
   const [dashboardRoute, setDashboardRoute] = useState('KTY_CMB')
   const [dashboardBus, setDashboardBus] = useState('')
   const [dashboardTrip, setDashboardTrip] = useState('')
+  const [dashboardTrips, setDashboardTrips] = useState([])
+  const [dashboardTripsLoading, setDashboardTripsLoading] = useState(false)
+  const [dashboardTripsError, setDashboardTripsError] = useState('')
+  const [dashboardTripsRetry, setDashboardTripsRetry] = useState(0)
   const [profitPeriod, setProfitPeriod] = useState('day')
   const [profitDate, setProfitDate] = useState(todayIso())
   const [profitRoute, setProfitRoute] = useState('')
@@ -191,6 +239,7 @@ function App() {
   const [profitLedger, setProfitLedger] = useState({ revenueEntries: [], expenseSubmissions: [] })
   const [customerPeriod, setCustomerPeriod] = useState('6')
   const [customerChartPeriod, setCustomerChartPeriod] = useState('6')
+  const [customerDataError, setCustomerDataError] = useState('')
   const [customerToday] = useState(() => todayIso())
   const [monthlyExpenseMonth, setMonthlyExpenseMonth] = useState(() => todayIso().slice(0, 7))
   const [expenseForm, setExpenseForm] = useState({ expense_date: todayIso(), bus_no: '', category: 'Fuel', description: '', amount: '' })
@@ -230,19 +279,66 @@ function App() {
   })
 
   const isAdmin = user?.role === 'admin'
-  const staffPermissions = isAdmin
-    ? { home: true, log: true, info: true, passengers: true, cargo: true, trips: true }
-    : { home: true, log: true, info: true, passengers: true, cargo: true, trips: true, ...(user?.permissions || {}) }
-  const navTabs = ['Home', 'Log', 'Info', ...(isAdmin ? ['Dashboard', 'Accounts', 'Customers', 'Staff'] : [])].filter((tab) => {
+  const rawStaffPermissions = isAdmin
+    ? { home: true, log: true, info: true, dashboard: true, accounts: true, customers: true, staff: true, passengers: true, cargo: true, trips: true }
+    : { home: true, log: true, info: true, dashboard: false, accounts: false, customers: false, staff: false, passengers: false, cargo: false, trips: false, ...(user?.permissions || {}) }
+  const pageAccess = resolveStaffPageAccess(rawStaffPermissions, isAdmin)
+  const staffPermissions = {
+    ...rawStaffPermissions,
+    pageAccess,
+    home: pageAccess.home.view,
+    log: pageAccess.log.view,
+    info: pageAccess.info.view,
+    dashboard: pageAccess.dashboard.view,
+    accounts: pageAccess.accounts.view,
+    customers: pageAccess.customers.view,
+    staff: pageAccess.staff.view,
+    homeManage: pageAccess.home.manage,
+    logManage: pageAccess.log.manage,
+    dashboardManage: pageAccess.dashboard.manage,
+    accountsManage: pageAccess.accounts.manage,
+    customersManage: pageAccess.customers.manage,
+    staffManage: false,
+    homePassengers: rawStaffPermissions.passengers && pageAccess.home.manage,
+    homeCargo: rawStaffPermissions.cargo && pageAccess.home.manage,
+    logPassengers: rawStaffPermissions.passengers && pageAccess.log.manage,
+    logCargo: rawStaffPermissions.cargo && pageAccess.log.manage,
+    customerActions: rawStaffPermissions.passengers && pageAccess.customers.manage,
+    passengers: rawStaffPermissions.passengers && (pageAccess.home.manage || pageAccess.log.manage || pageAccess.customers.manage),
+    cargo: rawStaffPermissions.cargo && (pageAccess.home.manage || pageAccess.log.manage),
+    trips: rawStaffPermissions.trips && pageAccess.home.manage,
+  }
+  const canViewFinancialData = isAdmin || staffPermissions.accounts
+  const homePermissions = { ...staffPermissions, passengers: staffPermissions.homePassengers, cargo: staffPermissions.homeCargo }
+  const navTabs = ['Home', 'Log', 'Info', ...(staffPermissions.dashboard ? ['Dashboard'] : []), ...(staffPermissions.accounts ? ['Accounts'] : []), ...(staffPermissions.customers ? ['Customers'] : []), ...(staffPermissions.staff ? ['Staff'] : [])].filter((tab) => {
     if (tab === 'Home') return staffPermissions.home
     if (tab === 'Log') return staffPermissions.log
     if (tab === 'Info') return staffPermissions.info
+    if (tab === 'Dashboard') return staffPermissions.dashboard
+    if (tab === 'Accounts') return staffPermissions.accounts
+    if (tab === 'Customers') return staffPermissions.customers
+    if (tab === 'Staff') return staffPermissions.staff
     return true
   })
   const route = routeByCode(routeCode)
   const activeTrip = trips.find((trip) => trip.id === activeTripId) || trips[0] || null
+  const activeTabAllowed = activeTab === 'Home' ? staffPermissions.home
+    : activeTab === 'Log' ? staffPermissions.log
+      : activeTab === 'Info' ? staffPermissions.info
+        : activeTab === 'Dashboard' ? staffPermissions.dashboard
+          : activeTab === 'Accounts' ? staffPermissions.accounts
+            : activeTab === 'Customers' ? staffPermissions.customers
+              : activeTab === 'Staff' ? staffPermissions.staff : true
+  const fallbackTab = navTabs[0] || 'Home'
   const knownDriverNames = [...new Set([...(crewList || []).filter((member) => member.role === 'driver').map((member) => member.full_name), ...(adminStats?.crewMembers || []).filter((member) => member.role === 'driver').map((member) => member.full_name), ...trips.map((item) => item.driver_name), ...buses.map((item) => item.driver_name)].map((name) => String(name || '').trim()).filter(Boolean))]
   const knownConductorNames = [...new Set([...(crewList || []).filter((member) => member.role === 'conductor').map((member) => member.full_name), ...(adminStats?.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => member.full_name), ...trips.map((item) => item.conductor_name), ...buses.map((item) => item.conductor_name)].map((name) => String(name || '').trim()).filter(Boolean))]
+
+  useEffect(() => {
+    if (!token) return
+    if (!activeTabAllowed) {
+      setActiveTab(fallbackTab)
+    }
+  }, [token, activeTab, activeTabAllowed, fallbackTab, isAdmin])
 
   useEffect(() => {
     if (!token) return
@@ -286,7 +382,7 @@ function App() {
       })
     })
   }, [adminStats, seatChartMonth, dashboardTrip])
-  const filteredTrips = useMemo(() => dashboardRange ? filterTripOverviewTrips(adminStats?.trips || [], { start: dashboardRange.start, end: dashboardRange.end, route: dashboardRoute, bus: dashboardBus, tripId: dashboardTrip }) : [], [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
+  const filteredTrips = useMemo(() => dashboardRange ? filterTripOverviewTrips(dashboardTrips, { start: dashboardRange.start, end: dashboardRange.end, route: dashboardRoute, bus: dashboardBus, tripId: dashboardTrip }) : [], [dashboardTrips, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const filteredPassengerRecords = useMemo(() => (adminStats?.passengerRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const filteredCargoRecords = useMemo(() => (adminStats?.cargoRecords || []).filter((row) => isInDashboardRange(row.travel_date) && matchesDashboardRoute(row) && matchesDashboardTrip(row) && matchesDashboardBus(row)), [adminStats, dashboardRange, dashboardRoute, dashboardBus, dashboardTrip])
   const tripOverview = useMemo(() => buildTripOverview(filteredTrips, adminStats?.dailyRevenue || [], SEAT_LAYOUT.totalSeats, [], profitLedger.revenueEntries || []), [adminStats, filteredTrips, profitLedger.revenueEntries])
@@ -559,8 +655,16 @@ function App() {
   }
 
   const loadFleet = useCallback(async (authToken) => {
+    const requestId = ++fleetRequestIdRef.current
     const data = await api.buses(authToken, true)
-    setBuses(data.buses || [])
+    if (requestId === fleetRequestIdRef.current) {
+      const fleet = data.buses || []
+      setBuses(fleet)
+      setAdminStats((previous) => previous ? { ...previous, buses: fleet } : previous)
+      for (const [scope, cached] of Object.entries(adminStatsCacheRef.current)) {
+        adminStatsCacheRef.current[scope] = { ...cached, buses: fleet }
+      }
+    }
   }, [])
 
   const loadTrips = useCallback(async (authToken, date = selectedDate, routeValue = routeCode) => {
@@ -573,6 +677,24 @@ function App() {
       setTripsLoading(false)
     }
   }, [routeCode, selectedDate])
+
+  useEffect(() => {
+    if (!token || !staffPermissions.dashboard || activeTab !== 'Dashboard') return
+    let active = true
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(revenueDate)) {
+      setDashboardTrips([]); setDashboardTripsLoading(false); setDashboardTripsError('Choose a valid date.')
+      return
+    }
+    setDashboardTrips([]); setDashboardTripsLoading(true); setDashboardTripsError('')
+    // The dashboard summary contains only the latest 200 trips. Query the existing
+    // Express endpoint by calendar date/route so older trips remain selectable.
+    api.trips(token, queryString({ date: revenueDate, route: dashboardRoute, dashboard: '1' })).then(data => {
+      if (active) setDashboardTrips(data.trips || [])
+    }).catch(err => {
+      if (active) setDashboardTripsError(err.message || 'Unable to load trips.')
+    }).finally(() => { if (active) setDashboardTripsLoading(false) })
+    return () => { active = false }
+  }, [token, staffPermissions.dashboard, activeTab, revenueDate, dashboardRoute, dashboardTripsRetry])
 
   const loadLogs = useCallback(async (authToken, selectedTrip) => {
     const requestId = ++logsRequestIdRef.current
@@ -648,6 +770,7 @@ function App() {
       setUser(data.user)
       setToken('cookie-session')
       setAuthStatus('authenticated')
+      setActiveTab(firstAuthorizedPage(data.user))
     } catch (err) {
       if (err.status === 401 || err.status === 403) {
         clearAuthState()
@@ -675,6 +798,11 @@ function App() {
   }, [clearAuthState])
 
   const bootstrap = useCallback(async (authToken) => {
+    if (!isAdmin && !staffPermissions.home && !staffPermissions.log) {
+      setTrips([])
+      setActiveTripId(null)
+      return
+    }
     try {
       const nextTrips = await loadTrips(authToken)
       setActiveTripId((previousId) => nextTrips.find((trip) => trip.id === previousId)?.id || nextTrips[0]?.id || null)
@@ -682,18 +810,33 @@ function App() {
       if (err.status === 401) clearAuthState()
       showMessage(err.message, true)
     }
-  }, [clearAuthState, loadTrips, showMessage])
+  }, [clearAuthState, isAdmin, loadTrips, showMessage, staffPermissions.home, staffPermissions.log])
 
   useEffect(() => {
     if (token) bootstrap(token)
   }, [token, selectedDate, routeCode, bootstrap])
 
   useEffect(() => {
-    if (!token) return
+    if (!token || (!isAdmin && !staffPermissions.home && !staffPermissions.log)) return
     loadFleet(token).catch((err) => {
       if (err.status !== 401 && err.status !== 403) showMessage(err.message, true)
     })
-  }, [token, loadFleet, showMessage])
+  }, [token, isAdmin, loadFleet, showMessage, staffPermissions.home, staffPermissions.log])
+
+  useEffect(() => {
+    if (!token || (!isAdmin && !staffPermissions.home && !staffPermissions.log)) return
+    const refresh = () => {
+      if (document.visibilityState === 'hidden') return
+      loadFleet(token).catch(() => {})
+    }
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    return () => {
+      fleetRequestIdRef.current++
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+    }
+  }, [token, isAdmin, loadFleet, staffPermissions.home, staffPermissions.log])
 
   useEffect(() => {
     if (!user) return
@@ -727,13 +870,22 @@ function App() {
     setLoginError('')
     setLoginLoading(true)
     try {
-      const data = await api.login(loginForm)
+      const data = mfaChallenge
+        ? await api.verifyAdminMfa({ challenge: mfaChallenge, code: mfaCode })
+        : await api.login(loginForm)
+      if (data.mfaRequired) {
+        setMfaChallenge(data.challenge)
+        setMfaCode('')
+        setLoginForm(prev => ({ ...prev, password: '' }))
+        return
+      }
+      setMfaChallenge('')
+      setMfaCode('')
       setToken('cookie-session')
       setUser(data.user)
       setAuthStatus('authenticated')
       setAuthError('')
-      const firstTab = data.user?.role === 'admin' || data.user?.permissions?.home !== false ? 'Home' : (data.user?.permissions?.log !== false ? 'Log' : 'Info')
-      setActiveTab(firstTab)
+      setActiveTab(firstAuthorizedPage(data.user))
     } catch (err) {
       setLoginError(err.message)
     } finally {
@@ -769,6 +921,9 @@ function App() {
   }
 
   const handleLogout = async () => {
+    if (logoutInFlightRef.current) return
+    logoutInFlightRef.current = true
+    setLogoutBusy(true)
     try {
       await api.logout()
     } catch (err) {
@@ -776,6 +931,9 @@ function App() {
     } finally {
       clearAuthState()
       setActiveTab('Home')
+      setShowLogoutConfirm(false)
+      logoutInFlightRef.current = false
+      setLogoutBusy(false)
     }
   }
 
@@ -879,6 +1037,8 @@ function App() {
   }
 
   const openCrewForm = (trip) => {
+    // A different administrator may have registered a bus since this session loaded.
+    loadFleet(token).catch((err) => showMessage(err.message || 'Unable to refresh bus numbers.', true))
     setEditingTrip(trip)
     setTripForm({
       travel_date: trip?.travel_date || selectedDate,
@@ -928,7 +1088,7 @@ function App() {
       const data = await api.updateTrip(token, editingTrip.id, {
         travel_date: editingTrip.travel_date,
         route_code: editingTrip.route_code,
-        bus_id: editingTrip.bus_id || null,
+        bus_id: buses.find(bus => String(bus.registration_no || '').trim().toLowerCase() === tripForm.bus_no.trim().toLowerCase())?.id || null,
         bus_no: tripForm.bus_no,
         departure_time: tripForm.departure_time,
         status: tripForm.status,
@@ -1005,20 +1165,31 @@ function App() {
   }
 
   const handleSaveBus = async () => {
+    if (busSaving) return
+    setBusFormError('')
     const registrationNo = String(busForm.registration_no || '').trim()
     const mobileNo = String(busForm.mobile_no || '').trim()
     if (!registrationNo) {
+      setBusFormError('Enter a bus registration number.')
       showMessage('Enter a bus registration number.', true)
       return
     }
     setBusSaving(true)
     try {
+      const applySavedBus = (bus) => {
+        fleetRequestIdRef.current++
+        if (bus) setBuses((previous) => [...previous.filter((item) => item.id !== bus.id), bus])
+        adminStatsCacheRef.current = {}
+        setAdminStatsScope('')
+      }
       if (editingBus) {
-        await api.updateBus(token, editingBus.id, { ...busForm, registration_no: registrationNo })
+        const result = await api.updateBus(token, editingBus.id, { ...busForm, registration_no: registrationNo })
+        applySavedBus(result.bus)
         if (mobileNo) await api.createBusContact(token, { bus_no: registrationNo, phone_number: mobileNo })
         showMessage('Bus details updated.')
       } else {
         const result = await api.createBus(token, { ...busForm, registration_no: registrationNo })
+        applySavedBus(result.bus)
         if (mobileNo) await api.createBusContact(token, { bus_no: registrationNo, phone_number: mobileNo })
         showMessage(result.reactivated ? 'Inactive bus reactivated.' : 'Bus registered.')
       }
@@ -1029,6 +1200,7 @@ function App() {
       setBusContactList(contacts.contacts || [])
       if (activeTab === 'Dashboard' || activeTab === 'Accounts') await openAdminDashboard(activeTab === 'Accounts' ? 'accounts' : 'dashboard', false, true)
     } catch (err) {
+      setBusFormError(err.message)
       showMessage(err.message, true)
     } finally {
       setBusSaving(false)
@@ -1104,24 +1276,31 @@ function App() {
 
   const openAdminDashboard = async (scope = activeTab === 'Dashboard' ? 'dashboard' : activeTab === 'Accounts' ? 'accounts' : 'full', forceLedger = false, forceData = false) => {
     if (adminDashboardRequestRef.current?.scope === scope) return adminDashboardRequestRef.current.promise
-    if (!isAdmin) {
-      showMessage('Admin access required.', true)
+    const pageAllowed = scope === 'dashboard' ? staffPermissions.dashboard
+      : scope === 'accounts' ? staffPermissions.accounts
+        : scope === 'customers' ? staffPermissions.customers : isAdmin
+    if (!pageAllowed) {
+      showMessage('Your staff account does not have access to this page.', true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
       return
     }
-    const cachedScope = adminStatsCacheRef.current[scope] ? scope : scope !== 'full' && adminStatsCacheRef.current.full ? 'full' : ''
+    const cachedScope = adminStatsCacheRef.current[scope] ? scope : scope !== 'full' && scope !== 'customers' && adminStatsCacheRef.current.full ? 'full' : ''
     if (cachedScope && !forceData) {
+      if (scope === 'dashboard') setDashboardDataError('')
+      if (scope === 'full' || scope === 'customers') setCustomerDataError('')
       setAdminStats(adminStatsCacheRef.current[cachedScope])
       setAdminStatsScope(cachedScope)
       setAdminDataLoading(false)
-      return loadProfitLedger(forceLedger)
+      return canViewFinancialData ? loadProfitLedger(forceLedger) : Promise.resolve()
     }
     const startedAt = performance.now()
     const requestId = ++adminDashboardRequestIdRef.current
     const pending = (async () => {
       setAdminDataLoading(true)
-      setProfitLedgerError('')
-      const ledgerPending = loadProfitLedger(forceLedger)
+      if (scope === 'dashboard') setDashboardDataError('')
+      if (scope === 'full' || scope === 'customers') setCustomerDataError('')
+      if (canViewFinancialData) setProfitLedgerError('')
+      const ledgerPending = canViewFinancialData ? loadProfitLedger(forceLedger) : Promise.resolve()
       try {
         const data = await api.adminDashboard(token, scope === 'full' ? undefined : scope)
         if (requestId === adminDashboardRequestIdRef.current) {
@@ -1138,6 +1317,8 @@ function App() {
         console.info(JSON.stringify({ kind: 'admin_dashboard_all_sections_perf', scope, duration_ms: Number((performance.now() - startedAt).toFixed(1)) }))
       } catch (err) {
         if (requestId === adminDashboardRequestIdRef.current) {
+          if (scope === 'dashboard') setDashboardDataError(err.message || 'Unable to load dashboard data.')
+          if (scope === 'full' || scope === 'customers') setCustomerDataError(err.message || 'Unable to load customer analytics.')
           setProfitLedgerError(err.message || 'Request failed')
           showMessage(err.message, true)
         }
@@ -1190,10 +1371,10 @@ function App() {
 
   const refreshAccountsData = async () => {
     try {
-      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
-      adminStatsCacheRef.current = { full: data, dashboard: data, accounts: data }
+      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token, 'accounts'), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
+      adminStatsCacheRef.current.accounts = data
       setAdminStats(data)
-      setAdminStatsScope('full')
+      setAdminStatsScope('accounts')
       setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
       setProfitLedgerLoaded(true)
       setProfitLedgerError('')
@@ -1292,18 +1473,21 @@ function App() {
   }
 
   const openStaffManagement = async () => {
-    if (!isAdmin) {
-      showMessage('Admin access required.', true)
+    if (!staffPermissions.staff) {
+      showMessage('Your staff account does not have access to this page.', true)
       setActiveTab(staffPermissions.home ? 'Home' : (navTabs[0] || 'Info'))
       return
     }
     setStaffPageLoading(true)
     setStaffPageError('')
     try {
-      const [staffData, crewData, fleetData] = await Promise.all([api.adminStaff(token), api.adminCrew(token), api.buses(token, true)])
+      const staffData = await api.adminStaff(token)
       setStaffList(staffData.staff || [])
-      setCrewList(crewData.crew || [])
-      setBuses(fleetData.buses || [])
+      if (isAdmin) {
+        const [crewData, fleetData] = await Promise.all([api.adminCrew(token), api.buses(token, true)])
+        setCrewList(crewData.crew || [])
+        setBuses(fleetData.buses || [])
+      }
     } catch (err) {
       setStaffPageError(err.message || 'Unable to load staff management data.')
     } finally {
@@ -1383,7 +1567,7 @@ function App() {
               <button type="submit" className="primary-button wide login-submit" disabled={recoveryLoading}>{recoveryLoading ? 'Please wait…' : recoveryStep === 'request' ? 'Send reset link' : 'Reset password'}</button>
               <button type="button" className="recovery-back" onClick={() => { setShowRecovery(false); setRecoveryError(''); setRecoveryMessage(''); setRecoveryForm({ email: '', token: '', password: '', confirmPassword: '' }); setRecoveryStep('request') }}>Back to sign in</button>
             </form> : <form className="auth-form" onSubmit={(event) => { event.preventDefault(); handleLogin() }}>
-              <label className="auth-visually-hidden" htmlFor="login-username">Username / Admin ID</label>
+              {!mfaChallenge && <><label className="auth-visually-hidden" htmlFor="login-username">Username / Admin ID</label>
               <div className="auth-input-wrap"><span className="auth-input-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5" /><path d="M5 20a7 7 0 0 1 14 0" /></svg></span><input id="login-username" required autoComplete="username" placeholder="Username / Admin ID" value={loginForm.username} onChange={(event) => setLoginForm((prev) => ({ ...prev, username: event.target.value }))} /></div>
               <label className="auth-visually-hidden" htmlFor="login-password">Password</label>
               <div className="login-password-field auth-input-wrap">
@@ -1393,6 +1577,12 @@ function App() {
                   {showLoginPassword ? <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 5.2A10.8 10.8 0 0112 5c5.2 0 8.8 4.5 10 7-.4.9-1.2 2-2.3 3M6.2 6.2C3.9 7.7 2.5 10 2 12c1.2 2.5 4.8 7 10 7 1.4 0 2.6-.3 3.7-.8" /></svg> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z" /><circle cx="12" cy="12" r="3" /></svg>}
                 </button>
               </div>
+              </>}
+              {mfaChallenge && <>
+                <label htmlFor="admin-mfa-code">Authenticator or recovery code</label>
+                <div className="auth-input-wrap"><input id="admin-mfa-code" required autoFocus autoComplete="one-time-code" maxLength={32} value={mfaCode} onChange={event => setMfaCode(event.target.value.trim())} /></div>
+                <button type="button" className="recovery-back" onClick={() => { setMfaChallenge(''); setMfaCode(''); setLoginError('') }}>Back to sign in</button>
+              </>}
               {loginError ? <div className="banner error" role="alert">{loginError}</div> : null}
               <button type="submit" className="primary-button wide login-submit" disabled={loginLoading} aria-busy={loginLoading}>
                 {loginLoading ? <><span className="login-submit-spinner" aria-hidden="true" />Signing in…</> : 'Sign In'}
@@ -1415,7 +1605,7 @@ function App() {
   }
 
   return (
-    <div className={`app-shell print-${printMode || 'screen'}`}>
+    <div className={`app-shell print-${printMode || 'screen'}${activeTab === 'Dashboard' ? ' admin-dashboard-shell' : ''}${activeTab === 'Home' ? ' home-page-shell' : ''}${activeTab === 'Log' ? ' log-page-shell' : ''}`}>
       <header className="topbar no-print">
         <div className="topbar-brand">
           <img className="nav-logo" src="/logo-transparent.png" alt="District Line" />
@@ -1441,15 +1631,18 @@ function App() {
               type="button"
               className={activeTab === tab ? 'nav-button active' : 'nav-button'}
               onClick={() => {
-                if ((tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers' || tab === 'Staff') && !isAdmin) {
-                  showMessage('Staff cannot open admin-only pages.', true)
+                if ((tab === 'Dashboard' && !staffPermissions.dashboard)
+                  || (tab === 'Accounts' && !staffPermissions.accounts)
+                  || (tab === 'Customers' && !staffPermissions.customers)
+                  || (tab === 'Staff' && !staffPermissions.staff)) {
+                  showMessage('Your staff account does not have access to this page.', true)
                   return
                 }
                 setActiveTab(tab)
                 setMobileNavOpen(false)
                 if (tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') {
-                  const scope = tab === 'Dashboard' ? 'dashboard' : tab === 'Accounts' ? 'accounts' : 'full'
-                  if ((!adminStats || (adminStatsScope !== scope && adminStatsScope !== 'full')) || !profitLedgerLoaded) openAdminDashboard(scope)
+                  const scope = tab === 'Dashboard' ? 'dashboard' : tab === 'Accounts' ? 'accounts' : 'customers'
+                  if (!adminStats || adminStatsScope !== scope) openAdminDashboard(scope)
                 }
                 if (tab === 'Staff') openStaffManagement()
                 if (tab === 'Log') loadLogs(token, activeTrip)
@@ -1477,7 +1670,7 @@ function App() {
               <small>{isAdmin ? 'Administrator' : 'Staff'} · Dispatcher HQ</small>
             </div>
           </button>
-          <button type="button" className="topbar-logout-button" onClick={handleLogout} aria-label="Log out" title="Log out">
+          <button type="button" className="topbar-logout-button" onClick={() => setShowLogoutConfirm(true)} aria-label="Log out" title="Log out">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M13 4h6a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-6" />
               <path d="M3 12h12m-4-4 4 4-4 4" />
@@ -1572,7 +1765,7 @@ function App() {
                 <h2>{trip.registration_no || 'Bus number not entered'}</h2>
                 <TripWorkspace
                   token={token}
-                  permissions={staffPermissions}
+                  permissions={homePermissions}
                   trip={trip}
                   formNumber={index + 1}
                   date={selectedDate}
@@ -1597,7 +1790,7 @@ function App() {
       )}
 
       {activeTab === 'Log' && staffPermissions.log && (
-        <main className="content-page">
+        <main className="content-page log-page">
           <section className="log-context-panel no-print">
             <div className="log-calendar-card">
               <div className="log-calendar-topline">
@@ -1633,7 +1826,6 @@ function App() {
             <div className="corridor-allocation-card">
               <div className="corridor-allocation-heading">
                 <span>Primary Corridor Allocation</span>
-                <b>Night Super Express Service</b>
               </div>
               <div className="log-corridor-options">
                 {ROUTES.map((item) => {
@@ -1656,14 +1848,21 @@ function App() {
                   )
                 })}
               </div>
-              <div className="log-corridor-current-trip">
-                <span>▦ Date: {selectedDate}</span>
-                <span>▣ Coach: {activeTrip?.registration_no || 'Select bus'}{activeTrip?.bus_name ? ` (${activeTrip.bus_name})` : ''}</span>
-                <span>◷ Departure: {activeTrip?.departure_time || '—'}</span>
-                <span>♙ Lead Driver: {activeTrip?.driver_name || '—'}</span>
-                <span>♧ Conductor: {activeTrip?.conductor_name || '—'}</span>
-              </div>
             </div>
+            <section className="log-trip-summary-card" aria-label="Selected trip summary">
+              <div className="log-trip-summary-heading">
+                <span>Selected Trip</span>
+                <strong>{route.label}</strong>
+                <span className="log-trip-service">Night Super Express Service</span>
+              </div>
+              <div className="log-corridor-current-trip">
+                <div><TripVisualIcon name="date" /><span><small>Date</small><strong>{selectedDate}</strong></span></div>
+                <div><TripVisualIcon name="bus" /><span><small>Coach / Bus</small><strong>{activeTrip?.registration_no || 'Select bus'}{activeTrip?.bus_name ? ` (${activeTrip.bus_name})` : ''}</strong></span></div>
+                <div><TripVisualIcon name="trip" /><span><small>Departure</small><strong>{activeTrip?.departure_time || '—'}</strong></span></div>
+                <div><TripVisualIcon name="person" /><span><small>Driver</small><strong>{activeTrip?.driver_name || '—'}</strong></span></div>
+                <div><TripVisualIcon name="person" /><span><small>Conductor</small><strong>{activeTrip?.conductor_name || '—'}</strong></span></div>
+              </div>
+            </section>
           </section>
           <section className="content-card log-card">
             <div className="logs-toolbar customer-log-toolbar">
@@ -1706,8 +1905,8 @@ function App() {
                     ))}
                   </select>
                 </label>
-                <button type="button" className="secondary-button small customer-print-button" onClick={() => printNow('passengers')}><span aria-hidden="true">▣</span> Print Customer Manifest</button>
-                {staffPermissions.passengers && <button type="button" className="primary-button small customer-entry-button" onClick={() => openEntryForm('passenger')}><span aria-hidden="true">⊕</span> Add Passenger</button>}
+                <button type="button" className="secondary-button small manifest-print-button customer-print-button" onClick={() => printNow('passengers')}><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M7 8V3h10v5M6 17H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/><path d="M18 11h.01"/></svg>Print Customer Manifest</button>
+                {staffPermissions.logPassengers && <button type="button" className="primary-button small customer-entry-button" onClick={() => openEntryForm('passenger')}><span aria-hidden="true">⊕</span> Add Passenger</button>}
               </div>
             </div>
             <div className="filter-row no-print">
@@ -1775,21 +1974,21 @@ function App() {
                         <span className={`sms-pill ${log.sms_status === 'queued' ? 'sending' : log.sms_status}`}>{smsBusyId === log.id ? 'Sending' : smsStatusLabel}</span>
                         {formattedSmsDateTime ? <small className="sms-meta">{formattedSmsDateTime}</small> : null}
                         {log.sms_error ? <small className="sms-meta sms-error-text">{log.sms_error}</small> : null}
-                        {isConfirmed && canSendSms && staffPermissions.passengers ? <button type="button" className="sms-send-button" disabled={smsBusyId === log.id} onClick={() => handleSendConfirmationSms(log)}>{log.sms_status === 'failed' ? 'Retry confirmation SMS' : 'Send confirmation SMS'}</button> : null}
-                        {canSendCancellationSms && staffPermissions.passengers ? <button type="button" className="sms-send-button cancellation-sms-button" disabled={smsBusyId === log.id} onClick={() => handleCancellationSms(log)}>{smsBusyId === log.id ? 'Sending…' : (log.sms_message_type === 'cancellation' && log.sms_status === 'failed' ? 'Retry cancellation SMS' : 'Send cancellation SMS')}</button> : null}
+                        {isConfirmed && canSendSms && staffPermissions.logPassengers ? <button type="button" className="sms-send-button" disabled={smsBusyId === log.id} onClick={() => handleSendConfirmationSms(log)}>{log.sms_status === 'failed' ? 'Retry confirmation SMS' : 'Send confirmation SMS'}</button> : null}
+                        {canSendCancellationSms && staffPermissions.logPassengers ? <button type="button" className="sms-send-button cancellation-sms-button" disabled={smsBusyId === log.id} onClick={() => handleCancellationSms(log)}>{smsBusyId === log.id ? 'Sending…' : (log.sms_message_type === 'cancellation' && log.sms_status === 'failed' ? 'Retry cancellation SMS' : 'Send cancellation SMS')}</button> : null}
                       </td>
                       <td className="no-print">
                         <input
                           type="checkbox"
                           checked={isConfirmed}
-                          disabled={!log.any_active || smsBusyId === log.id || !staffPermissions.passengers}
+                          disabled={!log.any_active || smsBusyId === log.id || !staffPermissions.logPassengers}
                           aria-label={`${isConfirmed ? 'Unconfirm' : 'Confirm'} booking for ${log.passenger_name}`}
                           onChange={(event) => handleBookingConfirmation(log, event.target.checked)}
                         />
                       </td>
                       <td className="no-print">
-                        {staffPermissions.passengers && <button type="button" className="ghost-button small" disabled={smsBusyId === log.id} onClick={() => { setEditingCustomerDetailsId(log.id); setCustomerNameDraft(log.passenger_name || ''); setCustomerContactDraft(log.contact || ''); setCustomerGenderDraft(log.gender || ''); setCustomerFromDraft(log.boarding_point || ''); setCustomerToDraft(log.destination || ''); setCustomerFareDraft(String(log.bookings[0]?.fare ?? '')); setCustomerNotesDraft(log.notes || '') }}>Edit</button>}
-                        {log.any_active && staffPermissions.passengers ? (
+                        {(staffPermissions.logPassengers || staffPermissions.customerActions) && <button type="button" className="ghost-button small" disabled={smsBusyId === log.id} onClick={() => { setEditingCustomerDetailsId(log.id); setCustomerNameDraft(log.passenger_name || ''); setCustomerContactDraft(log.contact || ''); setCustomerGenderDraft(log.gender || ''); setCustomerFromDraft(log.boarding_point || ''); setCustomerToDraft(log.destination || ''); setCustomerFareDraft(String(log.bookings[0]?.fare ?? '')); setCustomerNotesDraft(log.notes || '') }}>Edit</button>}
+                        {log.any_active && staffPermissions.logPassengers ? (
                           <button type="button" className="ghost-button small" onClick={() => setCancelTarget(log)}>Cancel</button>
                         ) : '—'}
                       </td>
@@ -1818,8 +2017,8 @@ function App() {
                 </div>
               </div>
               <div className="toolbar-actions">
-                <button type="button" className="secondary-button small cargo-print-button" onClick={() => printNow('cargo')}>Print Luggage Manifest</button>
-                {staffPermissions.cargo && <button type="button" className="primary-button small cargo-entry-button" onClick={() => openEntryForm('cargo')}>New Freight Entry</button>}
+                <button type="button" className="secondary-button small manifest-print-button cargo-print-button" onClick={() => printNow('cargo')}><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M7 8V3h10v5M6 17H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/><path d="M18 11h.01"/></svg>Print Luggage Manifest</button>
+                {staffPermissions.logCargo && <button type="button" className="primary-button small customer-entry-button cargo-entry-button" onClick={() => openEntryForm('cargo')}>New Freight Entry</button>}
               </div>
             </div>
             <div className="log-table-scroll cargo-log-table-scroll">
@@ -1848,7 +2047,7 @@ function App() {
                     <td>{route.label.split(' to ')[1] || '—'}</td>
                     <td className="cargo-fee">{Number(item.charge || 0).toLocaleString('en-US')}</td>
                     <td><span className={`cargo-payment-badge ${String(item.payment_status || '').toLowerCase() === 'paid' ? 'paid' : String(item.payment_status || '').toLowerCase() === 'pass' ? 'pass' : 'cod'}`}>{String(item.payment_status || '').toLowerCase() === 'paid' ? '● Paid' : String(item.payment_status || '').toLowerCase() === 'pass' ? '● Pass' : '● COD'}</span></td>
-                    <td className="no-print cargo-action-cell">{staffPermissions.cargo ? <button type="button" className="cargo-delete-button" aria-label={`Delete luggage entry ${item.cargo_ref}`} title="Delete luggage entry" onClick={() => handleDeleteCargo(item)}><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M10 11v6m4-6v6M5.5 7l1 13h11l1-13M9 7V4h6v3" /></svg></button> : null}</td>
+                    <td className="no-print cargo-action-cell">{staffPermissions.logCargo ? <button type="button" className="cargo-delete-button" aria-label={`Delete luggage entry ${item.cargo_ref}`} title="Delete luggage entry" onClick={() => handleDeleteCargo(item)}><svg aria-hidden="true" viewBox="0 0 24 24" focusable="false"><path d="M4 7h16M10 11v6m4-6v6M5.5 7l1 13h11l1-13M9 7V4h6v3" /></svg></button> : null}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1867,72 +2066,40 @@ function App() {
       )}
 
       {activeTab === 'Info' && staffPermissions.info && (
-        <main className="content-page info-page">
-          <section className="info-hero">
-            <div className="info-hero-copy">
-              <span className="info-eyebrow">DISTRICT LINE · EXPRESS SERVICE</span>
-              <h1>Your journey, connected.</h1>
-              <p>Plan a comfortable trip between Colombo and Kattankudy with a team that keeps every journey organised, from seat reservation to arrival.</p>
-              <button type="button" className="primary-button" onClick={() => setActiveTab('Home')}>Explore trips <span aria-hidden="true">→</span></button>
-            </div>
-            <div className="info-route-art" aria-label="Service route from Colombo to Kattankudy">
-              <div className="info-route-point"><span className="info-route-dot" /><strong>Colombo</strong><small>Western Province</small></div>
-              <div className="info-route-line"><span>↔</span></div>
-              <div className="info-route-point destination"><span className="info-route-dot" /><strong>Kattankudy</strong><small>Eastern Province</small></div>
-              <span className="info-route-caption">A link between the coast and the capital</span>
-            </div>
-          </section>
-
-          <section className="info-intro">
-            <div><span className="info-eyebrow">TRAVEL WITH CONFIDENCE</span><h2>Every trip starts with a clear plan.</h2></div>
-            <p>Choose your travel date, check available seats, and reserve for your preferred route. Our operations team coordinates passenger bookings, trip details, and luggage services in one place.</p>
-          </section>
-
-          <section className="info-directions" aria-label="Choose a travel direction">
-            <button type="button" className="info-direction-card" onClick={() => { setRouteCode('CMB_KTY'); setActiveTab('Home') }}>
-              <span className="info-direction-kicker">TRAVEL EAST</span><span className="info-direction-cities">Colombo <i aria-hidden="true">→</i> Kattankudy</span><span className="info-direction-action">Explore this direction <b aria-hidden="true">↗</b></span>
-            </button>
-            <button type="button" className="info-direction-card" onClick={() => { setRouteCode('KTY_CMB'); setActiveTab('Home') }}>
-              <span className="info-direction-kicker">TRAVEL WEST</span><span className="info-direction-cities">Kattankudy <i aria-hidden="true">→</i> Colombo</span><span className="info-direction-action">Explore this direction <b aria-hidden="true">↗</b></span>
-            </button>
-          </section>
-
-          <section className="info-feature-grid" aria-label="Our services">
-            <article className="info-feature-card"><span className="info-feature-icon" aria-hidden="true">01</span><h3>Seat reservations</h3><p>View the seat layout and reserve a seat for the date and direction that suit your journey.</p></article>
-            <article className="info-feature-card"><span className="info-feature-icon" aria-hidden="true">02</span><h3>Passenger support</h3><p>Keep your booking details together, including your contact number and boarding and destination points.</p></article>
-            <article className="info-feature-card"><span className="info-feature-icon" aria-hidden="true">03</span><h3>Luggage & freight</h3><p>Arrange a consignment with sender, receiver, destination, and payment details recorded for the trip.</p></article>
-          </section>
-
-          <section className="info-booking-strip">
-            <div><span className="info-eyebrow">HOW TO BOOK</span><h2>Three simple steps</h2></div>
-            <ol><li><span>1</span><div><strong>Choose your trip</strong><small>Select the route and travel date.</small></div></li><li><span>2</span><div><strong>Pick your seat</strong><small>Choose from the available seats.</small></div></li><li><span>3</span><div><strong>Share your details</strong><small>Enter passenger information to complete the reservation.</small></div></li></ol>
-            <button type="button" className="ghost-button" onClick={() => setActiveTab('Home')}>View available trips <span aria-hidden="true">→</span></button>
-          </section>
-
-        </main>
+        <InfoGuide topic={infoTopic} onTopicChange={setInfoTopic} />
       )}
 
-      {activeTab === 'Staff' && isAdmin && (
-        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} loading={staffPageLoading} loadError={staffPageError} onRetry={openStaffManagement} onRegisterBus={() => { setEditingBus(null); setBusForm({ registration_no: '', mobile_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} onActivateBus={handleActivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
-          if (result.id === user?.id && result.permissions?.home === false && activeTab === 'Home') {
-            const nextTab = result.permissions?.log !== false ? 'Log' : 'Info'
-            setActiveTab(nextTab)
-            if (nextTab === 'Log') loadLogs(token, activeTrip)
+      {activeTab === 'Staff' && staffPermissions.staff && (
+        <StaffManagement token={token} staffList={staffList} setStaffList={setStaffList} crewList={crewList} setCrewList={setCrewList} buses={buses} busContacts={busContactList} loading={staffPageLoading} loadError={staffPageError} onRetry={openStaffManagement} onRegisterBus={() => { setBusFormError(''); setEditingBus(null); setBusForm({ registration_no: '', mobile_no: '', display_name: '', driver_name: '', driver_phone: '', conductor_name: '', conductor_phone: '', image_url: '/bus.jpg' }); setShowBusForm(true) }} onDeleteBus={handleDeactivateBus} onActivateBus={handleActivateBus} showMessage={showMessage} requestConfirmation={(details) => setConfirmDialog(details)} onSaved={(result) => {
+          if (result.id === user?.id) {
+            const pagePermission = { Home: 'home', Log: 'log', Info: 'info', Dashboard: 'dashboard', Accounts: 'accounts' }[activeTab]
+            if (pagePermission && result.permissions?.[pagePermission] !== true) {
+              const nextTab = firstAuthorizedPage({ ...user, permissions: result.permissions })
+              setActiveTab(nextTab)
+              if (nextTab === 'Log') loadLogs(token, activeTrip)
+            }
           }
-        }} />
+        }} readOnly={!isAdmin} />
       )}
 
-      {activeTab === 'Dashboard' && isAdmin && (
-        <main className="content-page dashboard-page">
-          <SmsBalanceCard token={token} />
+      {activeTab === 'Dashboard' && staffPermissions.dashboard && (
+        <main className="content-page dashboard-page admin-dashboard-page" aria-labelledby="admin-dashboard-title">
+          <header className="admin-dashboard-header"><span><DashboardIcon /></span><div><h1 id="admin-dashboard-title">Admin Dashboard</h1><p>{canViewFinancialData ? 'Trip operations, seat availability and financial performance.' : 'Trip operations and seat availability.'}</p></div></header>
+          <section className={`dashboard-kpis ${isAdmin ? 'is-four-card' : canViewFinancialData ? 'is-three-card' : 'is-two-card'}`} aria-label="Dashboard summary">
+            {isAdmin && <SmsBalanceCard token={token} compact />}
+            <DashboardKpi name="booked" title="Booked Seats" value={tripOverview.booked} loading={adminDataLoading || dashboardTripsLoading || !adminStats} error={dashboardTripsError || dashboardDataError} detail="Confirmed seats for the active Trip Controls filters." />
+            <DashboardKpi name="available" title="Available Seats" value={tripOverview.available} loading={adminDataLoading || dashboardTripsLoading || !adminStats} error={dashboardTripsError || dashboardDataError} detail="Remaining capacity for the active Trip Controls filters." />
+            {canViewFinancialData && <div className="dashboard-profit-kpi-slot" ref={setDashboardProfitTarget}>{!adminStats && <DashboardKpi name="profit" title="Net Profit" value="—" loading={adminDataLoading} error={dashboardDataError} detail="Profit Report totals will appear here." />}</div>}
+          </section>
+          {dashboardDataError && adminStats && <div className="dashboard-primary-error" role="alert">Unable to load dashboard data: {dashboardDataError}<button type="button" className="ghost-button" onClick={() => openAdminDashboard('dashboard', true, true)}>Retry dashboard load</button></div>}
           {adminStats ? <>
-          <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={profitLedgerLoading} error={profitLedgerError} />
+          {canViewFinancialData && <ExpenseSubmissionsTable className="dashboard-profit-report" submissions={profitLedger.expenseSubmissions} trips={adminStats.trips || []} revenueEntries={profitLedger.revenueEntries} dailyRevenue={adminStats.dailyRevenue || []} monthlyExpenses={adminStats.expenses || []} loading={profitLedgerLoading || adminDataLoading} error={profitLedgerError || dashboardDataError} summaryTarget={dashboardProfitTarget} onRetry={() => loadProfitLedger(true)} />}
           <section className="content-card dashboard-seat-chart-section">
             <div className="dashboard-section-heading">
               <div><h2>Seats booked by travel date</h2><p>Confirmed seats for each route in the selected month.</p></div>
               <label className="dashboard-seat-chart-month">Month<input type="month" value={seatChartMonth} onChange={(event) => setSeatChartMonth(event.target.value)} /></label>
             </div>
-            <div className="dashboard-seat-chart-grid">
+            {adminDataLoading ? <p className="daily-revenue-empty" role="status">Loading travel-date charts…</p> : dashboardDataError ? <p className="daily-revenue-empty" role="alert">Travel-date charts are unavailable: {dashboardDataError}</p> : <div className="dashboard-seat-chart-grid">
               {seatBookingCharts.map((chart) => {
                 const maximum = Math.max(0, ...chart.counts)
                 const step = Math.max(1, Math.ceil(maximum / 4))
@@ -1943,7 +2110,7 @@ function App() {
                 const showDateLabel = (index) => index % 5 === 0 || index === chart.dates.length - 1
                 return <article className="dashboard-seat-chart-card" key={chart.code}>
                   <h3>{chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}</h3>
-                  <svg className="dashboard-seat-chart" viewBox="0 0 800 285" role="img" aria-label={`Confirmed seats booked by date: ${chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}`}>
+                  <div className="dashboard-seat-chart-scroll" role="region" aria-label={`Scrollable travel-date chart for ${chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}`} tabIndex={0}><svg className="dashboard-seat-chart" viewBox="0 0 800 285" role="img" aria-label={`Confirmed seats booked by date: ${chart.code === 'KTY_CMB' ? 'Kattankudy to Colombo' : 'Colombo to Kattankudy'}`}>
                     {[0, 1, 2, 3, 4].map((tick) => {
                       const value = axisMaximum - tick * step
                       const y = plot.top + (tick / 4) * plot.height
@@ -1956,33 +2123,34 @@ function App() {
                       const x = plot.left + index * bandWidth + (bandWidth - barWidth) / 2
                       const y = plot.top + plot.height - height
                       return <g key={chart.dates[index]}>
-                        <rect x={x} y={y} width={barWidth} height={Math.max(count ? 2 : 0, height)} rx="2" className="dashboard-seat-bar"><title>{`${chart.dates[index]}: ${count} seats`}</title></rect>
+                        <rect x={x} y={y} width={barWidth} height={Math.max(count ? 2 : 0, height)} rx="2" className="dashboard-seat-bar" tabIndex={count ? 0 : undefined} aria-label={`${chart.dates[index]}: ${count} confirmed seats`}><title>{`${chart.dates[index]}: ${count} seats`}</title></rect>
                         {showDateLabel(index) && <text x={plot.left + index * bandWidth + bandWidth / 2} y={plot.top + plot.height + 22} textAnchor="middle" className="dashboard-seat-axis-label">{chart.dates[index].slice(5)}</text>}
                       </g>
                     })}
-                  </svg>
+                  </svg></div>
+                  {!chart.counts.some(Boolean) && <p className="dashboard-chart-empty">No confirmed seats in the selected month.</p>}
                 </article>
               })}
-            </div>
+            </div>}
           </section>
-          {!adminStats.smsGateway?.configured && <p className="hint">SMS gateway is pending configuration. Bookings still work.</p>}
+          {isAdmin && !adminStats.smsGateway?.configured && <p className="hint">SMS gateway is pending configuration. Bookings still work.</p>}
           <section className="content-card dashboard-trip-controls">
             <div className="dashboard-section-heading trip-controls-heading">
-              <div><h2>Trip controls</h2><p>Filter trips by date, route, or individual trip.</p></div>
+              <div className="trip-controls-title"><span className="trip-controls-icon"><TripVisualIcon name="sliders" /></span><div><h2>Trip Controls</h2><p>Filter trips by date, route, or individual trip.</p></div></div>
             </div>
             <div className="trip-controls-filters">
-              <label>Choose date<input type="date" value={revenueDate} onChange={(event) => setRevenueDate(event.target.value)} /></label>
-              <label>Bus No<select value={dashboardBus} onChange={(event) => { setDashboardBus(event.target.value); setDashboardTrip('') }}><option value="">All buses</option>{[...new Set((adminStats.buses || []).map((bus) => String(bus.registration_no || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)).map((busNo) => <option key={busNo} value={busNo}>{busNo}</option>)}</select></label>
-              <label>Route<select value={dashboardRoute} onChange={(event) => { setDashboardRoute(event.target.value); setDashboardTrip('') }}>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
-              <label>Trip<select value={dashboardTrip} onChange={(event) => setDashboardTrip(event.target.value)}><option value="">All trips</option>{(adminStats.trips || []).filter((trip) => isInDashboardRange(trip.travel_date) && (!dashboardRoute || trip.route_code === dashboardRoute) && matchesDashboardBus(trip)).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
-              <strong>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
-              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenueDate(todayIso()); setDashboardBus(''); setDashboardRoute('KTY_CMB'); setDashboardTrip('') }}>Reset filters</button>
+              <label><span className="trip-filter-label"><TripVisualIcon name="date" />Choose date</span><input type="date" value={revenueDate} onChange={(event) => { setRevenueDate(event.target.value); setDashboardTrip('') }} /></label>
+              <label><span className="trip-filter-label"><TripVisualIcon name="bus" />Bus No</span><select value={dashboardBus} onChange={(event) => { setDashboardBus(event.target.value); setDashboardTrip('') }}><option value="">All buses</option>{busRegistrations(adminStats.buses || []).sort((a, b) => a.localeCompare(b)).map((busNo) => <option key={busNo} value={busNo}>{busNo}</option>)}</select></label>
+              <label><span className="trip-filter-label"><TripVisualIcon name="route" />Route</span><select value={dashboardRoute} onChange={(event) => { setDashboardRoute(event.target.value); setDashboardTrip('') }}>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
+              <label><span className="trip-filter-label"><TripVisualIcon name="trip" />Trip</span><select value={dashboardTrip} disabled={dashboardTripsLoading} onChange={(event) => setDashboardTrip(event.target.value)}><option value="">All trips</option>{dashboardTrips.filter((trip) => isInDashboardRange(trip.travel_date) && (!dashboardRoute || trip.route_code === dashboardRoute) && matchesDashboardBus(trip)).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
+              <strong className="dashboard-selected-range"><span>Selected date range</span>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
+              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenueDate(todayIso()); setDashboardBus(''); setDashboardRoute('KTY_CMB'); setDashboardTrip('') }}><TripVisualIcon name="reset" />Reset filters</button>
             </div>
             <section className="trip-overview" aria-labelledby="trip-overview-heading">
-              <div className="trip-overview-heading"><div><h3 id="trip-overview-heading">Trip Overview</h3><p>Seat availability and trip-linked revenue for the filtered trips.</p></div></div>
-              {adminDataLoading ? <p className="daily-revenue-empty" role="status">Loading trip and revenue data…</p> : profitLedgerError ? <p className="daily-revenue-empty" role="alert">Unable to load Trip Overview: {profitLedgerError}</p> : !tripOverview.rows.length ? <p className="daily-revenue-empty">No trips match the selected filters.</p> : <div className="trip-overview-grid">
+              <div className="trip-overview-heading"><span className="trip-overview-heading-icon"><TripVisualIcon name="analytics" /></span><div><h3 id="trip-overview-heading">Trip Overview</h3><p>Seat availability and trip-linked revenue for the filtered trips.</p></div></div>
+              {adminDataLoading || dashboardTripsLoading ? <p className="daily-revenue-empty" role="status">Loading trip data…</p> : dashboardTripsError || (canViewFinancialData && profitLedgerError) ? <p className="daily-revenue-empty" role="alert">Unable to load Trip Overview: {dashboardTripsError || profitLedgerError} {dashboardTripsError && <button type="button" className="ghost-button small" onClick={() => setDashboardTripsRetry(value => value + 1)}>Retry trips</button>}</p> : !tripOverview.rows.length ? <p className="daily-revenue-empty">No trips match the selected filters.</p> : <div className="trip-overview-grid">
                 <section className="trip-overview-seats" aria-label="Booked and available seats by bus and route">
-                  <h4>Booked vs Available Seats</h4>
+                  <h4 className="trip-card-title"><span className="trip-card-icon"><TripVisualIcon name="chart" /></span>Booked Vs Available Seats</h4>
                   <div className="trip-overview-route-groups">
                     {tripOverviewRoutes.map((route) => <section className="trip-overview-route-group" key={route.code} aria-label={route.short || route.label}>
                       <h5>{route.short || route.label}</h5>
@@ -1994,8 +2162,8 @@ function App() {
                             <div className="trip-overview-route-pie-legend"><span><i className="booked" />Booked</span><span><i className="available" />Available</span></div>
                           </div>
                           <div className="trip-overview-route-seat-counts">
-                            <div><span>Booked seats</span><strong>{bus.booked}</strong><small>{bus.bookedPercent.toFixed(1)}%</small></div>
-                            <div><span>Available seats</span><strong>{bus.available}</strong><small>{bus.availablePercent.toFixed(1)}%</small></div>
+                            <div><span><i className="trip-stat-icon booked"><TripVisualIcon name="seats" /></i>Booked seats</span><strong>{bus.booked}</strong><small>{bus.bookedPercent.toFixed(1)}%</small></div>
+                            <div><span><i className="trip-stat-icon available"><TripVisualIcon name="seats" /></i>Available seats</span><strong>{bus.available}</strong><small>{bus.availablePercent.toFixed(1)}%</small></div>
                             <div><span>Total capacity</span><strong>{bus.totalSeats}</strong><small>{bus.tripCount} {bus.tripCount === 1 ? 'trip' : 'trips'} × {SEAT_LAYOUT.totalSeats}</small></div>
                           </div>
                         </article>)}
@@ -2004,24 +2172,24 @@ function App() {
                   </div>
                 </section>
                 <section className="trip-overview-trip-list" aria-label="Filtered trip and vehicle details">
-                  <h4>Trip details</h4>
+                  <h4 className="trip-card-title"><span className="trip-card-icon"><TripVisualIcon name="bus" /></span>Trip Details</h4>
                   {tripOverview.rows.map(({ trip, booked, available, seatRevenue, cargoRevenue, totalRevenue, unscheduled, busId }) => <article className="trip-overview-trip-card" key={unscheduled ? `bus-${busId}` : `trip-${trip.id}`}>
-                    <div className="trip-overview-trip-heading"><h4>{trip.trip_code || `Trip ${trip.id}`}</h4><span>{unscheduled ? `Bus ID ${busId}` : `Trip ID ${trip.id}`}</span></div>
-                    <div className="trip-overview-trip-details"><div><span>Date</span><strong>{trip.travel_date || 'No trip in selected range'}</strong></div><div><span>Route</span><strong>{trip.route_label || ROUTES.find((route) => route.code === trip.route_code)?.label || trip.route_code || 'No route assigned'}</strong></div><div><span>Bus</span><strong>{trip.registration_no || trip.bus_no || 'Unassigned'}</strong></div><div><span>Driver</span><strong>{trip.driver_name || trip.bus_driver_name || 'Unassigned'}</strong></div><div><span>Conductor</span><strong>{trip.conductor_name || trip.bus_conductor_name || 'Unassigned'}</strong></div><div><span>Seats</span><strong>{booked} booked · {available} available</strong></div></div>
-                    <div className="trip-overview-revenue"><div><span>Seat Revenue</span><strong>{lkr(seatRevenue)}</strong></div><div><span>Cargo Revenue</span><strong>{lkr(cargoRevenue)}</strong></div><div className="total"><span>Total Revenue</span><strong>{lkr(totalRevenue)}</strong></div></div>
+                    <div className="trip-overview-trip-heading"><h4><span className="trip-number-pill">{trip.trip_code || `Trip ${trip.id}`}</span></h4><span>{unscheduled ? `Bus ID ${busId}` : `Trip ID ${trip.id}`}</span></div>
+                    <div className="trip-overview-trip-details"><div><span><TripVisualIcon name="date" />Date</span><strong>{trip.travel_date || 'No trip in selected range'}</strong></div><div><span><TripVisualIcon name="route" />Route</span><strong>{trip.route_label || ROUTES.find((route) => route.code === trip.route_code)?.label || trip.route_code || 'No route assigned'}</strong></div><div><span><TripVisualIcon name="bus" />Bus</span><strong>{trip.registration_no || trip.bus_no || 'Unassigned'}</strong></div><div><span><TripVisualIcon name="person" />Driver</span><strong>{trip.driver_name || trip.bus_driver_name || 'Unassigned'}</strong></div><div><span><TripVisualIcon name="person" />Conductor</span><strong>{trip.conductor_name || trip.bus_conductor_name || 'Unassigned'}</strong></div><div><span><TripVisualIcon name="seats" />Seats</span><strong>{booked} booked · {available} available</strong></div></div>
+                    {canViewFinancialData && <div className="trip-overview-revenue"><div><span><TripVisualIcon name="revenue" />Seat Revenue</span><strong>{lkr(seatRevenue)}</strong></div><div><span><TripVisualIcon name="cargo" />Cargo Revenue</span><strong>{lkr(cargoRevenue)}</strong></div><div className="total"><span><TripVisualIcon name="revenue" />Total Revenue</span><strong>{lkr(totalRevenue)}</strong></div></div>}
                   </article>)}
                 </section>
               </div>}
             </section>
           </section>
           </> : <section className="content-card" role="status" aria-live="polite">
-            {adminDataLoading ? <AdminPageSkeleton label={activeTab === 'Accounts' ? 'account information' : 'customer analytics'} /> : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
-            {!adminDataLoading && profitLedgerError && <button type="button" className="primary-button small" onClick={() => openAdminDashboard(activeTab === 'Accounts' ? 'accounts' : 'dashboard', true)}>Retry dashboard load</button>}
+            {adminDataLoading ? <AdminPageSkeleton label="dashboard" /> : dashboardDataError || (canViewFinancialData && profitLedgerError) ? `Unable to load dashboard data: ${dashboardDataError || profitLedgerError}` : 'Dashboard data is not available yet.'}
+            {!adminDataLoading && (dashboardDataError || (canViewFinancialData && profitLedgerError)) && <button type="button" className="primary-button small" onClick={() => openAdminDashboard('dashboard', true, true)}>Retry dashboard load</button>}
           </section>}
         </main>
       )}
 
-      {(activeTab === 'Accounts' || activeTab === 'Customers') && isAdmin && !adminStats && (
+      {activeTab === 'Accounts' && staffPermissions.accounts && !adminStats && (
         <main className="content-page dashboard-page">
           <section className="content-card" role="status" aria-live="polite">
             {adminDataLoading ? <AdminPageSkeleton label="dashboard" /> : profitLedgerError ? `Unable to load dashboard data: ${profitLedgerError}` : 'Account data is not available yet.'}
@@ -2030,15 +2198,8 @@ function App() {
         </main>
       )}
 
-      {activeTab === 'Customers' && isAdmin && adminStats && adminStatsScope !== 'full' && (
-        <main className="content-page dashboard-page">
-          <section className="content-card" role="status" aria-live="polite">
-            {adminDataLoading ? 'Loading customer analytics…' : 'Customer analytics are not available.'}
-          </section>
-        </main>
-      )}
-
-      {activeTab === 'Accounts' && isAdmin && adminStats && <AccountsRevenue
+      {activeTab === 'Accounts' && staffPermissions.accounts && adminStats && <AccountsRevenue
+        readOnly={!isAdmin && !staffPermissions.accountsManage}
         data={{ ...adminStats, crewMembers: crewList }}
         token={token}
         showMessage={showMessage}
@@ -2055,53 +2216,18 @@ function App() {
         onPrint={() => { setPrintMode('accounts'); setTimeout(() => window.print(), 50) }}
       />}
 
-      {activeTab === 'Customers' && isAdmin && adminStats && (
-        <main className="content-page dashboard-page">
-          <section className="customer-destination-section">
-            <div className="customer-analytics-heading">
-              <div><h2>Popular departure</h2><p>Confirmed bookings by departure point within each route.</p></div>
-              <label>Period<select value={customerChartPeriod} onChange={(event) => setCustomerChartPeriod(event.target.value)}><option value="week">Last week</option><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option></select></label>
-            </div>
-            <div className="customer-destination-grid">
-              {[{ code: 'KTY_CMB', title: 'Kattankudy to Colombo' }, { code: 'CMB_KTY', title: 'Colombo to Kattankudy' }].map((route) => {
-                const departures = popularDeparturesByRoute[route.code] || []
-                const maxCount = Math.max(1, ...departures.map((item) => item.count))
-                return <section className="content-card customer-destination-chart" key={route.code}>
-                  <h3>{route.title}</h3>
-                  {departures.length ? <div className="customer-destination-bars" role="img" aria-label={`Departure booking counts for ${route.title}`}>
-                    {departures.map((item) => <div className="customer-destination-bar-row" key={item.departure}>
-                      <span title={item.departure}>{item.departure}</span><div className="customer-destination-bar-track"><div className="customer-destination-bar" style={{ width: `${(item.count / maxCount) * 100}%` }} /></div><strong>{item.count}</strong>
-                    </div>)}
-                  </div> : <p className="daily-revenue-empty">No confirmed departure bookings in this period.</p>}
-                </section>
-              })}
-            </div>
-          </section>
-          <section className="content-card">
-            <div className="dashboard-section-heading">
-              <div>
-                <h2>Regular customers</h2>
-                <p>Customers are grouped by mobile number. Counts and rankings use confirmed trips in the selected period; multiple seats on one trip count once. “Months travelled” is the number of different calendar months in that period with a trip.</p>
-              </div>
-              <div className="revenue-filter-controls">
-                <label>Period<select value={customerPeriod} onChange={(event) => setCustomerPeriod(event.target.value)}><option value="week">Last week</option><option value="1">Last month</option><option value="3">Last 3 months</option><option value="6">Last 6 months</option></select></label>
-                <strong>{sortedRegularCustomers.length} regular customer{sortedRegularCustomers.length === 1 ? '' : 's'}</strong>
-              </div>
-            </div>
-            <div className="daily-revenue-table-wrap"><table>
-              <thead><tr><th>Rank</th><th>Customer</th><th>Mobile No.</th><th>Confirmed trips</th><th>Months travelled</th><th>Most recent trip</th></tr></thead>
-              <tbody>
-                {sortedRegularCustomers.map((customer, index) => (
-                  <tr key={`${customer.contact || customer.passenger_name}-${index}`}>
-                    <td>{index + 1}</td><td>{customer.passenger_name || 'Unknown'}</td><td>{customer.contact || '—'}</td>
-                    <td><strong>{customer.trip_count}</strong></td><td>{customer.month_count}</td><td>{customer.last_trip_date || '—'}</td>
-                  </tr>
-                ))}
-                {!sortedRegularCustomers.length && <tr><td colSpan="6" className="daily-revenue-empty">No repeat customers with a mobile number found.</td></tr>}
-              </tbody>
-            </table></div>
-          </section>
-        </main>
+      {activeTab === 'Customers' && staffPermissions.customers && (
+        <CustomersPage
+          departuresByRoute={popularDeparturesByRoute}
+          customers={sortedRegularCustomers}
+          departurePeriod={customerChartPeriod}
+          onDeparturePeriodChange={setCustomerChartPeriod}
+          customerPeriod={customerPeriod}
+          onCustomerPeriodChange={setCustomerPeriod}
+          loading={adminDataLoading || !adminStats || adminStatsScope !== 'customers'}
+          error={customerDataError}
+          onRetry={() => openAdminDashboard('customers', false, true)}
+        />
       )}
 
       {showProfile && isAdmin && (
@@ -2114,6 +2240,21 @@ function App() {
         />
       )}
 
+      {showLogoutConfirm && (
+        <StaffDialog
+          title="Sign out?"
+          subtitle="Are you sure you want to sign out of District Line? You will need to sign in again to access the system."
+          className="logout-confirm-dialog"
+          busy={logoutBusy}
+          onClose={() => { if (!logoutBusy) setShowLogoutConfirm(false) }}
+        >
+          <footer className="staff-dialog-footer">
+            <button type="button" className="ghost-button" autoFocus disabled={logoutBusy} onClick={() => setShowLogoutConfirm(false)}>Cancel</button>
+            <button type="button" className="primary-button" disabled={logoutBusy} onClick={handleLogout}>{logoutBusy ? 'Signing Out…' : 'Sign Out'}</button>
+          </footer>
+        </StaffDialog>
+      )}
+
       {showCrewForm && editingTrip && (
         <div className="modal-backdrop no-print">
           <div className="modal">
@@ -2123,7 +2264,7 @@ function App() {
               const matched = busContactList.find((contact) => contact.bus_no.trim().toLocaleLowerCase() === busNo.trim().toLocaleLowerCase())
               setTripForm((prev) => ({ ...prev, bus_no: busNo, conductor_phone: matched?.phone_number || '' }))
             }} /></label>
-            <datalist id="crew-bus-numbers">{[...new Set([...(buses || []).map((bus) => bus.registration_no), ...(busContactList || []).map((contact) => contact.bus_no)].filter(Boolean))].map((busNo) => <option key={busNo} value={busNo} />)}</datalist>
+            <datalist id="crew-bus-numbers">{busRegistrations(buses, busContactList).map((busNo) => <option key={busNo} value={busNo} />)}</datalist>
             <label><span>Departure time</span><input type="time" value={tripForm.departure_time} onChange={(event) => setTripForm((prev) => ({ ...prev, departure_time: event.target.value }))} /></label>
             <label><span>Journey status</span><select value={tripForm.status} onChange={(event) => setTripForm((prev) => ({ ...prev, status: event.target.value }))}><option value="scheduled">Scheduled</option><option value="boarding">Boarding</option><option value="departed">Departed</option><option value="completed">Completed</option></select></label>
             <label><span>Driver name</span><input list="crew-driver-names" value={tripForm.driver_name} onChange={(event) => setTripForm((prev) => ({ ...prev, driver_name: event.target.value }))} /></label>
@@ -2139,7 +2280,11 @@ function App() {
         </div>
       )}
 
-      {confirmDialog && (
+      {confirmDialog && activeTab === 'Staff' ? (
+        <StaffDialog title={confirmDialog.title} subtitle={confirmDialog.message} className="staff-confirm-modal" alert onClose={() => setConfirmDialog(null)}>
+          <footer className="staff-dialog-footer"><button type="button" className="ghost-button" autoFocus onClick={() => setConfirmDialog(null)}>Cancel</button><button type="button" className={confirmDialog.destructive === false ? 'primary-button' : 'danger-button'} onClick={() => { const action = confirmDialog.onConfirm; setConfirmDialog(null); action() }}>{confirmDialog.confirmLabel}</button></footer>
+        </StaffDialog>
+      ) : confirmDialog && (
         <div className="modal-backdrop no-print" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmDialog(null) }}>
           <section className="modal confirm-action-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description">
             <div className="confirm-action-icon" aria-hidden="true">!</div>
@@ -2203,18 +2348,17 @@ function App() {
       )}
 
       {showBusForm && isAdmin && (
-        <div className="modal-backdrop no-print">
-          <div className="modal">
-            <h2>{editingBus ? 'Edit bus' : 'Register bus'}</h2>
-            <label><span>Registration number</span><input required maxLength={40} value={busForm.registration_no} onChange={(event) => setBusForm((prev) => ({ ...prev, registration_no: event.target.value }))} /></label>
-            <label><span>Mobile No.</span><input type="tel" maxLength={30} value={busForm.mobile_no || ''} onChange={(event) => setBusForm((prev) => ({ ...prev, mobile_no: event.target.value }))} placeholder="Enter bus contact number" /></label>
-            <label><span>Display name</span><input value={busForm.display_name} onChange={(event) => setBusForm((prev) => ({ ...prev, display_name: event.target.value }))} /></label>
-            <div className="reservation-actions">
-              <button type="button" className="ghost-button" onClick={() => setShowBusForm(false)}>Close</button>
-              <button type="button" className="primary-button" disabled={busSaving} onClick={handleSaveBus}>{busSaving ? 'Saving...' : 'Save bus'}</button>
-            </div>
-          </div>
-        </div>
+        <StaffDialog title={editingBus ? 'Edit bus' : 'Register bus'} subtitle="Register a bus for use across District Line forms." className="staff-bus-modal" busy={busSaving} onClose={() => setShowBusForm(false)}>
+          <form onSubmit={event => { event.preventDefault(); handleSaveBus() }} onInvalid={event => setBusFormError(event.target.validationMessage)}>
+            <fieldset className="staff-ui-fields staff-ui-bus-fields" disabled={busSaving}>
+              <label><span>Registration number</span><input required maxLength={40} value={busForm.registration_no} onChange={event => { setBusFormError(''); setBusForm(prev => ({ ...prev, registration_no: event.target.value })) }} placeholder="NE-3456" /></label>
+              <label><span>Mobile No. <small>(optional)</small></span><input type="tel" maxLength={30} value={busForm.mobile_no || ''} onChange={event => { setBusFormError(''); setBusForm(prev => ({ ...prev, mobile_no: event.target.value })) }} placeholder="077 123 4567" /></label>
+              <label><span>Display name <small>(optional)</small></span><input value={busForm.display_name} onChange={event => setBusForm(prev => ({ ...prev, display_name: event.target.value }))} placeholder="District Line Coach" /></label>
+            </fieldset>
+            {busFormError && <p className="staff-ui-form-error" role="alert">{busFormError}</p>}
+            <footer className="staff-dialog-footer"><button type="button" className="ghost-button" disabled={busSaving} onClick={() => setShowBusForm(false)}>Cancel</button><button type="submit" className="primary-button" disabled={busSaving}>{busSaving ? 'Saving...' : 'Save bus'}</button></footer>
+          </form>
+        </StaffDialog>
       )}
 
       {cancelTarget && (
@@ -2389,7 +2533,7 @@ function App() {
         <div className="footer-inner">
           <div className="footer-brand">
             <div className="footer-logo-wrap">
-              <img src="/logo.png" alt="District Line logo" className="footer-logo" />
+              <img src={activeTab === 'Home' || activeTab === 'Log' ? '/logo-transparent.png' : '/logo.png'} alt="District Line logo" className="footer-logo" />
             </div>
             <div className="footer-brand-copy">
               <strong>District Line</strong>

@@ -1,0 +1,15 @@
+{
+  "validatedAt": "2026-11-08T09:38:54.839Z",
+  "createdAt": "2026-11-08T09:37:45.087Z",
+  "createdAtColombo": "8 Nov 2026, 15:07:45",
+  "archiveRelativePath": ".private-security\\backups\\2026-11-08T09-36-35.844Z\\database.dump.age",
+  "exists": true,
+  "bytes": 476689,
+  "sizeMatches": true,
+  "encryptedHeaderValid": true,
+  "sha256": "49e3653609c3b2d128acaf1094bdc9a0de4f3c6a6baeb45bc8e615f08fc013b2",
+  "checksumMatches": true,
+  "archiveFullReadbackValidated": true,
+  "restorationVerified": false,
+  "productionWrites": false
+}

@@ -1,0 +1,166 @@
+[
+  {
+    "name": "fixed date changes clear an obsolete trip selection",
+    "passed": true
+  },
+  {
+    "name": "fixed date query retrieves trips absent from the 200-trip summary",
+    "passed": true
+  },
+  {
+    "name": "fixed combined date/bus/route/trip result",
+    "passed": true
+  },
+  {
+    "name": "fixed reset and route selection",
+    "passed": true
+  },
+  {
+    "name": "fixed API failure is shown and retry recovers",
+    "passed": true
+  },
+  {
+    "name": "fixed registration invalidates cached dashboard bus numbers",
+    "passed": true
+  },
+  {
+    "name": "fixed failed registration leaves bus list unchanged",
+    "passed": true
+  },
+  {
+    "name": "fixed staff dropdown refreshes when opened",
+    "passed": true
+  },
+  {
+    "name": "fixed valid selected bus preserved and suggestions deduplicated",
+    "passed": true
+  },
+  {
+    "name": "fixed authorized edit uses the selected bus ID",
+    "passed": true
+  },
+  {
+    "name": "restricted staff cannot see trip actions",
+    "passed": true
+  },
+  {
+    "name": "administrator can create and edit a synthetic staff account",
+    "passed": true
+  },
+  {
+    "name": "administrator logout returns to sign-in",
+    "passed": true
+  },
+  {
+    "name": "booking form validates missing seats and saves synthetic selection",
+    "passed": true
+  },
+  {
+    "name": "cargo form validates missing goods and submits only synthetic data",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 360",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 390",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 768",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 1440",
+    "passed": true
+  },
+  {
+    "name": "staff logout returns to sign-in",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 360",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 390",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 768",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 1440",
+    "passed": true
+  },
+  {
+    "name": "mobile MFA challenge withholds admin UI, displays failure and completes synthetic verification",
+    "passed": true
+  },
+  {
+    "name": "Customers layout, readable filters and contained table scrolling 1440",
+    "passed": true
+  },
+  {
+    "name": "Customers layout, readable filters and contained table scrolling 768",
+    "passed": true
+  },
+  {
+    "name": "Customers layout, readable filters and contained table scrolling 390",
+    "passed": true
+  },
+  {
+    "name": "Customers layout, readable filters and contained table scrolling 320",
+    "passed": true
+  },
+  {
+    "name": "both routes show the actual confirmed counts and share an accurate bar scale",
+    "passed": true
+  },
+  {
+    "name": "existing period options and independent immediate filtering make no additional API calls",
+    "passed": true
+  },
+  {
+    "name": "rankings, normalized mobile profiles, distinct trips, months and latest dates are preserved",
+    "passed": true
+  },
+  {
+    "name": "keyboard focus is visible on filters and the horizontal table region",
+    "passed": true
+  },
+  {
+    "name": "existing footer logo loads and all footer information remains",
+    "passed": true
+  },
+  {
+    "name": "customer page and filter changes never write application records",
+    "passed": true
+  },
+  {
+    "name": "loading shows feedback without no-results messages or old cached rows",
+    "passed": true
+  },
+  {
+    "name": "API error is distinct from empty results and Retry uses a fresh successful request",
+    "passed": true
+  },
+  {
+    "name": "genuine empty responses show exact empty messages without fake data",
+    "passed": true
+  },
+  {
+    "name": "late responses from an older navigation request cannot replace current Customers results",
+    "passed": true
+  },
+  {
+    "name": "unrelated ledger failure does not masquerade as a Customers analytics failure",
+    "passed": true
+  },
+  {
+    "name": "administrator-only Customers navigation remains unavailable to ordinary staff",
+    "passed": true
+  }
+]

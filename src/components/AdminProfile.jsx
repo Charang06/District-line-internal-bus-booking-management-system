@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, assetUrl } from '../api'
 import './AdminProfile.css'
+import AdminMfaEnrollment from './AdminMfaEnrollment'
 
 function ProfileIcon({ name, ...props }) {
   const paths = {
@@ -321,6 +322,7 @@ export default function AdminProfile({ token, user, onUserUpdate, onClose, showM
           </form>
         </section>
         <section role="tabpanel" id="profile-panel-recovery" aria-labelledby="profile-tab-recovery" hidden={tab !== 'recovery'} tabIndex={0}>
+          {import.meta.env.VITE_ENABLE_ADMIN_MFA_ENROLLMENT === 'true' && <AdminMfaEnrollment />}
           <div className="profile-section-heading"><h3>Account recovery</h3><p>Manage the email used for administrator account recovery.</p></div>
           <form className="profile-form" onSubmit={saveEmail}>
             <label className="profile-field" htmlFor="profile-recovery-email"><span>Recovery Email</span><input id="profile-recovery-email" type="email" autoComplete="email" value={recoveryEmail} onChange={event => setRecoveryEmail(event.target.value)} disabled={Boolean(busy)} /></label>

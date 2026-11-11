@@ -1,6 +1,24 @@
+/* One self-hosted variable font serves the four UI weights. */
+@font-face {
+  font-family: 'Inter';
+  src: url('/InterVariable.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: optional;
+}
+
+:root {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --font-regular: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+}
+
 html {
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-sans);
+  font-weight: var(--font-regular);
 }
 
 *, *::before, *::after {
@@ -28,4 +46,30 @@ img {
 
 #root {
   min-height: 100vh;
+}
+
+/* Semantic weight policy also covers dialogs and independently rendered pages.
+   Important keeps component specificity from changing these shared roles. */
+:is(h1, .page-title, #login-title, .accounts-expense-heading h2, .customer-log-title h2) {
+  font-weight: var(--font-bold) !important;
+}
+
+:is(h2, h3, h4, h5, h6, th, strong, b) {
+  font-weight: var(--font-semibold) !important;
+}
+
+:is(button, [role='button']) {
+  font-weight: var(--font-semibold) !important;
+}
+
+:is(label, nav a, [role='tab'], .nav-button, .profile-tabs button) {
+  font-weight: var(--font-medium) !important;
+}
+
+/* Align digits in ledgers, counts and totals without imposing monospace text. */
+:where(table, input[type='number'], input[inputmode='numeric'],
+  input[inputmode='decimal'], .metric-card, .booking-shell, .reservation-panel,
+  .cargo-panel, .trip-overview, .accounts-subtotal, .accounts-total,
+  .accounts-expense-summary, .profit-ledger-summary, .sms-balance-main) {
+  font-variant-numeric: lining-nums tabular-nums;
 }

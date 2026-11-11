@@ -1,0 +1,35 @@
+  const sortedRegularCustomers = useMemo(() => {
+    const endDate = customerToday
+    const start = new Date(`${customerToday}T00:00:00`)
+    if (customerPeriod === 'week') start.setDate(start.getDate() - 6)
+    else if (customerPeriod !== 'all') start.setMonth(start.getMonth() - Number(customerPeriod))
+    const startDate = customerPeriod === 'all' ? '' : `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
+    return [...(adminStats?.regularCustomers || [])]
+      .map((customer) => {
+        const dates = (customer.trip_dates || []).filter((date) => customerPeriod === 'all' || (date >= startDate && date <= endDate))
+        const months = new Set(dates.map((date) => String(date).slice(0, 7)))
+        return { ...customer, trip_count: dates.length, month_count: months.size, last_trip_date: dates.sort().at(-1) || '' }
+      })
+      .filter((customer) => customer.trip_count >= 2)
+      .sort((a, b) => b.trip_count - a.trip_count || b.month_count - a.month_count || String(b.last_trip_date).localeCompare(String(a.last_trip_date)))
+  }, [adminStats, customerPeriod, customerToday])
+
+  const popularDeparturesByRoute = useMemo(() => {
+    const start = new Date(`${customerToday}T00:00:00`)
+    if (customerChartPeriod === 'week') start.setDate(start.getDate() - 6)
+    else start.setMonth(start.getMonth() - Number(customerChartPeriod))
+    const startDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`
+    const byRoute = { KTY_CMB: new Map(), CMB_KTY: new Map() }
+    ;(adminStats?.passengerRecords || []).forEach((booking) => {
+      if (booking.status !== 'confirmed' || booking.confirmation_status !== 'confirmed' || !byRoute[booking.route_code]) return
+      if (!booking.travel_date || booking.travel_date < startDate || booking.travel_date > customerToday) return
+      const departure = String(booking.boarding_point || '').trim()
+      if (!departure) return
+      const key = departure.toLocaleLowerCase()
+      const current = byRoute[booking.route_code].get(key) || { departure, count: 0 }
+      current.count += 1
+      byRoute[booking.route_code].set(key, current)
+    })
+    return Object.fromEntries(Object.entries(byRoute).map(([code, departures]) => [code, [...departures.values()].sort((a, b) => b.count - a.count || a.departure.localeCompare(b.departure))]))
+  }, [adminStats, customerChartPeriod, customerToday])
+

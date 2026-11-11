@@ -1,12 +1,14 @@
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { DashboardKpi } from './DashboardWidgets'
 import { ROUTES } from '../data/seatLayout'
 
 const money = (value) => `Rs. ${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-const summaryMoney = (value) => `Rs. ${Number(value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+const summaryMoney = (value) => `Rs. ${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 const currentMonth = () => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}` }
 const routeShortName = (code) => ROUTES.find((route) => route.code === code)?.short || code || 'Unassigned route'
 
-export default function ExpenseSubmissionsTable({ className = '', submissions = [], trips = [], revenueEntries = [], dailyRevenue = [], monthlyExpenses = [], loading = false, error = '' }) {
+export default function ExpenseSubmissionsTable({ className = '', submissions = [], trips = [], revenueEntries = [], dailyRevenue = [], monthlyExpenses = [], loading = false, error = '', summaryTarget = null, onRetry }) {
   const [view, setView] = useState('trip')
   const [dateSearch, setDateSearch] = useState('')
   const [busSearch, setBusSearch] = useState('')
@@ -80,7 +82,10 @@ export default function ExpenseSubmissionsTable({ className = '', submissions = 
     return `Rs. ${value.toFixed(0)}`
   }
   const axisTicks = Array.from({ length: 5 }, (_, index) => chartMax - (chartSpan * index / 4))
-  return <section className={`content-card accounts-recent-card accounts-expense-ledger ${className}`}>
+  const reportingScope = `${view === 'route' ? 'Route' : 'Trip'} mode · ${period === 'month' ? monthSearch : period === 'week' ? 'Last 7 days' : 'All periods'}${dateSearch ? ` · ${dateSearch}` : ''} · ${busSearch || 'All buses'}`
+  return <>
+    {summaryTarget && createPortal(<DashboardKpi name="profit" title="Net Profit" value={money(summaryProfit)} loading={loading} error={error} negative={summaryProfit < 0} detail={`Profit Report: ${reportingScope}. Independent of Trip Controls.`} />, summaryTarget)}
+    <section className={`content-card accounts-recent-card accounts-expense-ledger ${className}`} aria-busy={loading}>
     <div className="accounts-panel-heading"><div><h2>Profit report</h2><p>Finalized bus duties with accounting totals from Accounts.</p></div><span>{loading ? 'Loading...' : `Showing ${Math.min(activeRows.length, 100)} of ${activeRows.length} entries`}</span></div>
     <div className="accounts-expense-ledger-switch" role="group" aria-label="Expense ledger view">
       <button type="button" className={view === 'trip' ? 'active' : ''} aria-pressed={view === 'trip'} onClick={() => setView('trip')}>Trip</button>
@@ -93,21 +98,22 @@ export default function ExpenseSubmissionsTable({ className = '', submissions = 
       {period === 'month' && <label>Month<input type="month" aria-label="Select profit report month" value={monthSearch} onChange={(event) => setMonthSearch(event.target.value)} /></label>}
       <button type="button" className="profit-ledger-reset" onClick={() => { setDateSearch(''); setBusSearch(''); setPeriod('week'); setMonthSearch(currentMonth()); setView('trip') }}>Reset</button>
     </div>
-    <div className={`stats-grid profit-ledger-summary${period === 'month' ? ' with-monthly' : ''}`}>
-      <div className="metric-card"><span>Total revenue</span><strong>{summaryMoney(summaryRevenue)}</strong></div>
-      {period === 'month' && <div className="metric-card"><span>Monthly expenses</span><strong>{summaryMoney(summaryMonthlyExpenses)}</strong></div>}
-      <div className="metric-card"><span>Total expense</span><strong>{summaryMoney(summaryExpenses)}</strong></div>
-      <div className="metric-card profit-ledger-profit-card"><span>Profit amount</span><strong className={summaryProfit < 0 ? 'negative' : 'positive'}>{summaryMoney(summaryProfit)}</strong></div>
+    <p className="dashboard-report-scope">Reporting scope: {reportingScope}. Finalized accounting entries; independent of Trip Controls.</p>
+    <div className={`stats-grid profit-ledger-summary${period === 'month' ? ' with-monthly' : ''}`} aria-busy={loading}>
+      <div className="metric-card"><span>Total revenue</span><strong>{loading || error ? '—' : summaryMoney(summaryRevenue)}</strong></div>
+      {period === 'month' && <div className="metric-card"><span>Monthly expenses</span><strong>{loading || error ? '—' : summaryMoney(summaryMonthlyExpenses)}</strong></div>}
+      <div className="metric-card"><span>Total expense</span><strong>{loading || error ? '—' : summaryMoney(summaryExpenses)}</strong></div>
+      <div className="metric-card profit-ledger-profit-card"><span>Profit amount</span><strong className={summaryProfit < 0 ? 'negative' : 'positive'}>{loading || error ? '—' : summaryMoney(summaryProfit)}</strong></div>
     </div>
     <section className="profit-ledger-chart" aria-label="Profit and loss bar chart">
       <div className="profit-ledger-chart-heading"><h3>Profit &amp; Loss</h3><div className="profit-ledger-chart-legend"><span><i className="revenue" />Revenue</span><span><i className="expenses" />Expenses</span><span><i className="net-profit" />Net Profit</span></div></div>
-      {error ? <p className="daily-revenue-empty" role="alert">Unable to load profit and loss data: {error}</p> : loading ? <p className="daily-revenue-empty" role="status">Loading profit and loss data…</p> : !chartEntries.length ? <p className="daily-revenue-empty">No matching ledger entries to chart.</p> : <div className="profit-ledger-chart-scroll"><svg className="profit-ledger-chart-svg" viewBox={`0 0 ${chartWidth} 300`} style={{ width: `max(100%, ${chartWidth}px)` }} role="img" aria-label={`Revenue, expenses and net profit for all ${chartEntries.length} matching ledger entries`}>
-        {axisTicks.map((tick, index) => { const y = yFor(tick); return <g key={index}><line x1="48" y1={y} x2={chartWidth - 8} y2={y} className="profit-ledger-gridline" /><text x="43" y={y + 4} textAnchor="end" className="profit-ledger-axis-label">{formatAxis(tick)}</text></g> })}
+      {error ? <p className="daily-revenue-empty" role="alert">Unable to load profit and loss data: {error} {onRetry && <button type="button" className="ghost-button" onClick={onRetry}>Retry profit report</button>}</p> : loading ? <p className="daily-revenue-empty" role="status">Loading profit and loss data…</p> : !chartEntries.length ? <p className="daily-revenue-empty">No matching ledger entries to chart.</p> : <div className="profit-ledger-chart-scroll" role="region" aria-label="Scrollable Profit and Loss chart" tabIndex={0}><svg className="profit-ledger-chart-svg" viewBox={`0 0 ${chartWidth} 300`} style={{ width: `max(100%, ${chartWidth}px)` }} role="img" aria-label={`Revenue, expenses and net profit for all ${chartEntries.length} matching ledger entries`}>
+        {axisTicks.map((tick, index) => { const y = yFor(tick); return <g key={index}><line x1="80" y1={y} x2={chartWidth - 8} y2={y} className="profit-ledger-gridline" /><text x="75" y={y + 4} textAnchor="end" className="profit-ledger-axis-label">{formatAxis(tick)}</text></g> })}
         {chartEntries.map((entry, index) => {
           const values = [Number(entry.gross_revenue || 0), Number(entry.total_expense || 0), Number(entry.gross_revenue || 0) - Number(entry.total_expense || 0)]
           const colors = ['revenue', 'expenses', 'net-profit']
-          const groupWidth = (chartWidth - 56) / chartEntries.length
-          const center = 48 + groupWidth * (index + 0.5)
+          const groupWidth = (chartWidth - 88) / chartEntries.length
+          const center = 80 + groupWidth * (index + 0.5)
           const zeroY = yFor(0)
           const routeName = routeShortName(entry.route_code)
           const label = `${entry.expense_date || '—'} · ${entry.bus_no || 'Unassigned'}${view === 'route' ? ` · ${routeName}` : ''}`
@@ -118,8 +124,8 @@ export default function ExpenseSubmissionsTable({ className = '', submissions = 
         })}
       </svg></div>}
     </section>
-    <div className="daily-revenue-table-wrap"><table>{view === 'trip' ? <>
-      <thead><tr><th>Date</th><th>Bus No</th><th>Driver / Conductor</th><th>KKY to CMB date</th><th>CMB to KKY date</th><th>Total revenue</th><th>Total Expense</th><th>Net Return</th><th>Status</th></tr></thead>
+    {!loading && !error && <div className="daily-revenue-table-wrap" role="region" aria-label="Finalized accounting table" tabIndex={0}><table><caption className="dashboard-sr-only">Finalized accounting entries in {view} mode for the selected Profit Report filters</caption>{view === 'trip' ? <>
+      <thead><tr><th scope="col">Date</th><th scope="col">Bus No</th><th scope="col">Driver / Conductor</th><th scope="col">KKY to CMB date</th><th scope="col">CMB to KKY date</th><th scope="col">Total revenue</th><th scope="col">Total Expense</th><th scope="col">Net Return</th><th scope="col">Status</th></tr></thead>
       <tbody>{filtered.slice(0, 100).map((submission) => {
         const firstTrip = trips.find((trip) => String(trip.id) === String(submission.first_trip_id))
         const returnTrip = trips.find((trip) => String(trip.id) === String(submission.return_trip_id))
@@ -131,8 +137,8 @@ export default function ExpenseSubmissionsTable({ className = '', submissions = 
         return <tr key={submission.id}><td>{submission.expense_date}</td><td>{submission.bus_no}</td><td>{submission.driver_name || '-'} / {submission.conductor_name || '-'}</td><td>{dates.KTY_CMB || '—'}</td><td>{dates.CMB_KTY || '—'}</td><td>{money(submission.gross_revenue)}</td><td><strong>{money(submission.total_expense)}</strong></td><td>{money(Number(submission.gross_revenue || 0) - Number(submission.total_expense || 0))}</td><td><span className="accounts-entry-locked">{String(submission.status || 'locked').toUpperCase()} · {submission.submission_code}</span></td></tr>
       })}{!loading && !filtered.length && <tr><td colSpan="9" className="daily-revenue-empty">{submissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}</tbody>
     </> : <>
-      <thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver / Conductor</th><th>Route Revenue</th><th>Route Expense</th><th>Net Return</th><th>Status</th></tr></thead>
+      <thead><tr><th scope="col">Date</th><th scope="col">Bus No</th><th scope="col">Route</th><th scope="col">Driver / Conductor</th><th scope="col">Route Revenue</th><th scope="col">Route Expense</th><th scope="col">Net Return</th><th scope="col">Status</th></tr></thead>
       <tbody>{routeRows.slice(0, 100).map((submission) => <tr key={submission.id}><td>{submission.expense_date}</td><td>{submission.bus_no}</td><td>{ROUTES.find((route) => route.code === submission.route_code)?.label || submission.route_code}</td><td>{submission.driver_name || '-'} / {submission.conductor_name || '-'}</td><td>{money(submission.gross_revenue)}</td><td><strong>{money(submission.total_expense)}</strong></td><td>{money(Number(submission.gross_revenue || 0) - Number(submission.total_expense || 0))}</td><td><span className="accounts-entry-locked">{String(submission.status || 'locked').toUpperCase()} · {submission.submission_code}</span></td></tr>)}{!loading && !activeRows.length && <tr><td colSpan="8" className="daily-revenue-empty">{submissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}</tbody>
-    </>}</table></div>
-  </section>
+    </>}</table></div>}
+  </section></>
 }

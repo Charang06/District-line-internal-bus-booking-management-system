@@ -27,16 +27,31 @@ export function cookieSessionRequest(baseUrl, fetchLocal = fetch) {
   }
 }
 
-export async function loadBookingTestApp(pool) {
+export async function loadBookingTestApp(pool, testOptions = {}) {
   if (!vm.SourceTextModule) throw Error('Use --experimental-vm-modules for the isolated booking harness; no database startup performed')
   const entry = new URL('../server.js', import.meta.url)
   const source = bookingRouteSource(fs.readFileSync(entry, 'utf8'))
+    + (testOptions.exerciseStartup ? '\nexport { initializeDatabaseWithRetry as startupProbe }\n' : '')
   const safeEnv = { NODE_ENV: 'test', DATABASE_URL: 'postgresql://test.invalid/synthetic', SESSION_COOKIE_SAME_SITE: 'lax',
     ENABLE_ADMIN_USERNAME_RECOVERY: 'false', ENABLE_ADMIN_RECOVERY_EMAIL_VERIFICATION: 'false' }
+  if (testOptions.recordRecoveryEmail) Object.assign(safeEnv, {
+    APP_URL: 'https://synthetic.example.test', RESEND_API_KEY: 'synthetic-not-a-key',
+    RECOVERY_EMAIL_FROM: 'security@example.test', ENABLE_ADMIN_USERNAME_RECOVERY: 'true',
+    ENABLE_ADMIN_RECOVERY_EMAIL_VERIFICATION: 'true',
+  })
+  for (const key of ['ADMIN_MFA_MODE', 'ADMIN_MFA_ENCRYPTION_KEY', 'ENABLE_LOGIN_RATE_LIMIT', 'LOGIN_RATE_LIMIT_KEY']) {
+    if (testOptions.securityEnv?.[key] !== undefined) safeEnv[key] = testOptions.securityEnv[key]
+  }
+  const recordingFetch = async (url, options) => {
+    if (!testOptions.recordRecoveryEmail || url !== 'https://api.resend.com/emails')
+      throw Error('External network calls are forbidden by the booking harness')
+    testOptions.recordRecoveryEmail(JSON.parse(options.body))
+    return { ok: true, status: 200 }
+  }
   const context = vm.createContext({ process: { env: safeEnv, hrtime: process.hrtime.bind(process) }, Buffer,
     URL, AbortSignal, setTimeout, clearTimeout,
     console: { info() {}, log() {}, warn() {}, error() {} },
-    fetch: async () => { throw Error('External network calls are forbidden by the booking harness') } })
+    fetch: recordingFetch })
   // hrtime.bigint is used by production metrics.
   context.process.hrtime.bigint = process.hrtime.bigint
   const module = new vm.SourceTextModule(source, { context, identifier: entry.href, initializeImportMeta(meta) { meta.url = entry.href } })
@@ -51,11 +66,19 @@ export async function loadBookingTestApp(pool) {
     const namespace = { ...await import(url) }
     if (specifier === './admin-username-recovery.js') {
       const create = namespace.createUsernameRecoveryRouter
-      namespace.createUsernameRecoveryRouter = options => create({ ...options, env: safeEnv })
+      namespace.createUsernameRecoveryRouter = options => create({ ...options, env: safeEnv,
+        ...(testOptions.recordRecoveryEmail ? { service: namespace.createUsernameRecoveryService({
+          store: namespace.createPostgresUsernameRecoveryStore(pool), config: namespace.usernameRecoveryConfig(safeEnv),
+          sendEmail: namespace.createUsernameRecoveryEmailSender(namespace.usernameRecoveryConfig(safeEnv), recordingFetch),
+        }) } : {}) })
     }
     if (specifier === './admin-recovery-email-verification.js') {
       const create = namespace.createEmailVerificationRouter
-      namespace.createEmailVerificationRouter = options => create({ ...options, env: safeEnv })
+      namespace.createEmailVerificationRouter = options => create({ ...options, env: safeEnv,
+        ...(testOptions.recordRecoveryEmail ? { service: namespace.createEmailVerificationService({
+          store: namespace.createPostgresEmailVerificationStore(pool), config: namespace.recoveryEmailVerificationConfig(safeEnv),
+          sendEmail: namespace.createVerificationEmailSender(namespace.recoveryEmailVerificationConfig(safeEnv), recordingFetch),
+        }) } : {}) })
     }
     if (specifier === './sms.js') {
       namespace.sendSms = async () => ({ ok: true, status: 'sent', providerStatus: 'synthetic', raw: {} })
@@ -64,11 +87,12 @@ export async function loadBookingTestApp(pool) {
     return synthetic(namespace)
   })
   await module.evaluate()
+  if (testOptions.exerciseStartup) await module.namespace.startupProbe('synthetic-startup')
   return module.namespace.default
 }
 
-export async function serveBookingTestApp(pool) {
-  const app = await loadBookingTestApp(pool)
+export async function serveBookingTestApp(pool, testOptions) {
+  const app = await loadBookingTestApp(pool, testOptions)
   const server = createServer(app).listen(0, '127.0.0.1')
   await new Promise(resolve => server.once('listening', resolve))
   return { request: cookieSessionRequest(`http://127.0.0.1:${server.address().port}`),

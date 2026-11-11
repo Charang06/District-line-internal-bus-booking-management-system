@@ -1,0 +1,54 @@
+{
+  "at": "2026-11-08T10:16:55.624Z",
+  "readyForOwnerApproval": true,
+  "productionApplied": false,
+  "productionVersions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+  ],
+  "productionSecurityMetadataUnchanged": true,
+  "applicationDataChecksPassed": 22,
+  "sequenceChecksPassed": 18,
+  "decryptionAuthenticated": true,
+  "applicationRestorePassed": true,
+  "fullSupabasePlatformRestoreTested": false,
+  "isolatedTargetPreserved": true,
+  "postDeploymentHttpChecksPending": true,
+  "migrationSha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde",
+  "rollbackSha256": "b2483280b3df88c29d279529078468e7c51af32fd0e6a2e9116c63e077534d3e",
+  "encryptedBackupSha256": "49e3653609c3b2d128acaf1094bdc9a0de4f3c6a6baeb45bc8e615f08fc013b2",
+  "files": [
+    {
+      "file": "scripts/security/007_internal_application_security.sql",
+      "sha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde"
+    },
+    {
+      "file": "artifacts/internal-table-security/rollback-baseline.sql.review",
+      "sha256": "b2483280b3df88c29d279529078468e7c51af32fd0e6a2e9116c63e077534d3e"
+    },
+    {
+      "file": "scripts/security/apply-v7.mjs",
+      "sha256": "69f578f86e3acb8c2f13233172dc9e69ec754578326753280bbaa5c8ba7156e7"
+    },
+    {
+      "file": "scripts/security/final-readiness.mjs",
+      "sha256": "13c3f4db7cc2f10a527033f43d6c38aecc294d594e483877651c988b101f149b"
+    },
+    {
+      "file": "scripts/security/http-check.mjs",
+      "sha256": "4f6d1bd31d67899c16429e1d417b887f62007729a814a771366457ff6a8daa32"
+    },
+    {
+      "file": "scripts/security/encrypted-restore-drill.mjs",
+      "sha256": "f58899c58eb1de092b2a68ee7a59631825a87b378a53adac8fd60df3ca41db5c"
+    },
+    {
+      "file": "docs/production-v7-runbook.md",
+      "sha256": "083eed0f2faac2ed76976d74c0163dfb9cae18ea264a7541b10c90c1ecd9cde6"
+    }
+  ]
+}

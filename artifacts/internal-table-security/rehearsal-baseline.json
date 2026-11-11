@@ -1,0 +1,2250 @@
+{
+  "objects": [
+    {
+      "oid": 18045,
+      "relname": "audit_logs",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18051,
+      "relname": "audit_logs_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18052,
+      "relname": "auth_sessions",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18059,
+      "relname": "auth_sessions_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18060,
+      "relname": "bookings",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18074,
+      "relname": "bookings_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18075,
+      "relname": "bus_contacts",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18083,
+      "relname": "bus_contacts_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18084,
+      "relname": "bus_duties",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18092,
+      "relname": "bus_duties_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18093,
+      "relname": "buses",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18103,
+      "relname": "buses_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18104,
+      "relname": "cargo",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18112,
+      "relname": "cargo_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18113,
+      "relname": "crew_members",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18123,
+      "relname": "crew_members_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18124,
+      "relname": "daily_expenses",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18133,
+      "relname": "daily_expenses_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18134,
+      "relname": "duty_adjustments",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18142,
+      "relname": "duty_adjustments_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18143,
+      "relname": "expense_submissions",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18159,
+      "relname": "expense_submissions_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18160,
+      "relname": "password_recovery_rate_limits",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18166,
+      "relname": "password_recovery_tokens",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18172,
+      "relname": "password_recovery_tokens_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18173,
+      "relname": "revenue_entries",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18187,
+      "relname": "revenue_entries_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18188,
+      "relname": "schema_meta",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18191,
+      "relname": "sms_attempts",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18198,
+      "relname": "sms_attempts_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18199,
+      "relname": "trips",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18207,
+      "relname": "trips_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres,service_role=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18208,
+      "relname": "users",
+      "relkind": "r",
+      "relowner": 16384,
+      "relacl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    },
+    {
+      "oid": 18217,
+      "relname": "users_id_seq",
+      "relkind": "S",
+      "relowner": 16384,
+      "relacl": "{postgres=rwU/postgres,service_role=rwU/postgres,anon=rwU/postgres,authenticated=rwU/postgres}",
+      "relrowsecurity": false,
+      "relforcerowsecurity": false
+    }
+  ],
+  "columns": [
+    {
+      "attrelid": 18045,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18045,
+      "attnum": 2,
+      "attname": "user_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18045,
+      "attnum": 3,
+      "attname": "action",
+      "attacl": null
+    },
+    {
+      "attrelid": 18045,
+      "attnum": 4,
+      "attname": "entity_type",
+      "attacl": null
+    },
+    {
+      "attrelid": 18045,
+      "attnum": 5,
+      "attname": "entity_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18045,
+      "attnum": 6,
+      "attname": "details",
+      "attacl": null
+    },
+    {
+      "attrelid": 18045,
+      "attnum": 7,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18051,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18051,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18051,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 2,
+      "attname": "user_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 3,
+      "attname": "token_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 4,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 5,
+      "attname": "last_seen_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 6,
+      "attname": "idle_expires_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18052,
+      "attnum": 7,
+      "attname": "expires_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18059,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18059,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18059,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 2,
+      "attname": "booking_ref",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 3,
+      "attname": "booking_group_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 4,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 5,
+      "attname": "seat_number",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 6,
+      "attname": "passenger_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 7,
+      "attname": "contact",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 8,
+      "attname": "gender",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 9,
+      "attname": "boarding_point",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 10,
+      "attname": "destination",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 11,
+      "attname": "fare",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 12,
+      "attname": "payment_status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 13,
+      "attname": "notes",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 14,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 15,
+      "attname": "confirmation_status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 16,
+      "attname": "sms_status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 17,
+      "attname": "sms_error",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 18,
+      "attname": "cancelled_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 19,
+      "attname": "cancelled_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 20,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 21,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18060,
+      "attnum": 22,
+      "attname": "updated_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18074,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18074,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18074,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18075,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18075,
+      "attnum": 2,
+      "attname": "bus_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18075,
+      "attnum": 3,
+      "attname": "phone_number",
+      "attacl": null
+    },
+    {
+      "attrelid": 18075,
+      "attnum": 4,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18075,
+      "attnum": 5,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18075,
+      "attnum": 6,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18083,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18083,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18083,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 2,
+      "attname": "duty_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 3,
+      "attname": "bus_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 4,
+      "attname": "first_trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 5,
+      "attname": "return_trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 6,
+      "attname": "start_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 7,
+      "attname": "completion_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 8,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 9,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 10,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 11,
+      "attname": "finalized_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 12,
+      "attname": "finalized_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18084,
+      "attnum": 13,
+      "attname": "snapshot_json",
+      "attacl": null
+    },
+    {
+      "attrelid": 18092,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18092,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18092,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 2,
+      "attname": "bus_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 3,
+      "attname": "registration_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 4,
+      "attname": "display_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 5,
+      "attname": "image_url",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 6,
+      "attname": "logo_url",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 7,
+      "attname": "driver_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 8,
+      "attname": "driver_phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 9,
+      "attname": "conductor_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 10,
+      "attname": "conductor_phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 11,
+      "attname": "seat_layout_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 12,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 13,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18093,
+      "attnum": 14,
+      "attname": "updated_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18103,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18103,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18103,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 2,
+      "attname": "cargo_ref",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 3,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 4,
+      "attname": "travel_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 5,
+      "attname": "route_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 6,
+      "attname": "route_label",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 7,
+      "attname": "bus_registration",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 8,
+      "attname": "sender_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 9,
+      "attname": "sender_phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 10,
+      "attname": "receiver_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 11,
+      "attname": "receiver_phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 12,
+      "attname": "description",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 13,
+      "attname": "weight",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 14,
+      "attname": "charge",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 15,
+      "attname": "payment_status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 16,
+      "attname": "cargo_status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 17,
+      "attname": "notes",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 18,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18104,
+      "attnum": 19,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18112,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18112,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18112,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 2,
+      "attname": "full_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 3,
+      "attname": "role",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 4,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 5,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 6,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18113,
+      "attnum": 7,
+      "attname": "mobile_number",
+      "attacl": null
+    },
+    {
+      "attrelid": 18123,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18123,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18123,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 2,
+      "attname": "expense_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 3,
+      "attname": "category",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 4,
+      "attname": "description",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 5,
+      "attname": "amount",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 6,
+      "attname": "duty_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 7,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 8,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 9,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 10,
+      "attname": "expense_source",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 11,
+      "attname": "bus_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18124,
+      "attnum": 12,
+      "attname": "submission_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18133,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18133,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18133,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 2,
+      "attname": "duty_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 3,
+      "attname": "adjustment_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 4,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 5,
+      "attname": "type",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 6,
+      "attname": "description",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 7,
+      "attname": "amount",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 8,
+      "attname": "seat_number",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 9,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18134,
+      "attnum": 10,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18142,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18142,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18142,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 2,
+      "attname": "submission_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 3,
+      "attname": "expense_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 4,
+      "attname": "bus_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 5,
+      "attname": "driver_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 6,
+      "attname": "conductor_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 7,
+      "attname": "route_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 8,
+      "attname": "first_leg_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 9,
+      "attname": "return_leg_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 10,
+      "attname": "first_trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 11,
+      "attname": "return_trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 12,
+      "attname": "items_json",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 13,
+      "attname": "total_expense",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 14,
+      "attname": "gross_revenue",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 15,
+      "attname": "first_leg_share",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 16,
+      "attname": "return_leg_share",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 17,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 18,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 19,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18143,
+      "attnum": 20,
+      "attname": "locked_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18159,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18159,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18159,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18160,
+      "attnum": 1,
+      "attname": "ip_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18160,
+      "attnum": 2,
+      "attname": "window_started_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18160,
+      "attnum": 3,
+      "attname": "attempts",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 2,
+      "attname": "user_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 3,
+      "attname": "token_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 4,
+      "attname": "recovery_code_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 5,
+      "attname": "expires_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 6,
+      "attname": "used_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18166,
+      "attnum": 7,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18172,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18172,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18172,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 2,
+      "attname": "entry_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 3,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 4,
+      "attname": "travel_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 5,
+      "attname": "route_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 6,
+      "attname": "route_label",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 7,
+      "attname": "bus_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 8,
+      "attname": "driver_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 9,
+      "attname": "conductor_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 10,
+      "attname": "seat_rows_json",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 11,
+      "attname": "cargo_rows_json",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 12,
+      "attname": "seat_subtotal",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 13,
+      "attname": "cargo_subtotal",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 14,
+      "attname": "total_revenue",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 15,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 16,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 17,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18173,
+      "attnum": 18,
+      "attname": "locked_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18187,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18187,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18187,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18188,
+      "attnum": 1,
+      "attname": "version",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 2,
+      "attname": "booking_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 3,
+      "attname": "idempotency_key",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 4,
+      "attname": "phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 5,
+      "attname": "message",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 6,
+      "attname": "message_type",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 7,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 8,
+      "attname": "provider_status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 9,
+      "attname": "provider_response",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 10,
+      "attname": "error",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 11,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18191,
+      "attnum": 12,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18198,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18198,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18198,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 2,
+      "attname": "trip_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 3,
+      "attname": "travel_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 4,
+      "attname": "route_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 5,
+      "attname": "route_label",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 6,
+      "attname": "bus_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 7,
+      "attname": "bus_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 8,
+      "attname": "departure_time",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 9,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 10,
+      "attname": "driver_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 11,
+      "attname": "driver_phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 12,
+      "attname": "conductor_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 13,
+      "attname": "conductor_phone",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 14,
+      "attname": "created_by",
+      "attacl": null
+    },
+    {
+      "attrelid": 18199,
+      "attnum": 15,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18207,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18207,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18207,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 2,
+      "attname": "username",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 3,
+      "attname": "password_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 4,
+      "attname": "role",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 5,
+      "attname": "full_name",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 6,
+      "attname": "created_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 7,
+      "attname": "permissions",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 8,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 9,
+      "attname": "profile_photo_url",
+      "attacl": null
+    },
+    {
+      "attrelid": 18208,
+      "attnum": 10,
+      "attname": "recovery_email",
+      "attacl": null
+    },
+    {
+      "attrelid": 18217,
+      "attnum": 1,
+      "attname": "last_value",
+      "attacl": null
+    },
+    {
+      "attrelid": 18217,
+      "attnum": 2,
+      "attname": "log_cnt",
+      "attacl": null
+    },
+    {
+      "attrelid": 18217,
+      "attnum": 3,
+      "attname": "is_called",
+      "attacl": null
+    },
+    {
+      "attrelid": 18218,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18220,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18222,
+      "attnum": 1,
+      "attname": "token_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18224,
+      "attnum": 1,
+      "attname": "booking_ref",
+      "attacl": null
+    },
+    {
+      "attrelid": 18226,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18228,
+      "attnum": 1,
+      "attname": "bus_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18230,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18232,
+      "attnum": 1,
+      "attname": "duty_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18234,
+      "attnum": 1,
+      "attname": "first_trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18236,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18238,
+      "attnum": 1,
+      "attname": "return_trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18240,
+      "attnum": 1,
+      "attname": "bus_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18242,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18244,
+      "attnum": 1,
+      "attname": "registration_no",
+      "attacl": null
+    },
+    {
+      "attrelid": 18246,
+      "attnum": 1,
+      "attname": "cargo_ref",
+      "attacl": null
+    },
+    {
+      "attrelid": 18248,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18250,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18252,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18254,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18256,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18258,
+      "attnum": 1,
+      "attname": "submission_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18260,
+      "attnum": 1,
+      "attname": "ip_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18262,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18264,
+      "attnum": 1,
+      "attname": "token_hash",
+      "attacl": null
+    },
+    {
+      "attrelid": 18266,
+      "attnum": 1,
+      "attname": "entry_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18268,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18270,
+      "attnum": 1,
+      "attname": "version",
+      "attacl": null
+    },
+    {
+      "attrelid": 18272,
+      "attnum": 1,
+      "attname": "idempotency_key",
+      "attacl": null
+    },
+    {
+      "attrelid": 18274,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18276,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18278,
+      "attnum": 1,
+      "attname": "trip_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18280,
+      "attnum": 1,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18282,
+      "attnum": 1,
+      "attname": "username",
+      "attacl": null
+    },
+    {
+      "attrelid": 18284,
+      "attnum": 1,
+      "attname": "expires_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18284,
+      "attnum": 2,
+      "attname": "idle_expires_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18285,
+      "attnum": 1,
+      "attname": "user_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18286,
+      "attnum": 1,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18286,
+      "attnum": 2,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18287,
+      "attnum": 1,
+      "attname": "travel_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18288,
+      "attnum": 1,
+      "attname": "bus_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18288,
+      "attnum": 2,
+      "attname": "status",
+      "attacl": null
+    },
+    {
+      "attrelid": 18288,
+      "attnum": 3,
+      "attname": "start_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18289,
+      "attnum": 1,
+      "attname": "duty_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18289,
+      "attnum": 2,
+      "attname": "expense_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18290,
+      "attnum": 1,
+      "attname": "expense_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18290,
+      "attnum": 2,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18291,
+      "attnum": 1,
+      "attname": "expires_at",
+      "attacl": null
+    },
+    {
+      "attrelid": 18292,
+      "attnum": 1,
+      "attname": "travel_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18292,
+      "attnum": 2,
+      "attname": "id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18293,
+      "attnum": 1,
+      "attname": "travel_date",
+      "attacl": null
+    },
+    {
+      "attrelid": 18293,
+      "attnum": 2,
+      "attname": "route_code",
+      "attacl": null
+    },
+    {
+      "attrelid": 18294,
+      "attnum": 1,
+      "attname": "trip_id",
+      "attacl": null
+    },
+    {
+      "attrelid": 18294,
+      "attnum": 2,
+      "attname": "seat_number",
+      "attacl": null
+    },
+    {
+      "attrelid": 18295,
+      "attnum": 1,
+      "attname": "role",
+      "attacl": null
+    },
+    {
+      "attrelid": 18295,
+      "attnum": 2,
+      "attname": "lower",
+      "attacl": null
+    },
+    {
+      "attrelid": 18296,
+      "attnum": 1,
+      "attname": "booking_id",
+      "attacl": null
+    }
+  ],
+  "functions": [
+    {
+      "oid": 18044,
+      "name": "prevent_duplicate_duty_trip()",
+      "definition": "CREATE OR REPLACE FUNCTION public.prevent_duplicate_duty_trip()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT 1\n    FROM bus_duties d\n    WHERE d.id IS DISTINCT FROM NEW.id\n      AND (\n        d.first_trip_id IN (NEW.first_trip_id, NEW.return_trip_id)\n        OR d.return_trip_id IN (NEW.first_trip_id, NEW.return_trip_id)\n      )\n  ) THEN\n    RAISE EXCEPTION 'A trip is already assigned to a bus duty';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n",
+      "proacl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    }
+  ],
+  "sequences": {
+    "audit_logs_id_seq": {
+      "last_value": "28",
+      "is_called": true
+    },
+    "auth_sessions_id_seq": {
+      "last_value": "89",
+      "is_called": true
+    },
+    "bookings_id_seq": {
+      "last_value": "4",
+      "is_called": true
+    },
+    "bus_contacts_id_seq": {
+      "last_value": "2",
+      "is_called": true
+    },
+    "bus_duties_id_seq": {
+      "last_value": "1",
+      "is_called": false
+    },
+    "buses_id_seq": {
+      "last_value": "2",
+      "is_called": true
+    },
+    "cargo_id_seq": {
+      "last_value": "1",
+      "is_called": false
+    },
+    "crew_members_id_seq": {
+      "last_value": "2",
+      "is_called": true
+    },
+    "daily_expenses_id_seq": {
+      "last_value": "3",
+      "is_called": true
+    },
+    "duty_adjustments_id_seq": {
+      "last_value": "1",
+      "is_called": false
+    },
+    "expense_submissions_id_seq": {
+      "last_value": "2",
+      "is_called": true
+    },
+    "password_recovery_tokens_id_seq": {
+      "last_value": "3",
+      "is_called": true
+    },
+    "revenue_entries_id_seq": {
+      "last_value": "4",
+      "is_called": true
+    },
+    "sms_attempts_id_seq": {
+      "last_value": "1",
+      "is_called": false
+    },
+    "trips_id_seq": {
+      "last_value": "7",
+      "is_called": true
+    },
+    "users_id_seq": {
+      "last_value": "2",
+      "is_called": true
+    }
+  },
+  "schemas": [
+    {
+      "nspname": "public",
+      "nspacl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,postgres=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}",
+      "nspowner": 6171
+    }
+  ],
+  "policies": [],
+  "versions": [
+    {
+      "version": 1
+    },
+    {
+      "version": 2
+    },
+    {
+      "version": 3
+    },
+    {
+      "version": 4
+    }
+  ]
+}

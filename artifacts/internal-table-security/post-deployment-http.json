@@ -1,0 +1,170 @@
+{
+  "at": "2026-11-08T13:37:24.640Z",
+  "projectFingerprint": "868295d24a51",
+  "method": "GET",
+  "limit": 0,
+  "role": "anon",
+  "customerRecordsReturned": 0,
+  "productionMutations": false,
+  "probes": [
+    {
+      "table": "admin_recovery_email_verification_limits",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "admin_recovery_email_verification_tokens",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "admin_username_recovery_limits",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "admin_username_recovery_tokens",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "audit_logs",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "auth_sessions",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "bookings",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "bus_contacts",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "bus_duties",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "buses",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "cargo",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "crew_members",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "daily_expenses",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "duty_adjustments",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "expense_submissions",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "password_recovery_rate_limits",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "password_recovery_tokens",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "revenue_entries",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "schema_meta",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "sms_attempts",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "trips",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    },
+    {
+      "table": "users",
+      "status": 401,
+      "code": "42501",
+      "result": "PERMISSION_DENIED"
+    }
+  ],
+  "successful": [],
+  "denied": [
+    "admin_recovery_email_verification_limits",
+    "admin_recovery_email_verification_tokens",
+    "admin_username_recovery_limits",
+    "admin_username_recovery_tokens",
+    "audit_logs",
+    "auth_sessions",
+    "bookings",
+    "bus_contacts",
+    "bus_duties",
+    "buses",
+    "cargo",
+    "crew_members",
+    "daily_expenses",
+    "duty_adjustments",
+    "expense_submissions",
+    "password_recovery_rate_limits",
+    "password_recovery_tokens",
+    "revenue_entries",
+    "schema_meta",
+    "sms_attempts",
+    "trips",
+    "users"
+  ],
+  "unverified": [],
+  "unavailable": []
+}

@@ -8,11 +8,16 @@ import fs from 'fs'
 import { fileURLToPath } from 'url'
 import { AsyncLocalStorage } from 'async_hooks'
 import { loadEnv } from './env.js'
+import { verifyDatabaseBaseline, requestedDatabaseOperation, authorizeDatabaseOperation } from './database-startup.js'
+import { databaseConnection } from './database-tls.js'
+import { createLoginRateLimit } from './login-rate-limit.js'
+import { createMfaService, createMfaRouter, postgresMfaStore, mfaMode } from './admin-mfa.js'
 import { createUsernameRecoveryRouter } from './admin-username-recovery.js'
 import { createAdminUsernameHandler } from './admin-profile-username.js'
 import { createEmailVerificationRouter, createRecoveryEmailUpdateHandler } from './admin-recovery-email-verification.js'
 import { sendSms, buildConfirmationMessage, buildCancellationMessage, smsConfig } from './sms.js'
 import { getSmsLenzBalance, SmsLenzBalanceError } from './smslenz-balance.js'
+import { normalizeRevenueSeatRows } from './revenue-seat-rows.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -74,14 +79,38 @@ const databaseUrl = process.env.DATABASE_URL
 if (!databaseUrl) {
   throw new Error('Set DATABASE_URL to the Supabase PostgreSQL connection string before starting the server.')
 }
+const databaseOperation = requestedDatabaseOperation(process.argv || [])
+if (databaseOperation) authorizeDatabaseOperation(databaseOperation, databaseUrl, process.env, process.argv || [])
 
 const DEFAULT_STAFF_PERMISSIONS = {
   home: true,
   log: true,
   info: true,
+  dashboard: true,
+  accounts: true,
+  customers: true,
+  staff: true,
   passengers: true,
   cargo: true,
   trips: true,
+  pageAccess: Object.fromEntries(['home', 'log', 'info', 'dashboard', 'accounts', 'customers', 'staff'].map((page) => [page, { view: true, manage: true }])),
+}
+const NEW_STAFF_PERMISSIONS = {
+  ...DEFAULT_STAFF_PERMISSIONS,
+  home: false,
+  log: false,
+  info: false,
+  dashboard: false,
+  accounts: false,
+  customers: false,
+  staff: false,
+  passengers: false,
+  cargo: false,
+  trips: false,
+  pageAccess: Object.fromEntries(['home', 'log', 'info', 'dashboard', 'accounts', 'customers', 'staff'].map((page) => [page, {
+    view: false,
+    manage: false,
+  }])),
 }
 const ALLOWED_IMAGE_TYPES = {
   'image/jpeg': 'jpg',
@@ -113,7 +142,7 @@ const ROUTES = {
 }
 
 const pool = new Pool({
-  connectionString: databaseUrl,
+  ...databaseConnection(databaseUrl, process.env),
   // Vercel can serve several API requests concurrently from one function
   // instance. A single client caused requests to queue behind dashboard
   // queries, while a short connection timeout made transient DB latency fatal.
@@ -121,7 +150,6 @@ const pool = new Pool({
   connectionTimeoutMillis: IS_VERCEL ? 10000 : 5000,
   idleTimeoutMillis: IS_VERCEL ? 5000 : 30000,
   keepAlive: true,
-  ssl: process.env.DATABASE_SSL === 'disable' ? false : { rejectUnauthorized: false },
 })
 pool.on('error', (error) => {
   console.error(JSON.stringify({
@@ -336,25 +364,64 @@ function parsePermissions(role, raw) {
   } catch {
     parsed = {}
   }
-  return {
+  const permissions = {
     home: parsed.home !== false,
     log: parsed.log !== false,
     info: parsed.info !== false,
+    dashboard: parsed.dashboard === true,
+    accounts: parsed.accounts === true,
+    customers: parsed.customers === true,
+    staff: parsed.staff === true,
     passengers: parsed.passengers === true,
     cargo: parsed.cargo === true,
     trips: parsed.trips === true,
   }
+  permissions.pageAccess = normalizePageAccess(parsed.pageAccess, permissions)
+  for (const page of ['home', 'log', 'info', 'dashboard', 'accounts', 'customers', 'staff']) {
+    permissions[page] = permissions.pageAccess[page].view
+  }
+  return permissions
+}
+
+function normalizePageAccess(input, legacy = {}) {
+  const pages = ['home', 'log', 'info', 'dashboard', 'accounts', 'customers', 'staff']
+  if (input && typeof input === 'object' && !Array.isArray(input)) {
+    return Object.fromEntries(pages.map((page) => {
+      const access = input[page]
+      const view = access?.view === true
+      return [page, { view, manage: page !== 'staff' && view && access?.manage === true }]
+    }))
+  }
+  const defaultViews = new Set(['home', 'log', 'info'])
+  const canPassenger = legacy.passengers === true
+  const canCargo = legacy.cargo === true
+  const canTrip = legacy.trips === true
+  return Object.fromEntries(pages.map((page) => {
+    const view = legacy[page] === true || (defaultViews.has(page) && legacy[page] !== false)
+    const manage = page === 'home' ? canPassenger || canCargo || canTrip
+      : page === 'log' ? canPassenger || canCargo : false
+    return [page, { view, manage: page !== 'staff' && view && manage }]
+  }))
 }
 
 function sanitizePermissions(input = {}) {
-  return {
+  const permissions = {
     home: input.home !== false,
     log: input.log !== false,
     info: input.info !== false,
+    dashboard: input.dashboard === true,
+    accounts: input.accounts === true,
+    customers: input.customers === true,
+    staff: input.staff === true,
     passengers: input.passengers === true,
     cargo: input.cargo === true,
     trips: input.trips === true,
   }
+  permissions.pageAccess = normalizePageAccess(input.pageAccess, permissions)
+  for (const page of ['home', 'log', 'info', 'dashboard', 'accounts', 'customers', 'staff']) {
+    permissions[page] = permissions.pageAccess[page].view
+  }
+  return permissions
 }
 
 function publicUser(user) {
@@ -580,7 +647,7 @@ function authMiddleware(req, res, next) {
       WHERE current_session.id = session_to_touch.id
       RETURNING current_session.id
     )
-    SELECT users.*, sessions.id AS session_id
+    SELECT users.*, sessions.id AS session_id${mfaMode(process.env) === 'enforce' ? ', sessions.mfa_verified_at' : ''}
     FROM auth_sessions AS sessions
     JOIN users ON users.id = sessions.user_id
     WHERE sessions.token_hash = ?
@@ -588,6 +655,10 @@ function authMiddleware(req, res, next) {
       AND sessions.expires_at > CURRENT_TIMESTAMP
   `, [tokenHash, tokenHash]).then((rows) => {
     const user = rows[0]
+    if (user?.role === 'admin' && mfaMode(process.env) === 'enforce' && !user.mfa_verified_at) {
+      clearSessionCookie(res)
+      return res.status(401).json({ message: 'Please sign in with administrator MFA.' })
+    }
     if (!user || (user.status || 'active') === 'inactive') {
       logAuthResult('invalid_session', 401)
       return res.status(401).json({ message: 'Your session is invalid or expired. Please sign in again.' })
@@ -610,6 +681,14 @@ function requireAdmin(req, res, next) {
 }
 
 function requireStaffPermission(permission) {
+  return requireAnyStaffPermission(permission)
+}
+
+function requireAnyStaffPermission(...permissionsToCheck) {
+  return requireStaffPermissionCheck((permissions) => permissionsToCheck.some((permission) => permissions[permission] === true))
+}
+
+function requireStaffPermissionCheck(check) {
   return async (req, res, next) => {
     if (req.user?.role === 'admin') return next()
     try {
@@ -618,7 +697,8 @@ function requireStaffPermission(permission) {
         return res.status(403).json({ message: 'This account has been deactivated.' })
       }
       const permissions = parsePermissions(row.role, row.permissions)
-      if (permissions[permission] !== true) {
+      req.staffPermissions = permissions
+      if (!check(permissions)) {
         return res.status(403).json({ message: 'Your staff account does not have permission for this action.' })
       }
       next()
@@ -626,6 +706,49 @@ function requireStaffPermission(permission) {
       next(error)
     }
   }
+}
+
+function requirePageView(page) {
+  return requireStaffPermissionCheck((permissions) => permissions.pageAccess[page]?.view === true)
+}
+
+function requireAnyPageView(...pages) {
+  return requireStaffPermissionCheck((permissions) => pages.some((page) => permissions.pageAccess[page]?.view === true))
+}
+
+function requirePageManage(page, ...actionPermissions) {
+  return requireStaffPermissionCheck((permissions) => permissions.pageAccess[page]?.view === true
+    && permissions.pageAccess[page]?.manage === true
+    && actionPermissions.every((permission) => permissions[permission] === true))
+}
+
+function requireAnyPageManage(pages, ...actionPermissions) {
+  return requireStaffPermissionCheck((permissions) => pages.some((page) => permissions.pageAccess[page]?.view === true
+    && permissions.pageAccess[page]?.manage === true)
+    && actionPermissions.every((permission) => permissions[permission] === true))
+}
+
+function requireDashboardScope(req, res, next) {
+  const scope = String(req.query.scope || '')
+  if (scope === 'dashboard') return requirePageView('dashboard')(req, res, next)
+  if (scope === 'accounts') return requirePageView('accounts')(req, res, next)
+  if (scope === 'customers') return requirePageView('customers')(req, res, next)
+  return requireAdmin(req, res, next)
+}
+
+function requireDashboardTripAccess(req, res, next) {
+  if (String(req.query.dashboard || '') === '1') return requirePageView('dashboard')(req, res, next)
+  return requireAnyPageView('home', 'log')(req, res, next)
+}
+
+function requireRevenueLedgerRead(req, res, next) {
+  if (req.user?.role === 'admin') return next()
+  if (String(req.query.summary || '') !== '1') return requireAdmin(req, res, next)
+  return requirePageView('accounts')(req, res, next)
+}
+
+function hasAccessiblePage(permissions) {
+  return Object.values(permissions.pageAccess || {}).some((access) => access.view === true)
 }
 
 async function nextCode(prefix, table, column) {
@@ -649,6 +772,7 @@ const DATABASE_MIGRATIONS = [
 ]
 
 async function migrateDatabaseIfNeeded() {
+  authorizeDatabaseOperation('migrate', databaseUrl, process.env, process.argv || [])
   const migrationStartedAt = monotonicMs()
   const acquireStartedAt = monotonicMs()
   let client
@@ -706,7 +830,8 @@ async function migrateDatabaseIfNeeded() {
 }
 
 async function seedDatabase() {
-  await migrateDatabaseIfNeeded()
+  authorizeDatabaseOperation('seed', databaseUrl, process.env, process.argv || [])
+  await verifyDatabaseBaseline(pool, process.env)
   const seedStartedAt = monotonicMs()
   const acquireStartedAt = monotonicMs()
   let client = null
@@ -1047,17 +1172,23 @@ app.use('/api/username-recovery', createUsernameRecoveryRouter({ pool }))
 // Disabled by default; the router rejects before touching auth/storage when off.
 app.use('/api/recovery-email-verification', createEmailVerificationRouter({ pool, authMiddleware, requireAdmin }))
 
-app.post('/api/login', async (req, res, next) => {
+const mfaService = createMfaService({ store: postgresMfaStore(pool, { idleMinutes: SESSION_IDLE_MINUTES, maxHours: SESSION_MAX_HOURS }), env: process.env })
+app.use('/api/admin-mfa', createMfaRouter({ service: mfaService, authMiddleware, requireAdmin,
+  setSessionCookie: (id, res) => res.setHeader('Set-Cookie', sessionCookieValue(id)), publicUser, env: process.env }))
+app.post('/api/login', createLoginRateLimit({ pool, env: process.env }), async (req, res, next) => {
   const { username, password } = req.body || {}
-  if (!username || !password) return res.status(400).json({ message: 'Username and password are required' })
+  if (typeof username !== 'string' || typeof password !== 'string' || !username || !password || username.length > 200 || password.length > 1024)
+    return res.status(400).json({ message: 'Username and password are required' })
   try {
     const user = await get('SELECT * FROM users WHERE username = ?', [username])
-    if (!user) return res.status(401).json({ message: 'Invalid username or password' })
-    if ((user.status || 'active') === 'inactive') {
-      return res.status(403).json({ message: 'This account has been deactivated. Contact an administrator.' })
+    const ok = await bcrypt.compare(password, user?.password_hash || '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy')
+    if (!user || !ok || (user.status || 'active') === 'inactive') return res.status(401).json({ message: 'Invalid username or password' })
+    res.setHeader('Cache-Control', 'no-store')
+    if (user.role === 'admin' && mfaMode(process.env) === 'enforce') {
+      const result = await mfaService.challenge(user.id, user.password_hash)
+      if (result.error) return res.status(result.status).json({ message: result.error })
+      return res.json(result)
     }
-    const ok = await bcrypt.compare(password, user.password_hash)
-    if (!ok) return res.status(401).json({ message: 'Invalid username or password' })
     const safeUser = publicUser(user)
     await run('DELETE FROM auth_sessions WHERE expires_at <= CURRENT_TIMESTAMP OR idle_expires_at <= CURRENT_TIMESTAMP')
     await issueSession(user.id, res)
@@ -1292,7 +1423,7 @@ app.delete('/api/admin/crew/:id', authMiddleware, requireAdmin, async (req, res)
   res.json({ message: `Removed ${crewMember.full_name}.`, id: crewMember.id })
 })
 
-app.get('/api/admin/bus-contacts', authMiddleware, requireStaffPermission('trips'), async (req, res) => {
+app.get('/api/admin/bus-contacts', authMiddleware, requireAnyPageView('home', 'log'), async (req, res) => {
   const contacts = await all("SELECT id, bus_no, phone_number, created_at FROM bus_contacts WHERE status = 'active' ORDER BY bus_no")
   res.json({ contacts })
 })
@@ -1323,7 +1454,7 @@ app.delete('/api/admin/bus-contacts/:id', authMiddleware, requireAdmin, async (r
   res.json({ message: `Removed contact for ${contact.bus_no}.`, id: contact.id })
 })
 
-app.get('/api/admin/staff', authMiddleware, requireAdmin, async (req, res, next) => {
+app.get('/api/admin/staff', authMiddleware, requireStaffPermission('staff'), async (req, res, next) => {
   try {
   const staff = await all("SELECT id, username, full_name, role, permissions, status FROM users WHERE role = 'staff' ORDER BY full_name")
   res.json({ staff: staff.map(serializeStaff) })
@@ -1346,7 +1477,8 @@ app.post('/api/admin/staff', authMiddleware, requireAdmin, async (req, res) => {
   if (req.body?.role && req.body.role !== 'staff') {
     return res.status(403).json({ message: 'Staff accounts cannot be created with admin privileges.' })
   }
-  const permissions = sanitizePermissions({ ...DEFAULT_STAFF_PERMISSIONS, ...(req.body?.permissions || {}) })
+  const permissions = sanitizePermissions({ ...NEW_STAFF_PERMISSIONS, ...(req.body?.permissions || {}) })
+  if (!hasAccessiblePage(permissions)) return res.status(400).json({ message: 'Select at least one page for this staff account.' })
   try {
     const hash = await bcrypt.hash(String(password), 10)
     const result = await run(
@@ -1365,7 +1497,7 @@ app.post('/api/admin/staff', authMiddleware, requireAdmin, async (req, res) => {
   }
 })
 
-app.post('/api/admin/expenses', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/expenses', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   const expense_date = String(req.body?.expense_date || '').trim()
   const category = String(req.body?.category || '').trim()
   const description = String(req.body?.description || '').trim()
@@ -1388,7 +1520,7 @@ app.post('/api/admin/expenses', authMiddleware, requireAdmin, async (req, res) =
   res.status(201).json({ expense })
 })
 
-app.get('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/expense-submissions', authMiddleware, requirePageView('accounts'), async (req, res) => {
   const rows = await all(`
     SELECT id, submission_code, expense_date, bus_no, driver_name, conductor_name,
       route_code, first_leg_date, return_leg_date, first_trip_id, return_trip_id, items_json, total_expense, gross_revenue,
@@ -1405,7 +1537,7 @@ app.get('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (r
   res.json({ submissions })
 })
 
-app.post('/api/admin/expense-submissions', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/expense-submissions', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   const expenseDate = String(req.body?.expense_date || '').trim()
   const firstLegDate = String(req.body?.first_leg_date || expenseDate).trim()
   const returnLegDate = String(req.body?.return_leg_date || expenseDate).trim()
@@ -1499,7 +1631,7 @@ app.get('/api/admin/smslenz/balance', authMiddleware, requireAdmin, async (req, 
   }
 })
 
-app.get('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/revenue-entries', authMiddleware, requireRevenueLedgerRead, async (req, res) => {
   const detailColumns = req.query.summary === '1' ? '' : ', seat_rows_json, cargo_rows_json'
   const entries = await all(`
     SELECT id, entry_code, trip_id, travel_date, route_code, route_label, bus_no,
@@ -1512,7 +1644,7 @@ app.get('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, 
   res.json({ entries })
 })
 
-app.post('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/revenue-entries', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   const travelDate = String(req.body?.travel_date || '').trim()
   const routeCode = String(req.body?.route_code || '').trim()
   const busNo = String(req.body?.bus_no || '').trim()
@@ -1527,7 +1659,8 @@ app.post('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req,
   if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
   if (driverName.length > 80 || conductorName.length > 80) return res.status(400).json({ message: 'Driver and conductor names must be 80 characters or fewer.' })
   if (tripId !== null && (!Number.isSafeInteger(tripId) || tripId < 1)) return res.status(400).json({ message: 'Choose a valid trip.' })
-  if (!Array.isArray(seatRows) || seatRows.length !== 4) return res.status(400).json({ message: 'Enter all four seat fare categories.' })
+  const normalizedSeatRows = normalizeRevenueSeatRows(seatRows)
+  if (normalizedSeatRows.error) return res.status(400).json({ message: normalizedSeatRows.error })
   if (!Array.isArray(cargoRows) || cargoRows.length > 30) return res.status(400).json({ message: 'Cargo rows are invalid or exceed the 30-row limit.' })
 
   if (tripId !== null) {
@@ -1537,20 +1670,8 @@ app.post('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req,
     }
   }
 
-  const seatCategories = ['Standard', 'Intermediate', 'Special', 'Agent / Extra']
-  const cleanSeatRows = []
-  let seatCount = 0
-  for (let index = 0; index < seatCategories.length; index += 1) {
-    const row = seatRows[index] || {}
-    const count = Number(row.count)
-    const amount = Number(row.amount)
-    if (!Number.isSafeInteger(count) || count < 0 || count > 49 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
-      return res.status(400).json({ message: `Enter a valid seat count and whole-rupee amount for ${seatCategories[index]}.` })
-    }
-    seatCount += count
-    cleanSeatRows.push({ category: seatCategories[index], count, amount, total: count * amount })
-  }
-  if (seatCount > 49) return res.status(400).json({ message: 'Seat counts cannot exceed the 49-seat bus capacity.' })
+  const cleanSeatRows = normalizedSeatRows.rows
+  const seatCount = normalizedSeatRows.seatCount
 
   const cleanCargoRows = []
   for (const row of cargoRows) {
@@ -1597,7 +1718,7 @@ app.post('/api/admin/revenue-entries', authMiddleware, requireAdmin, async (req,
   }
 })
 
-app.post('/api/admin/duties', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/duties', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   const busNo = String(req.body?.bus_no || '').trim()
   const firstTripId = Number(req.body?.first_trip_id)
   const returnTripId = Number(req.body?.return_trip_id)
@@ -1671,7 +1792,7 @@ app.post('/api/admin/duties', authMiddleware, requireAdmin, async (req, res) => 
   }
 })
 
-app.post('/api/admin/duties/:id/expenses', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/duties/:id/expenses', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   const expense_date = String(req.body?.expense_date || '').trim()
   const category = String(req.body?.category || '').trim()
   const description = String(req.body?.description || '').trim()
@@ -1713,7 +1834,7 @@ app.post('/api/admin/duties/:id/expenses', authMiddleware, requireAdmin, async (
   }
 })
 
-app.post('/api/admin/duties/:id/adjustments', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/duties/:id/adjustments', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   const adjustment_date = String(req.body?.adjustment_date || '').trim()
   const type = String(req.body?.type || '').trim()
   const description = String(req.body?.description || '').trim()
@@ -1756,7 +1877,7 @@ app.post('/api/admin/duties/:id/adjustments', authMiddleware, requireAdmin, asyn
   }
 })
 
-app.delete('/api/admin/duties/:id/expenses/:expenseId', authMiddleware, requireAdmin, async (req, res) => {
+app.delete('/api/admin/duties/:id/expenses/:expenseId', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   try {
     await exec('BEGIN IMMEDIATE')
     const duty = await get('SELECT * FROM bus_duties WHERE id = ?', [req.params.id])
@@ -1784,7 +1905,7 @@ app.delete('/api/admin/duties/:id/expenses/:expenseId', authMiddleware, requireA
   }
 })
 
-app.delete('/api/admin/duties/:id/adjustments/:adjustmentId', authMiddleware, requireAdmin, async (req, res) => {
+app.delete('/api/admin/duties/:id/adjustments/:adjustmentId', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   try {
     await exec('BEGIN IMMEDIATE')
     const duty = await get('SELECT * FROM bus_duties WHERE id = ?', [req.params.id])
@@ -1812,7 +1933,7 @@ app.delete('/api/admin/duties/:id/adjustments/:adjustmentId', authMiddleware, re
   }
 })
 
-app.post('/api/admin/duties/:id/finalize', authMiddleware, requireAdmin, async (req, res) => {
+app.post('/api/admin/duties/:id/finalize', authMiddleware, requirePageManage('accounts'), async (req, res) => {
   try {
     await exec('BEGIN IMMEDIATE')
     const duty = await get('SELECT * FROM bus_duties WHERE id = ?', [req.params.id])
@@ -1921,8 +2042,10 @@ app.patch('/api/admin/staff/:id', authMiddleware, requireAdmin, async (req, res,
     params.push(req.body.status)
   }
   if (req.body.permissions) {
+    const permissions = sanitizePermissions(req.body.permissions)
+    if (!hasAccessiblePage(permissions)) return res.status(400).json({ message: 'Select at least one page for this staff account.' })
     updates.push('permissions = ?')
-    params.push(JSON.stringify(sanitizePermissions(req.body.permissions)))
+    params.push(JSON.stringify(permissions))
   }
   if (!updates.length) return res.json({ staff: serializeStaff(person) })
   params.push(person.id)
@@ -1965,6 +2088,7 @@ app.patch('/api/admin/staff/:id/permissions', authMiddleware, requireAdmin, asyn
   const person = await get("SELECT id, username, full_name, role, status FROM users WHERE id = ? AND role = 'staff'", [req.params.id])
   if (!person) return res.status(404).json({ message: 'Staff account not found.' })
   const permissions = sanitizePermissions(req.body?.permissions || {})
+  if (!hasAccessiblePage(permissions)) return res.status(400).json({ message: 'Select at least one page for this staff account.' })
   await run('UPDATE users SET permissions = ? WHERE id = ?', [JSON.stringify(permissions), person.id])
   await audit(req.user, 'staff.permissions.update', 'user', person.id, JSON.stringify(permissions))
   res.json({ staff: serializeStaff({ ...person, permissions: JSON.stringify(permissions) }) })
@@ -1991,7 +2115,7 @@ app.use('/api/admin/staff', (error, req, res, next) => {
   res.status(500).json({ message: 'Staff management request failed. Check the server database schema and try again.' })
 })
 
-app.get('/api/buses', authMiddleware, async (req, res) => {
+app.get('/api/buses', authMiddleware, requireAnyPageView('home', 'log'), async (req, res) => {
   const includeInactive = req.query.includeInactive === '1' && req.user.role === 'admin'
   const buses = await all(
     includeInactive ? 'SELECT * FROM buses ORDER BY id' : "SELECT * FROM buses WHERE status = 'active' ORDER BY id",
@@ -2115,7 +2239,7 @@ app.delete('/api/buses/:id', authMiddleware, requireAdmin, async (req, res) => {
   res.json({ deleted: true })
 })
 
-app.get('/api/trips', authMiddleware, async (req, res) => {
+app.get('/api/trips', authMiddleware, requireDashboardTripAccess, async (req, res) => {
   const { date, route, busId } = req.query
   const clauses = []
   const params = []
@@ -2128,7 +2252,7 @@ app.get('/api/trips', authMiddleware, async (req, res) => {
   res.json({ trips: await Promise.all(trips.map(hydrateTrip)) })
 })
 
-app.delete('/api/trips/:id', authMiddleware, requireStaffPermission('trips'), async (req, res) => {
+app.delete('/api/trips/:id', authMiddleware, requirePageManage('home', 'trips'), async (req, res) => {
   try {
     await exec('BEGIN IMMEDIATE')
     const trip = await get('SELECT * FROM trips WHERE id = ?', [req.params.id])
@@ -2165,14 +2289,14 @@ app.delete('/api/trips/:id', authMiddleware, requireStaffPermission('trips'), as
   }
 })
 
-app.get('/api/trips/:id', authMiddleware, async (req, res) => {
+app.get('/api/trips/:id', authMiddleware, requireAnyPageView('home', 'log'), async (req, res) => {
   const trip = await get(`${tripJoinSelect()} WHERE t.id = ?`, [req.params.id])
   if (!trip) return res.status(404).json({ message: 'Trip not found' })
   const bookings = await all("SELECT * FROM bookings WHERE trip_id = ? ORDER BY seat_number", [trip.id])
   res.json({ trip: await hydrateTrip(trip), bookings })
 })
 
-app.post('/api/trips', authMiddleware, requireStaffPermission('trips'), async (req, res) => {
+app.post('/api/trips', authMiddleware, requirePageManage('home', 'trips'), async (req, res) => {
   const {
     travel_date, route_code, bus_id, bus_no, departure_time, status,
     driver_name, driver_phone, conductor_name, conductor_phone,
@@ -2231,7 +2355,7 @@ app.post('/api/trips', authMiddleware, requireStaffPermission('trips'), async (r
   res.status(201).json({ trip: await hydrateTrip(trip) })
 })
 
-app.patch('/api/trips/:id', authMiddleware, requireStaffPermission('trips'), async (req, res) => {
+app.patch('/api/trips/:id', authMiddleware, requirePageManage('home', 'trips'), async (req, res) => {
   const trip = await get('SELECT t.*, COALESCE(t.bus_no, b.registration_no) as registration_no FROM trips t LEFT JOIN buses b ON b.id = t.bus_id WHERE t.id = ?', [req.params.id])
   if (!trip) return res.status(404).json({ message: 'Trip not found' })
   const linkedDuty = await get(`SELECT d.duty_code, d.status FROM bus_duties d WHERE d.first_trip_id = ? OR d.return_trip_id = ? LIMIT 1`, [trip.id, trip.id])
@@ -2311,7 +2435,7 @@ app.patch('/api/trips/:id', authMiddleware, requireStaffPermission('trips'), asy
   res.json({ trip: await hydrateTrip(updated) })
 })
 
-app.get('/api/bookings', authMiddleware, async (req, res) => {
+app.get('/api/bookings', authMiddleware, requireAnyPageView('home', 'log'), async (req, res) => {
   const { date, route, bus, tripId, q, from, sms, status, page = 1, pageSize = 50 } = req.query
   const clauses = []
   const params = []
@@ -2355,7 +2479,7 @@ app.get('/api/bookings', authMiddleware, async (req, res) => {
   res.json({ bookings, total: Number(totalRow.count), page: Number(page) || 1, pageSize: limit })
 })
 
-app.post('/api/bookings', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 'passengers'), async (req, res) => {
   const {
     trip_id, seat_number, passenger_name, contact, gender, boarding_point, destination, fare, notes, payment_status, booking_group_id,
   } = req.body || {}
@@ -2413,7 +2537,7 @@ app.post('/api/bookings', authMiddleware, requireStaffPermission('passengers'), 
   }
 })
 
-app.post('/api/bookings/:id/cancel', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.post('/api/bookings/:id/cancel', authMiddleware, requirePageManage('log', 'passengers'), async (req, res) => {
   try {
     await exec('BEGIN IMMEDIATE')
     const booking = await get(
@@ -2449,7 +2573,7 @@ app.post('/api/bookings/:id/cancel', authMiddleware, requireStaffPermission('pas
   }
 })
 
-app.patch('/api/bookings/:id/confirmation', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.patch('/api/bookings/:id/confirmation', authMiddleware, requirePageManage('log', 'passengers'), async (req, res) => {
   const confirmationStatus = req.body?.confirmation_status
   if (!['confirmed', 'unconfirmed'].includes(confirmationStatus)) {
     return res.status(400).json({ message: 'Choose confirmed or unconfirmed status.' })
@@ -2465,7 +2589,7 @@ app.patch('/api/bookings/:id/confirmation', authMiddleware, requireStaffPermissi
   res.json({ booking: updated })
 })
 
-app.patch('/api/bookings/:id/contact', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.patch('/api/bookings/:id/contact', authMiddleware, requireAnyPageManage(['log', 'customers'], 'passengers'), async (req, res) => {
   const contact = String(req.body?.contact || '').trim()
   if (!isValidPhone(contact) || contact.length > 30) return res.status(400).json({ message: 'Enter a valid customer mobile number (up to 30 characters).' })
   const booking = await get('SELECT * FROM bookings WHERE id = ?', [req.params.id])
@@ -2480,7 +2604,7 @@ app.patch('/api/bookings/:id/contact', authMiddleware, requireStaffPermission('p
   res.json({ bookings })
 })
 
-app.patch('/api/bookings/:id/details', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.patch('/api/bookings/:id/details', authMiddleware, requireAnyPageManage(['log', 'customers'], 'passengers'), async (req, res) => {
   const body = req.body || {}
   const hasName = Object.hasOwn(body, 'passenger_name')
   const hasContact = Object.hasOwn(body, 'contact')
@@ -2531,7 +2655,7 @@ app.patch('/api/bookings/:id/details', authMiddleware, requireStaffPermission('p
   res.json({ bookings })
 })
 
-app.post('/api/bookings/:id/sms', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.post('/api/bookings/:id/sms', authMiddleware, requirePageManage('log', 'passengers'), async (req, res) => {
   const bookingId = Number(req.params.id)
   if (!Number.isSafeInteger(bookingId) || bookingId < 1) return res.status(400).json({ message: 'Invalid booking ID.' })
   let group = []
@@ -2613,7 +2737,7 @@ app.post('/api/bookings/:id/sms', authMiddleware, requireStaffPermission('passen
   res.json({ ok: true, status: result.status, message: 'SmsLenz accepted the confirmation SMS.', seatCount: group.length })
 })
 
-app.post('/api/bookings/:id/cancellation-sms', authMiddleware, requireStaffPermission('passengers'), async (req, res) => {
+app.post('/api/bookings/:id/cancellation-sms', authMiddleware, requirePageManage('log', 'passengers'), async (req, res) => {
   const bookingId = Number(req.params.id)
   if (!Number.isSafeInteger(bookingId) || bookingId < 1) return res.status(400).json({ message: 'Invalid booking ID.' })
   let group = []
@@ -2693,7 +2817,7 @@ app.post('/api/bookings/:id/cancellation-sms', authMiddleware, requireStaffPermi
   res.json({ ok: true, status: result.status, message: 'SmsLenz accepted the cancellation SMS.', seatCount: group.length })
 })
 
-app.get('/api/cargo', authMiddleware, async (req, res) => {
+app.get('/api/cargo', authMiddleware, requireAnyPageView('home', 'log'), async (req, res) => {
   const { date, route, bus, tripId, status, q } = req.query
   const clauses = []
   const params = []
@@ -2711,7 +2835,7 @@ app.get('/api/cargo', authMiddleware, async (req, res) => {
   res.json({ cargo: items })
 })
 
-app.post('/api/cargo', authMiddleware, requireStaffPermission('cargo'), async (req, res) => {
+app.post('/api/cargo', authMiddleware, requireAnyPageManage(['home', 'log'], 'cargo'), async (req, res) => {
   const {
     trip_id, sender_name, sender_phone, receiver_name, receiver_phone, description, weight, charge, payment_status, cargo_status, notes,
   } = req.body || {}
@@ -2758,7 +2882,7 @@ app.post('/api/cargo', authMiddleware, requireStaffPermission('cargo'), async (r
   res.status(201).json({ cargo: item })
 })
 
-app.delete('/api/cargo/:id', authMiddleware, requireStaffPermission('cargo'), async (req, res) => {
+app.delete('/api/cargo/:id', authMiddleware, requirePageManage('log', 'cargo'), async (req, res) => {
   const item = await get('SELECT id, cargo_ref FROM cargo WHERE id = ?', [req.params.id])
   if (!item) return res.status(404).json({ message: 'Cargo entry not found' })
   await run('DELETE FROM cargo WHERE id = ?', [item.id])
@@ -2766,28 +2890,74 @@ app.delete('/api/cargo/:id', authMiddleware, requireStaffPermission('cargo'), as
   res.json({ message: `Cargo ${item.cargo_ref} deleted.` })
 })
 
-app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) => {
+app.get('/api/admin/dashboard', authMiddleware, requireDashboardScope, async (req, res) => {
   const dashboardStartedAt = monotonicMs()
   const scope = String(req.query.scope || '')
+  const canViewFinancialData = req.user?.role === 'admin' || req.staffPermissions?.pageAccess?.accounts?.view === true
+  if (scope === 'customers') {
+    const [passengerRecords, regularCustomers] = await Promise.all([
+      all(`SELECT bk.status, bk.confirmation_status, t.travel_date, t.route_code, bk.boarding_point
+        FROM bookings bk JOIN trips t ON t.id = bk.trip_id
+        ORDER BY t.travel_date DESC, bk.created_at DESC LIMIT 200`),
+      all(`
+        WITH normalized_bookings AS (
+          SELECT bk.passenger_name, bk.contact, bk.trip_id, t.travel_date, bk.created_at,
+            CASE
+              WHEN digits.value LIKE '00%' THEN SUBSTRING(digits.value FROM 3)
+              WHEN digits.value LIKE '0%' AND LENGTH(digits.value) = 10 THEN '94' || SUBSTRING(digits.value FROM 2)
+              WHEN LENGTH(digits.value) = 9 THEN '94' || digits.value
+              ELSE digits.value
+            END AS mobile
+          FROM bookings bk
+          JOIN trips t ON t.id = bk.trip_id
+          CROSS JOIN LATERAL (SELECT REGEXP_REPLACE(COALESCE(bk.contact, ''), '[^0-9]', '', 'g') AS value) digits
+          WHERE bk.status = 'confirmed'
+            AND bk.confirmation_status = 'confirmed'
+            AND TRIM(COALESCE(bk.contact, '')) != ''
+        ), per_trip AS (
+          SELECT mobile, trip_id, MAX(travel_date) AS travel_date
+          FROM normalized_bookings WHERE mobile != ''
+          GROUP BY mobile, trip_id
+        ), customer_stats AS (
+          SELECT mobile, ARRAY_AGG(travel_date ORDER BY travel_date DESC) AS trip_dates,
+            COUNT(*) AS trip_count, COUNT(DISTINCT LEFT(travel_date, 7)) AS month_count,
+            MAX(travel_date) AS last_trip_date
+          FROM per_trip GROUP BY mobile HAVING COUNT(*) >= 2
+        ), customer_profiles AS (
+          SELECT DISTINCT ON (mobile) mobile, passenger_name, contact
+          FROM normalized_bookings WHERE mobile != ''
+          ORDER BY mobile, travel_date DESC, created_at DESC
+        )
+        SELECT profile.passenger_name,
+          CASE WHEN LENGTH(stats.mobile) = 11 AND LEFT(stats.mobile, 2) = '94' THEN '+' || stats.mobile ELSE profile.contact END AS contact,
+          stats.trip_dates, stats.trip_count, stats.month_count, stats.last_trip_date
+        FROM customer_stats stats JOIN customer_profiles profile ON profile.mobile = stats.mobile
+        ORDER BY stats.trip_count DESC, stats.month_count DESC, stats.last_trip_date DESC
+      `),
+    ])
+    const context = transactionContext.getStore()
+    if (context) context.dashboardMs += monotonicMs() - dashboardStartedAt
+    return res.json({ scope, passengerRecords, regularCustomers })
+  }
   if (scope === 'dashboard' || scope === 'accounts') {
     const [trips, buses, expenses, passengerDaily, cargoDaily] = await Promise.all([
       all(`${tripJoinSelect()} WHERE t.status != 'cancelled' ORDER BY t.travel_date DESC, t.id DESC LIMIT 200`),
       all('SELECT id, registration_no, status, driver_name, conductor_name FROM buses ORDER BY id'),
-      all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source, bus_no FROM daily_expenses ORDER BY expense_date DESC, id DESC'),
-      all(`
+      canViewFinancialData ? all('SELECT id, expense_date, category, description, amount, duty_id, trip_id, expense_source, bus_no FROM daily_expenses ORDER BY expense_date DESC, id DESC') : [],
+      canViewFinancialData ? all(`
         SELECT t.id as trip_id, t.trip_code, t.travel_date, t.route_code, t.route_label,
           COALESCE(t.bus_no, b.registration_no) as registration_no,
           COUNT(*) as passenger_count, COALESCE(SUM(bk.fare), 0) as passenger_revenue
         FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id
         WHERE bk.status = 'confirmed' AND bk.confirmation_status = 'confirmed'
         GROUP BY t.id, t.trip_code, t.travel_date, t.route_code, t.route_label, t.bus_no, b.registration_no
-      `),
-      all(`
+      `) : [],
+      canViewFinancialData ? all(`
         SELECT trip_id, travel_date, route_code, route_label, bus_registration,
           COUNT(*) as cargo_count, COALESCE(SUM(charge), 0) as cargo_revenue
         FROM cargo WHERE travel_date IS NOT NULL AND TRIM(travel_date) != ''
         GROUP BY trip_id, travel_date, route_code, route_label, bus_registration
-      `),
+      `) : [],
     ])
     const dailyRevenueMap = new Map()
     for (const row of passengerDaily) {
@@ -2821,8 +2991,9 @@ app.get('/api/admin/dashboard', authMiddleware, requireAdmin, async (req, res) =
       trip_count: trips.length, bus_count: buses.length, revenue_row_count: dailyRevenue.length,
     }))
     return res.json({
-      scope, trips: await Promise.all(trips.map(hydrateTrip)), buses, expenses,
-      dailyRevenue, smsGateway: { configured: smsConfig().configured, provider: smsConfig().provider },
+      scope, trips: await Promise.all(trips.map(hydrateTrip)), buses,
+      ...(canViewFinancialData ? { expenses, dailyRevenue } : {}),
+      ...(req.user?.role === 'admin' ? { smsGateway: { configured: smsConfig().configured, provider: smsConfig().provider } } : {}),
     })
   }
   const [trips, dutyData, buses, crewMembers, expenses, passengerRecords, regularCustomers, cargoRecords,
@@ -3012,7 +3183,7 @@ async function initializeDatabaseWithRetry(initializationId) {
   for (let attempt = 0; ; attempt += 1) {
     try {
       const initializationStartedAt = monotonicMs()
-      await seedDatabase()
+      await verifyDatabaseBaseline(pool, process.env)
       databaseIsReady = true
       console.info(JSON.stringify({
         kind: 'database_init',
@@ -3048,6 +3219,7 @@ async function initializeDatabaseWithRetry(initializationId) {
 }
 
 function ensureDatabaseReady() {
+  if (databaseOperation) return Promise.resolve()
   if (databaseIsReady) return Promise.resolve()
   if (!databaseInitialization) {
     const initializationId = randomUUID()
@@ -3062,7 +3234,13 @@ function ensureDatabaseReady() {
 const databaseReady = ensureDatabaseReady()
 if (IS_VERCEL) databaseReady.catch(() => {})
 
-if (!IS_VERCEL) {
+if (databaseOperation) {
+  try {
+    if (databaseOperation === 'migrate') await migrateDatabaseIfNeeded()
+    else await seedDatabase()
+    console.log('Explicit approved local database operation completed.')
+  } finally { await pool.end() }
+} else if (!IS_VERCEL) {
   app.listen(PORT, () => {
     console.log(`District Line API listening on http://localhost:${PORT}; waiting for database connection.`)
   })

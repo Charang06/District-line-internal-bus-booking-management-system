@@ -1,0 +1,218 @@
+[
+  {
+    "name": "fixed date changes clear an obsolete trip selection",
+    "passed": true
+  },
+  {
+    "name": "fixed date query retrieves trips absent from the 200-trip summary",
+    "passed": true
+  },
+  {
+    "name": "fixed combined date/bus/route/trip result",
+    "passed": true
+  },
+  {
+    "name": "fixed reset and route selection",
+    "passed": true
+  },
+  {
+    "name": "fixed API failure is shown and retry recovers",
+    "passed": true
+  },
+  {
+    "name": "fixed registration invalidates cached dashboard bus numbers",
+    "passed": true
+  },
+  {
+    "name": "fixed failed registration leaves bus list unchanged",
+    "passed": true
+  },
+  {
+    "name": "fixed staff dropdown refreshes when opened",
+    "passed": true
+  },
+  {
+    "name": "fixed valid selected bus preserved and suggestions deduplicated",
+    "passed": true
+  },
+  {
+    "name": "fixed authorized edit uses the selected bus ID",
+    "passed": true
+  },
+  {
+    "name": "restricted staff cannot see trip actions",
+    "passed": true
+  },
+  {
+    "name": "administrator can create and edit a synthetic staff account",
+    "passed": true
+  },
+  {
+    "name": "administrator logout returns to sign-in",
+    "passed": true
+  },
+  {
+    "name": "booking form validates missing seats and saves synthetic selection",
+    "passed": true
+  },
+  {
+    "name": "cargo form validates missing goods and submits only synthetic data",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 360",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 390",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 768",
+    "passed": true
+  },
+  {
+    "name": "responsive booking and navigation 1440",
+    "passed": true
+  },
+  {
+    "name": "staff logout returns to sign-in",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 360",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 390",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 768",
+    "passed": true
+  },
+  {
+    "name": "responsive sign-in 1440",
+    "passed": true
+  },
+  {
+    "name": "mobile MFA challenge withholds admin UI, displays failure and completes synthetic verification",
+    "passed": true
+  },
+  {
+    "name": "Staff page layout and typography 1440",
+    "passed": true
+  },
+  {
+    "name": "Staff page layout and typography 768",
+    "passed": true
+  },
+  {
+    "name": "Staff page layout and typography 390",
+    "passed": true
+  },
+  {
+    "name": "Staff page layout and typography 320",
+    "passed": true
+  },
+  {
+    "name": "staff modal fits viewport and has labelled fields 1440",
+    "passed": true
+  },
+  {
+    "name": "bus modal fits viewport and has labelled fields 1440",
+    "passed": true
+  },
+  {
+    "name": "staff modal fits viewport and has labelled fields 768",
+    "passed": true
+  },
+  {
+    "name": "bus modal fits viewport and has labelled fields 768",
+    "passed": true
+  },
+  {
+    "name": "staff modal fits viewport and has labelled fields 390",
+    "passed": true
+  },
+  {
+    "name": "bus modal fits viewport and has labelled fields 390",
+    "passed": true
+  },
+  {
+    "name": "staff modal fits viewport and has labelled fields 320",
+    "passed": true
+  },
+  {
+    "name": "bus modal fits viewport and has labelled fields 320",
+    "passed": true
+  },
+  {
+    "name": "summary counts derive from fixture data and permissions are read-only",
+    "passed": true
+  },
+  {
+    "name": "staff search, selection, status filter and empty state",
+    "passed": true
+  },
+  {
+    "name": "Add Staff dialog keyboard focus, trapping, Escape and restoration",
+    "passed": true
+  },
+  {
+    "name": "staff creation validation, inline failure, disabled state and successful retry",
+    "passed": true
+  },
+  {
+    "name": "staff editing preserves the six permission names and saves changes only on submit",
+    "passed": true
+  },
+  {
+    "name": "staff deactivate and activate require confirmation, Cancel leaves state intact",
+    "passed": true
+  },
+  {
+    "name": "password reset validates, announces failure and retries through the existing endpoint",
+    "passed": true
+  },
+  {
+    "name": "staff deletion is confirmed and selection recovers after deletion",
+    "passed": true
+  },
+  {
+    "name": "driver and conductor registration, failure feedback and crew deletion confirmation",
+    "passed": true
+  },
+  {
+    "name": "bus search matches registration and display name",
+    "passed": true
+  },
+  {
+    "name": "Register Bus validates, keeps optional fields optional, reports failure and prevents duplicate submit",
+    "passed": true
+  },
+  {
+    "name": "bus contact and display name save via existing fields",
+    "passed": true
+  },
+  {
+    "name": "bus delete confirmation and inactive bus reactivation preserve existing workflows",
+    "passed": true
+  },
+  {
+    "name": "new buses refresh Trip Controls and Bus No suggestions without duplicate entries",
+    "passed": true
+  },
+  {
+    "name": "Staff data loading error is announced and Retry restores the directory",
+    "passed": true
+  },
+  {
+    "name": "empty staff directory and crew and bus states remain usable",
+    "passed": true
+  },
+  {
+    "name": "ordinary staff cannot see administrator Staff navigation or management controls",
+    "passed": true
+  }
+]

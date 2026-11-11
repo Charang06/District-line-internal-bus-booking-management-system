@@ -1,0 +1,441 @@
+/* Home-only presentation refinements; all booking, trip, and form behavior stays in place. */
+.home-page-shell {
+  --home-navy: #102b46;
+  --home-gold: #c99a45;
+  --home-line: #dce4ed;
+}
+
+.home-page-shell .topbar {
+  z-index: 1100;
+  background: #f8fafc;
+  border-bottom: 1px solid #dce4ed;
+  box-shadow: 0 4px 14px rgb(16 43 70 / 8%);
+  isolation: isolate;
+  scroll-margin-top: 8px;
+}
+
+.home-page-shell .dashboard {
+  grid-template-columns: minmax(270px, 0.26fr) minmax(0, 0.74fr);
+  align-items: start;
+  gap: 14px 16px;
+  padding: 20px clamp(16px, 2.2vw, 32px) 28px;
+}
+
+.home-page-shell .dashboard .left-panel,
+.home-page-shell .dashboard .route-card,
+.home-page-shell .dashboard .booking-header,
+.home-page-shell .dashboard .seat-panel,
+.home-page-shell .dashboard .reservation-panel,
+.home-page-shell .dashboard .cargo-panel,
+.home-page-shell .dashboard .empty-trip-state {
+  border: 1px solid var(--home-line);
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgb(16 43 70 / 5%);
+}
+
+.home-page-shell .dashboard .left-panel {
+  padding: 16px;
+}
+
+.home-page-shell .dashboard .mini-calendar {
+  width: 100%;
+}
+
+.home-page-shell .dashboard .calendar-header {
+  margin: 0 0 16px;
+  color: var(--home-navy);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.home-page-shell .dashboard .calendar-nav button {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--home-line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--home-navy);
+  font-size: 18px;
+}
+
+.home-page-shell .dashboard .calendar-nav button:hover {
+  border-color: var(--home-gold);
+  background: #fff8eb;
+}
+
+.home-page-shell .dashboard .calendar-grid {
+  gap: 8px 5px;
+}
+
+.home-page-shell .dashboard .calendar-day-name {
+  color: #718096;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.home-page-shell .dashboard .calendar-date {
+  min-height: 36px;
+  border-radius: 9px;
+  color: #26384b;
+  font-weight: 600;
+}
+
+.home-page-shell .dashboard .calendar-date:hover:not(.selected) {
+  background: #edf3f8;
+}
+
+.home-page-shell .dashboard .calendar-date.selected {
+  width: 36px;
+  height: 36px;
+  border-color: #b88636;
+  border-radius: 9px;
+  background: var(--home-gold);
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(16 43 70 / 16%);
+}
+
+.home-page-shell .dashboard .main-panel {
+  gap: 12px;
+}
+
+.home-page-shell .dashboard .route-card {
+  min-height: 104px;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.home-page-shell .dashboard .route-tag {
+  color: #56677b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.home-page-shell .dashboard .route-title {
+  color: var(--home-navy);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.home-page-shell .dashboard .route-boxes {
+  gap: 10px;
+}
+
+.home-page-shell .dashboard .route-box {
+  min-height: 74px;
+  border-radius: 10px;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.home-page-shell .dashboard .route-box:focus-visible,
+.home-page-shell .dashboard .calendar-date:focus-visible,
+.home-page-shell .dashboard .calendar-nav button:focus-visible {
+  outline: 3px solid rgb(201 154 69 / 38%);
+  outline-offset: 2px;
+}
+
+.home-page-shell .dashboard .route-box.active {
+  border-color: #b88636;
+  background: var(--home-gold);
+  color: #102b46;
+}
+
+.home-page-shell .dashboard .route-box.active .route-arrow {
+  color: #102b46;
+}
+
+.home-page-shell .dashboard .schedule-strip {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 9px 12px 9px 34px;
+  border-radius: 9px;
+}
+
+.home-page-shell .dashboard .schedule-strip::before {
+  position: absolute;
+  left: 12px;
+}
+
+.home-page-shell .dashboard .schedule-strip > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-transform: none;
+}
+
+.home-page-shell .dashboard .schedule-strip span:last-child {
+  color: #854d0e;
+  text-align: right;
+}
+
+.home-page-shell .home-bus-banner {
+  min-height: 156px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgb(16 43 70 / 8%);
+}
+
+.home-page-shell .home-bus-banner img {
+  min-height: 156px;
+  object-position: center 62%;
+}
+
+.home-page-shell .dashboard .trip-workspaces {
+  gap: 16px;
+}
+
+/* Match the calendar track above to the seat-map track below. */
+.home-page-shell .dashboard .seat-layout {
+  grid-template-columns: minmax(270px, 0.26fr) minmax(0, 0.74fr);
+  align-items: stretch;
+  gap: 16px;
+}
+
+.home-page-shell .dashboard .trip-seat-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.home-page-shell .dashboard .seat-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-bottom: 6px;
+}
+
+.home-page-shell .dashboard .seat-deck {
+  flex: 1 1 auto;
+  justify-content: space-between;
+}
+
+.home-page-shell .dashboard .add-another-bus {
+  align-self: stretch;
+  width: 100%;
+  margin-top: 14px;
+}
+
+.home-page-shell .dashboard .booking-header {
+  gap: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.home-page-shell .dashboard .info-block {
+  min-height: 48px;
+  border-radius: 8px;
+  background: #f6f8fb;
+}
+
+.home-page-shell .dashboard .info-block span {
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.home-page-shell .dashboard .info-block strong {
+  color: var(--home-navy);
+  font-size: 12px;
+}
+
+.home-page-shell .dashboard .workspace-actions .ghost-button,
+.home-page-shell .dashboard .primary-button {
+  min-height: 40px;
+  border-radius: 8px;
+}
+
+.home-page-shell .dashboard .seat-panel {
+  background: #fff;
+}
+
+.home-page-shell .dashboard .panel-title {
+  color: var(--home-navy);
+  font-weight: 700;
+}
+
+.home-page-shell .dashboard .seat-legend .legend {
+  min-height: 34px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.home-page-shell .dashboard .seat {
+  border-radius: 7px;
+}
+
+.home-page-shell .dashboard .reservation-panel,
+.home-page-shell .dashboard .cargo-panel {
+  border-radius: 12px;
+}
+
+.home-page-shell .dashboard .panel-header,
+.home-page-shell .dashboard .cargo-header {
+  min-height: 46px;
+  padding: 10px 14px;
+  background: #f8fafc;
+}
+
+.home-page-shell .dashboard .panel-header h2,
+.home-page-shell .dashboard .cargo-header h3 {
+  color: var(--home-navy);
+  font-size: 14px;
+}
+
+.home-page-shell .dashboard .reservation-panel label > span,
+.home-page-shell .dashboard .cargo-panel label > span,
+.home-page-shell .dashboard .cargo-payment-control > span {
+  color: #43556b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.home-page-shell .dashboard .reservation-panel :is(input, select, textarea),
+.home-page-shell .dashboard .cargo-panel :is(input, select, textarea) {
+  min-height: 40px;
+  border-radius: 8px;
+  background: #fbfcfe;
+  font-size: 13px;
+}
+
+.home-page-shell .dashboard .reservation-panel textarea,
+.home-page-shell .dashboard .cargo-panel textarea {
+  min-height: 76px;
+}
+
+.home-page-shell .dashboard .radio-pill {
+  min-height: 38px;
+  border-radius: 8px;
+}
+
+.home-page-shell .dashboard .form-badge {
+  border-radius: 7px;
+}
+
+.home-page-shell .dashboard .reservation-actions > .primary-button,
+.home-page-shell .dashboard .cargo-panel > .primary-button {
+  min-height: 44px;
+  border-radius: 9px;
+  font-weight: 700;
+}
+
+.home-page-shell .site-footer {
+  margin-top: 16px;
+}
+
+.home-page-shell .footer-logo {
+  object-position: center;
+}
+
+@media (max-width: 1050px) {
+  .home-page-shell .dashboard {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 20px 24px;
+  }
+
+  .home-page-shell .dashboard .main-panel {
+    grid-column: 1;
+  }
+
+  .home-page-shell .dashboard .route-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .home-page-shell .dashboard .seat-layout {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .home-page-shell .dashboard .trip-seat-column {
+    height: auto;
+  }
+
+  .home-page-shell .dashboard .seat-panel {
+    flex: 0 0 auto;
+  }
+
+  .home-page-shell .dashboard .seat-deck {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+  }
+
+  .home-page-shell .home-bus-banner {
+    min-height: 180px;
+  }
+
+  .home-page-shell .home-bus-banner img {
+    min-height: 180px;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-page-shell .topbar {
+    box-shadow: 0 3px 12px rgb(16 43 70 / 10%);
+  }
+
+  .home-page-shell .topbar-brand .nav-logo {
+    width: 68px;
+  }
+
+  .home-page-shell .dashboard {
+    padding: 12px 12px 22px;
+  }
+
+  .home-page-shell .dashboard .route-box {
+    min-height: 64px;
+  }
+
+  .home-page-shell .dashboard .schedule-strip {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .home-page-shell .dashboard .schedule-strip span:last-child {
+    text-align: left;
+  }
+
+  .home-page-shell .dashboard .seat-layout {
+    gap: 12px;
+  }
+
+  .home-page-shell .dashboard .seat-panel {
+    padding: 12px;
+  }
+
+  .home-page-shell .dashboard .trip-entry-column {
+    gap: 12px;
+  }
+
+  .home-page-shell .dashboard .booking-header {
+    border-radius: 10px;
+  }
+
+  .home-page-shell .dashboard .home-bus-banner,
+  .home-page-shell .home-bus-banner img {
+    min-height: 164px;
+  }
+}
+
+@media (max-width: 420px) {
+  .home-page-shell .dashboard {
+    padding-inline: 8px;
+  }
+
+  .home-page-shell .dashboard .left-panel {
+    padding: 12px;
+  }
+
+  .home-page-shell .dashboard .booking-header {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .home-page-shell .dashboard .seat-row {
+    gap: 6px;
+  }
+
+  .home-page-shell .dashboard .aisle-index {
+    width: 30px;
+  }
+}

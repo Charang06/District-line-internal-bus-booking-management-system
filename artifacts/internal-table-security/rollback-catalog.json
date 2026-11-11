@@ -1,0 +1,6136 @@
+{
+  "at": "2026-11-08T09:39:24.882Z",
+  "projectFingerprint": "868295d24a51",
+  "tables": [
+    "admin_recovery_email_verification_limits",
+    "admin_recovery_email_verification_tokens",
+    "admin_username_recovery_limits",
+    "admin_username_recovery_tokens",
+    "audit_logs",
+    "auth_sessions",
+    "bookings",
+    "bus_contacts",
+    "bus_duties",
+    "buses",
+    "cargo",
+    "crew_members",
+    "daily_expenses",
+    "duty_adjustments",
+    "expense_submissions",
+    "password_recovery_rate_limits",
+    "password_recovery_tokens",
+    "revenue_entries",
+    "schema_meta",
+    "sms_attempts",
+    "trips",
+    "users"
+  ],
+  "sequences": [
+    "admin_recovery_email_verification_tokens_id_seq",
+    "admin_username_recovery_tokens_id_seq",
+    "audit_logs_id_seq",
+    "auth_sessions_id_seq",
+    "bookings_id_seq",
+    "bus_contacts_id_seq",
+    "bus_duties_id_seq",
+    "buses_id_seq",
+    "cargo_id_seq",
+    "crew_members_id_seq",
+    "daily_expenses_id_seq",
+    "duty_adjustments_id_seq",
+    "expense_submissions_id_seq",
+    "password_recovery_tokens_id_seq",
+    "revenue_entries_id_seq",
+    "sms_attempts_id_seq",
+    "trips_id_seq",
+    "users_id_seq"
+  ],
+  "objects": [
+    {
+      "oid": 18092,
+      "relname": "admin_recovery_email_verification_limits",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "owner": "postgres"
+    },
+    {
+      "oid": 18074,
+      "relname": "admin_recovery_email_verification_tokens",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "owner": "postgres"
+    },
+    {
+      "oid": 18059,
+      "relname": "admin_username_recovery_limits",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "owner": "postgres"
+    },
+    {
+      "oid": 18042,
+      "relname": "admin_username_recovery_tokens",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17941,
+      "relname": "audit_logs",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17960,
+      "relname": "auth_sessions",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17700,
+      "relname": "bookings",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17642,
+      "relname": "bus_contacts",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17804,
+      "relname": "bus_duties",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17660,
+      "relname": "buses",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17756,
+      "relname": "cargo",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17623,
+      "relname": "crew_members",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17846,
+      "relname": "daily_expenses",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17915,
+      "relname": "duty_adjustments",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17873,
+      "relname": "expense_submissions",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17995,
+      "relname": "password_recovery_rate_limits",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17979,
+      "relname": "password_recovery_tokens",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17774,
+      "relname": "revenue_entries",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17603,
+      "relname": "schema_meta",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17734,
+      "relname": "sms_attempts",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17677,
+      "relname": "trips",
+      "relkind": "r",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17609,
+      "relname": "users",
+      "relkind": "r",
+      "relrowsecurity": true,
+      "owner": "postgres"
+    },
+    {
+      "oid": 18073,
+      "relname": "admin_recovery_email_verification_tokens_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 18041,
+      "relname": "admin_username_recovery_tokens_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17940,
+      "relname": "audit_logs_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17959,
+      "relname": "auth_sessions_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17699,
+      "relname": "bookings_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17641,
+      "relname": "bus_contacts_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17803,
+      "relname": "bus_duties_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17659,
+      "relname": "buses_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17755,
+      "relname": "cargo_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17622,
+      "relname": "crew_members_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17845,
+      "relname": "daily_expenses_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17914,
+      "relname": "duty_adjustments_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17872,
+      "relname": "expense_submissions_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17978,
+      "relname": "password_recovery_tokens_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17773,
+      "relname": "revenue_entries_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17733,
+      "relname": "sms_attempts_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17676,
+      "relname": "trips_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    },
+    {
+      "oid": 17608,
+      "relname": "users_id_seq",
+      "relkind": "S",
+      "relrowsecurity": false,
+      "owner": "postgres"
+    }
+  ],
+  "grants": [
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17603,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17608,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17608,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17608,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17608,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17608,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17608,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17609,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17622,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17623,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17641,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17642,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17659,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17660,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17676,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17677,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17699,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17700,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17733,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17734,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17755,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17756,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17773,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17774,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17803,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17804,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17845,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17846,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17872,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17873,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17914,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17915,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17940,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17941,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17959,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17960,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17978,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17979,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "anon",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "authenticated",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 17995,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18041,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18041,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18041,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18041,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18041,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18041,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18042,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18059,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18073,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18073,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18073,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18073,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18073,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18073,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18074,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "postgres",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "DELETE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "INSERT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "MAINTAIN",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "REFERENCES",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "SELECT",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRIGGER",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "TRUNCATE",
+      "is_grantable": false
+    },
+    {
+      "oid": 18092,
+      "grantor": "postgres",
+      "grantee": "service_role",
+      "privilege_type": "UPDATE",
+      "is_grantable": false
+    }
+  ],
+  "schema": {
+    "oid": 2200,
+    "nspname": "public",
+    "nspacl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,postgres=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}",
+    "owner": "pg_database_owner"
+  },
+  "schemaGrants": [
+    {
+      "grantee": "PUBLIC",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "anon",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "authenticated",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "pg_database_owner",
+      "grantor": "pg_database_owner",
+      "privilege_type": "CREATE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "pg_database_owner",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "postgres",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    },
+    {
+      "grantee": "service_role",
+      "grantor": "pg_database_owner",
+      "privilege_type": "USAGE",
+      "is_grantable": false
+    }
+  ]
+}

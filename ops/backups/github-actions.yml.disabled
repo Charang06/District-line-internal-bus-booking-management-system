@@ -1,0 +1,73 @@
+# INACTIVE TEMPLATE. Not under .github/workflows. No schedule enabled.
+name: District Line encrypted application backup
+on:
+  workflow_dispatch:
+  # Enable only after separate owner approval, successful restore drill and storage selection.
+  # schedule:
+  #   - cron: '30 20 * * *' # 02:00 Asia/Colombo the next day
+permissions:
+  contents: read
+concurrency:
+  group: district-line-private-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    if: vars.BACKUPS_APPROVED == 'true' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    # Configure this environment with default-branch-only deployment restrictions.
+    # Keep database/storage/monitor secrets here, not repository-wide.
+    environment: district-backup
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Validate independent success and failure monitoring configuration
+        env:
+          BACKUP_SUCCESS_PING_URL: ${{ secrets.BACKUP_SUCCESS_PING_URL }}
+          BACKUP_FAILURE_PING_URL: ${{ secrets.BACKUP_FAILURE_PING_URL }}
+        run: node scripts/backups/heartbeat.mjs --preflight
+      - name: Install encryption tool and PostgreSQL 17 client from signed PGDG packages
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl --fail --silent --show-error --location https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          test "$(gpg --show-keys --with-colons /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc | awk -F: '$1 == "fpr" { print $10; exit }')" = B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+          echo 'deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt noble-pgdg main' | sudo tee /etc/apt/sources.list.d/district-pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install --no-install-recommends -y age postgresql-client-17
+          test -x /usr/lib/postgresql/17/bin/pg_dump
+          echo /usr/lib/postgresql/17/bin >> "$GITHUB_PATH"
+          command -v aws
+          command -v node
+      - name: Encrypt, upload and verify application archive
+        env:
+          BACKUPS_APPROVED: ${{ vars.BACKUPS_APPROVED }}
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_DATABASE_ROLE: district_backup
+          BACKUP_PROJECT_FINGERPRINT: ${{ vars.BACKUP_PROJECT_FINGERPRINT }}
+          BACKUP_AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+          BACKUP_S3_ENDPOINT: ${{ vars.BACKUP_S3_ENDPOINT }}
+          BACKUP_S3_BUCKET: ${{ vars.BACKUP_S3_BUCKET }}
+          BACKUP_S3_PREFIX: district-line
+          AWS_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ vars.BACKUP_S3_REGION }}
+        run: node scripts/backups/run.mjs
+      - name: Notify independent missed-backup monitor after verified upload
+        env:
+          BACKUP_SUCCESS_PING_URL: ${{ secrets.BACKUP_SUCCESS_PING_URL }}
+          BACKUP_FAILURE_PING_URL: ${{ secrets.BACKUP_FAILURE_PING_URL }}
+        run: node scripts/backups/heartbeat.mjs
+      - name: Signal backup failure to independent monitor
+        if: failure()
+        env:
+          BACKUP_SUCCESS_PING_URL: ${{ secrets.BACKUP_SUCCESS_PING_URL }}
+          BACKUP_FAILURE_PING_URL: ${{ secrets.BACKUP_FAILURE_PING_URL }}
+        run: node scripts/backups/heartbeat.mjs --failure
+      - name: Failure summary and optional approved alert
+        if: failure()
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.BACKUP_ALERT_WEBHOOK_URL }}
+        run: |
+          echo 'Backup failed: no successful recovery point is established by this run.' >> "$GITHUB_STEP_SUMMARY"
+          node scripts/backups/alert.mjs

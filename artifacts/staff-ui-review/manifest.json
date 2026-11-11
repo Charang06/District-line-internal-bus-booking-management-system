@@ -1,0 +1,82 @@
+{
+  "branch": "ui/staff-page-handover",
+  "committed": false,
+  "merged": false,
+  "deployed": false,
+  "sourceFiles": [
+    {
+      "path": "src/App.jsx",
+      "sha256": "6213bf3c48baeb53a7c3e9c7f4a37c1daa8f2ed4a756ced5d7325546249e3e5e"
+    },
+    {
+      "path": "src/components/StaffManagement.jsx",
+      "sha256": "01d237a0804a92397b0c406894a56992d9cda7525183cee1b7bfb74be54bd42e"
+    },
+    {
+      "path": "src/components/StaffDialog.jsx",
+      "sha256": "2355dd51f2bb2558702557043a397fd1ff4474a7ca87f7678dcd581e04506216"
+    },
+    {
+      "path": "src/components/StaffIcon.jsx",
+      "sha256": "b2e0776190c803f25ac4483dd8867e7d921b9c06a896c68bfa09452688d01819"
+    },
+    {
+      "path": "src/components/StaffPage.css",
+      "sha256": "2fa4be54b88a80a813ac698d1db07b890b3e17cbbc6a40cabfae6141613f36b2"
+    },
+    {
+      "path": "scripts/staff-ui-browser.cjs",
+      "sha256": "db5bdf24019c1d4dc517edf8d3abe829b1c908a260c48fde7e748d2098de03a6"
+    }
+  ],
+  "browserChecks": {
+    "passed": 54,
+    "failed": 0
+  },
+  "generatedFiles": [
+    "artifacts/staff-ui-review/README.md",
+    "artifacts/staff-ui-review/after-bus-modal-1440.png",
+    "artifacts/staff-ui-review/after-bus-modal-390.png",
+    "artifacts/staff-ui-review/after-staff-1440.png",
+    "artifacts/staff-ui-review/after-staff-320.png",
+    "artifacts/staff-ui-review/after-staff-390.png",
+    "artifacts/staff-ui-review/after-staff-768.png",
+    "artifacts/staff-ui-review/after-staff-modal-1440.png",
+    "artifacts/staff-ui-review/after-staff-modal-390.png",
+    "artifacts/staff-ui-review/baseline-build/Inter-LICENSE.txt",
+    "artifacts/staff-ui-review/baseline-build/InterVariable.woff2",
+    "artifacts/staff-ui-review/baseline-build/assets/index-BRNop_AT.js",
+    "artifacts/staff-ui-review/baseline-build/assets/index-DYSgoj-L.css",
+    "artifacts/staff-ui-review/baseline-build/bus.png",
+    "artifacts/staff-ui-review/baseline-build/bus.webp",
+    "artifacts/staff-ui-review/baseline-build/favicon.svg",
+    "artifacts/staff-ui-review/baseline-build/icons.svg",
+    "artifacts/staff-ui-review/baseline-build/index.html",
+    "artifacts/staff-ui-review/baseline-build/login-bg-1920x1080.jpg",
+    "artifacts/staff-ui-review/baseline-build/login-bg-clean-v2.jpg",
+    "artifacts/staff-ui-review/baseline-build/login-bg-clean-v2.png",
+    "artifacts/staff-ui-review/baseline-build/login-bg.png",
+    "artifacts/staff-ui-review/baseline-build/login-reference.jpg",
+    "artifacts/staff-ui-review/baseline-build/login-tropical-sunset.png",
+    "artifacts/staff-ui-review/baseline-build/logo-transparent.png",
+    "artifacts/staff-ui-review/baseline-build/logo.png",
+    "artifacts/staff-ui-review/baseline-build/uploads/profiles/profile-1-1791954557237.jpg",
+    "artifacts/staff-ui-review/baseline-build/uploads/profiles/profile-1-1793992016053.jpg",
+    "artifacts/staff-ui-review/baseline-build/uploads/profiles/profile-3-1792611007337.jpg",
+    "artifacts/staff-ui-review/baseline-source/App.jsx.txt",
+    "artifacts/staff-ui-review/baseline-source/StaffManagement.jsx.txt",
+    "artifacts/staff-ui-review/before-staff-1440.png",
+    "artifacts/staff-ui-review/before-staff-320.png",
+    "artifacts/staff-ui-review/before-staff-390.png",
+    "artifacts/staff-ui-review/before-staff-768.png",
+    "artifacts/staff-ui-review/booking-mobile.png",
+    "artifacts/staff-ui-review/browser-results.json",
+    "artifacts/staff-ui-review/browser.txt",
+    "artifacts/staff-ui-review/build.txt",
+    "artifacts/staff-ui-review/lint.txt",
+    "artifacts/staff-ui-review/login-mobile.png",
+    "artifacts/staff-ui-review/manifest.json",
+    "artifacts/staff-ui-review/task-changes.patch",
+    "artifacts/staff-ui-review/tests.txt"
+  ]
+}

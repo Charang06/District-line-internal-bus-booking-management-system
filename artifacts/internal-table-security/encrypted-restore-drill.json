@@ -1,0 +1,196 @@
+{
+  "at": "2026-11-08T10:12:06.291Z",
+  "productionWrites": false,
+  "isolatedFingerprint": "3ae16e4ead10",
+  "committed": false,
+  "privateIdentityCopied": false,
+  "plaintextArchiveWritten": false,
+  "plaintextSqlWritten": false,
+  "customerRecordsDisplayed": false,
+  "restoreScope": "public application schema; managed Supabase schemas and external Storage files are not replayed",
+  "encryptedBackupSha256": "49e3653609c3b2d128acaf1094bdc9a0de4f3c6a6baeb45bc8e615f08fc013b2",
+  "decryptionAuthenticated": true,
+  "decryptedArchiveHeaderValid": true,
+  "productionMigrationSha256": "5f725e7d9765326691c0bc5c21d9af522a7d0897379c0ef61298371099670bde",
+  "rollbackSha256": "b2483280b3df88c29d279529078468e7c51af32fd0e6a2e9116c63e077534d3e",
+  "schemaComparison": {
+    "match": true,
+    "differences": [],
+    "normalizedFunctionLineEndings": []
+  },
+  "schemaPermissionsMatch": true,
+  "applicationDataChecks": [
+    {
+      "table": "admin_recovery_email_verification_limits",
+      "match": true
+    },
+    {
+      "table": "admin_recovery_email_verification_tokens",
+      "match": true
+    },
+    {
+      "table": "admin_username_recovery_limits",
+      "match": true
+    },
+    {
+      "table": "admin_username_recovery_tokens",
+      "match": true
+    },
+    {
+      "table": "audit_logs",
+      "match": true
+    },
+    {
+      "table": "auth_sessions",
+      "match": true
+    },
+    {
+      "table": "bookings",
+      "match": true
+    },
+    {
+      "table": "bus_contacts",
+      "match": true
+    },
+    {
+      "table": "bus_duties",
+      "match": true
+    },
+    {
+      "table": "buses",
+      "match": true
+    },
+    {
+      "table": "cargo",
+      "match": true
+    },
+    {
+      "table": "crew_members",
+      "match": true
+    },
+    {
+      "table": "daily_expenses",
+      "match": true
+    },
+    {
+      "table": "duty_adjustments",
+      "match": true
+    },
+    {
+      "table": "expense_submissions",
+      "match": true
+    },
+    {
+      "table": "password_recovery_rate_limits",
+      "match": true
+    },
+    {
+      "table": "password_recovery_tokens",
+      "match": true
+    },
+    {
+      "table": "revenue_entries",
+      "match": true
+    },
+    {
+      "table": "schema_meta",
+      "match": true
+    },
+    {
+      "table": "sms_attempts",
+      "match": true
+    },
+    {
+      "table": "trips",
+      "match": true
+    },
+    {
+      "table": "users",
+      "match": true
+    }
+  ],
+  "sequenceChecks": [
+    {
+      "sequence": "admin_recovery_email_verification_tokens_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "admin_username_recovery_tokens_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "audit_logs_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "auth_sessions_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "bookings_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "bus_contacts_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "bus_duties_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "buses_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "cargo_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "crew_members_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "daily_expenses_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "duty_adjustments_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "expense_submissions_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "password_recovery_tokens_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "revenue_entries_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "sms_attempts_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "trips_id_seq",
+      "match": true
+    },
+    {
+      "sequence": "users_id_seq",
+      "match": true
+    }
+  ],
+  "migrationOnFreshRestorePassed": true,
+  "rollbackComparison": {
+    "match": true,
+    "differences": [],
+    "normalizedFunctionLineEndings": []
+  },
+  "rollbackOnFreshRestorePassed": true,
+  "originalTargetPreserved": true,
+  "passed": true,
+  "finishedAt": "2026-11-08T10:14:43.413Z"
+}
