@@ -71,6 +71,8 @@ async function timedRequest(name, url, options) {
 }
 
 export const api = {
+  accountsCrewOptions: (token) => request(`${API_BASE}/accounts/crew-options`, { headers: authHeaders(token) }),
+  accountsDutyData: (token) => request(`${API_BASE}/accounts/duties`, { headers: authHeaders(token) }),
   replaceMfaRecoveryCodes: (body) => request(`${API_BASE}/admin-mfa/recovery-codes`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   }),

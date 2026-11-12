@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { ROUTES } from '../data/seatLayout'
-import { appendExtraRevenueSeatRow, calculateRevenueSeatRows, createDefaultRevenueSeatRows, MAX_EXTRA_REVENUE_SEAT_ROWS, MAX_REVENUE_SEAT_ROW_COUNT, removeExtraRevenueSeatRow, REVENUE_SEAT_CATEGORIES } from '../data/revenueSeatRows'
+import { calculateRevenueSeatRows, createDefaultRevenueSeatRows, MAX_REVENUE_SEAT_ROW_COUNT, REVENUE_SEAT_CATEGORIES } from '../data/revenueSeatRows'
 import './AccountsRevenue.css'
 import './AccountsExpense.css'
 
@@ -80,8 +80,6 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
     }
   }, [route.code, date, busNo, driverName, conductorName, seatRows, cargoRows])
   const updateSeat = (index, field, value) => setSeatRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row))
-  const addExtraSeatRow = () => setSeatRows((rows) => appendExtraRevenueSeatRow(rows))
-  const removeExtraSeatRow = (rowId) => setSeatRows((rows) => removeExtraRevenueSeatRow(rows, rowId))
   const updateCargo = (index, field, value) => setCargoRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row))
   const submit = async (event) => {
     event.preventDefault()
@@ -93,7 +91,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
       const result = await api.createRevenueEntry(token, {
         travel_date: date, route_code: route.code, trip_id: selectedTrip?.id || null, bus_no: busNo,
         driver_name: driverName, conductor_name: conductorName,
-        seat_rows: seatRows.map((row, index) => ({ ...(index >= REVENUE_SEAT_CATEGORIES.length ? { category: row.category } : {}), count: Number(row.count), amount: Number(row.amount) })),
+        seat_rows: seatRows.map((row) => ({ count: Number(row.count), amount: Number(row.amount) })),
         cargo_rows: cargoRows.map((row) => ({ description: row.description, tag: row.tag, amount: Number(row.amount) || 0 })),
       })
       onSaved(result.entry)
@@ -113,7 +111,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
       <label>Conductor<select value={conductorName} onChange={(event) => setConductorName(event.target.value)}><option value="">Select a registered conductor</option>{conductorNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
     </div>
     <div className="accounts-revenue-columns">
-      <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="seats" />Revenue from Seats</h2><p>Enter the passenger count and fare for each seat category.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap"><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => { const isExtraRow = index >= REVENUE_SEAT_CATEGORIES.length; return <tr key={isExtraRow ? row.rowId : row.category}><td className={`accounts-seat-count-cell${isExtraRow ? ' has-extra' : ''}`}>{isExtraRow && <span>{row.category}</span>}<input aria-label={`${route.label} ${row.category} number of seats`} type="number" min="0" max={MAX_REVENUE_SEAT_ROW_COUNT} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} />{isExtraRow && <button type="button" className="accounts-remove-row accounts-seat-remove" aria-label={`Remove ${row.category}`} onClick={() => removeExtraSeatRow(row.rowId)}>×</button>}</td><td><input aria-label={`${route.label} ${row.category} fare amount`} type="number" min="0" max="100000000" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>})}</tbody></table></div><button type="button" className="accounts-add-row accounts-seat-add-row" onClick={addExtraSeatRow} disabled={saving || seatRows.length >= REVENUE_SEAT_CATEGORIES.length + MAX_EXTRA_REVENUE_SEAT_ROWS}>+ Add Extra Row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div></section>
+      <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="seats" />Revenue from Seats</h2><p>Enter the passenger count and fare for each seat category.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap"><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => { return <tr key={index}><td className="accounts-seat-count-cell"><input aria-label={`${route.label} ${row.category} number of seats`} type="number" min="0" max={MAX_REVENUE_SEAT_ROW_COUNT} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} /></td><td><input aria-label={`${route.label} ${row.category} fare amount`} type="number" min="0" max="100000000" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>})}</tbody></table></div><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div></section>
       <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="cargo" />Revenue from Cargo</h2><p>Luggage and waybill charges for this trip.</p></div><span>LUGGAGE &amp; WAYBILLS</span></div>{cargoRows.length > 0 ? <div className="daily-revenue-table-wrap"><table className="accounts-cargo-table"><thead><tr><th>Description</th><th>Amount (Rs.)</th></tr></thead><tbody>{cargoRows.map((row, index) => <tr key={`cargo-${index}`}><td className="accounts-cargo-description"><input aria-label={`${route.label} cargo description`} maxLength="120" required={Number(row.amount) > 0} value={row.description} onChange={(event) => updateCargo(index, 'description', event.target.value)} />{row.tag ? <span className="accounts-cargo-tag">{row.tag}</span> : null}<button type="button" className="accounts-remove-row" aria-label={`Remove ${row.description || 'cargo'} row`} onClick={() => setCargoRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}>×</button></td><td><input aria-label={`${route.label} cargo amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateCargo(index, 'amount', event.target.value)} /></td></tr>)}</tbody></table></div> : <p className="accounts-cargo-empty">No cargo entries for this trip.</p>}<button type="button" className="accounts-add-row" onClick={() => setCargoRows((rows) => rows.length < 30 ? [...rows, { description: '', tag: '', amount: '0' }] : rows)}>+ Add custom cargo row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(cargoSubtotal)}</strong></div></section>
     </div>
     <section className="content-card accounts-total-card"><div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong></div><div className="accounts-total-controls"><div className="accounts-draft-status"><strong>Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div><button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || Boolean(seatError)}><RevenueIcon name="lock" />{saving ? 'Saving revenue entry...' : 'Submit & Lock Revenue Entry'}</button>{seatCount === 0 && cargoRows.length === 0 && <span className="accounts-submit-hint">No seat or cargo revenue entered. You can still submit this entry.</span>}</div></section>
@@ -135,7 +133,7 @@ const EXPENSE_CATEGORY_ICONS = ['fuel', 'person', 'person', 'shield', 'toll', 'c
 const DEFAULT_EXPENSE_ITEMS = EXPENSE_CATEGORIES.map((category) => ({ category, description: '', amount: '0' }))
 const EXPENSE_DRAFT_KEY = 'district-line-expense-form-draft'
 
-export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense, revenueEntries = [], expenseSubmissionEntries = [], ledgerLoading = false, onRevenueEntrySaved, onExpenseSubmissionSaved, readOnly = false }) {
+export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense, revenueEntries = [], expenseSubmissionEntries = [], ledgerLoading = false, onRevenueEntrySaved, onExpenseSubmissionSaved, readOnly = false, dutyPanel = null }) {
   const [activeSection, setActiveSection] = useState('revenue')
   const [date, setDate] = useState(todayIso)
   const [routeCode, setRouteCode] = useState(ROUTES[0].code)
@@ -333,6 +331,8 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    const { validationError } = calculateRevenueSeatRows(seatRows)
+    if (validationError) return showMessage(validationError, true)
     setSaving(true)
     try {
       const result = await api.createRevenueEntry(token, {
@@ -453,9 +453,10 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
   return (
     <main className={`content-page accounts-revenue-page${readOnly ? ' is-read-only' : ''}`}>
+    {!readOnly && dutyPanel}
     <section className={`content-card accounts-revenue-titlebar${activeSection === 'revenue' ? ' is-revenue-view' : ' is-expense-view'}`}>
         <div className="accounts-revenue-banner-title"><span className="accounts-revenue-banner-icon"><RevenueIcon name="accounts" /></span><div><span className="accounts-kicker">Passenger and Cargo Accounts</span><h1>Revenue and Expenses</h1></div></div>
-        {readOnly && <p className="accounts-read-only-notice">View-only access. Financial entries can be submitted by administrators.</p>}
+        {readOnly && <p className="accounts-read-only-notice">View-only access. Financial entries require an administrator or staff with Accounts Manage permission.</p>}
         <div className="accounts-route-switch accounts-section-switch" aria-label="Select account section" role="tablist">
           <button type="button" role="tab" aria-selected={activeSection === 'revenue'} className={activeSection === 'revenue' ? 'active' : ''} onClick={() => setActiveSection('revenue')}>Revenue</button>
           <button type="button" role="tab" aria-selected={activeSection === 'expense'} className={activeSection === 'expense' ? 'active' : ''} onClick={() => setActiveSection('expense')}>Expense</button>
@@ -593,7 +594,7 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
           </div>
           <div className="daily-revenue-table-wrap"><table>
             {expenseLedgerView === 'trip' ? <>
-              <thead><tr><th>Date</th><th>Bus No</th><th>Driver / Conductor</th><th>KKY to CMB date</th><th>CMB to KKY date</th><th>Fuel</th><th>Police</th><th>Total Expense</th><th>Net Return</th><th>Status</th></tr></thead>
+              <thead><tr><th>Date</th><th>Bus No</th><th>Driver / Conductor</th><th>KKY to CMB date</th><th>CMB to KKY date</th><th>Fuel</th><th>Police</th><th>Total Expense</th><th>Status</th></tr></thead>
               <tbody>
                 {filteredExpenseSubmissions.slice(0, 100).map((submission) => {
                   const items = Array.isArray(submission.items) ? submission.items : []
@@ -601,26 +602,15 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
                   const police = items.filter((item) => String(item.category || '').toLowerCase().includes('police')).reduce((sum, item) => sum + Number(item.amount || 0), 0)
                   const firstTrip = (data.trips || []).find((trip) => String(trip.id) === String(submission.first_trip_id))
                   const returnTrip = (data.trips || []).find((trip) => String(trip.id) === String(submission.return_trip_id))
-                  const matchesExpenseBus = (row) => String(row.bus_no || row.registration_no || '').trim().toLowerCase() === String(submission.bus_no || '').trim().toLowerCase()
-                  const revenueForLeg = (routeCode, travelDate) => {
-                    const manualRevenue = entries.filter((entry) => entry.travel_date === travelDate && entry.route_code === routeCode && matchesExpenseBus(entry))
-                    const dailyRevenue = (data.dailyRevenue || []).filter((row) => row.travel_date === travelDate && row.route_code === routeCode && matchesExpenseBus(row))
-                    return (manualRevenue.length ? manualRevenue : dailyRevenue).reduce((sum, row) => sum + Number(row.total_revenue || 0), 0)
-                  }
-                  const firstRouteCode = submission.route_code
-                  const returnRouteCode = submission.route_code === 'KTY_CMB' ? 'CMB_KTY' : 'KTY_CMB'
-                  const firstRouteRevenue = revenueForLeg(firstRouteCode, submission.first_leg_date || submission.expense_date)
-                  const returnRouteRevenue = revenueForLeg(returnRouteCode, submission.return_leg_date || submission.expense_date)
-                  const netReturn = firstRouteRevenue + returnRouteRevenue - Number(submission.total_expense || 0)
                   const routeDates = { KTY_CMB: '', CMB_KTY: '' }
                   routeDates[submission.route_code] = submission.first_leg_date || submission.expense_date || ''
                   routeDates[submission.route_code === 'KTY_CMB' ? 'CMB_KTY' : 'KTY_CMB'] = submission.return_leg_date || ''
                   if (firstTrip?.route_code) routeDates[firstTrip.route_code] = firstTrip.travel_date || ''
                   if (returnTrip?.route_code) routeDates[returnTrip.route_code] = returnTrip.travel_date || ''
                   if (!routeDates[submission.route_code]) routeDates[submission.route_code] = submission.expense_date || ''
-                  return <tr key={submission.id}><td>{submission.expense_date}</td><td>{submission.bus_no}</td><td>{submission.driver_name || '-'} / {submission.conductor_name || '-'}</td><td>{routeDates.KTY_CMB || '—'}</td><td>{routeDates.CMB_KTY || '—'}</td><td>{money(fuel)}</td><td>{money(police)}</td><td><strong>{money(submission.total_expense)}</strong></td><td><strong>{money(netReturn)}</strong></td><td><span className="accounts-entry-locked">{String(submission.status || 'locked').toUpperCase()} · {submission.submission_code}</span></td></tr>
+                  return <tr key={submission.id}><td>{submission.expense_date}</td><td>{submission.bus_no}</td><td>{submission.driver_name || '-'} / {submission.conductor_name || '-'}</td><td>{routeDates.KTY_CMB || '—'}</td><td>{routeDates.CMB_KTY || '—'}</td><td>{money(fuel)}</td><td>{money(police)}</td><td><strong>{money(submission.total_expense)}</strong></td><td><span className="accounts-entry-locked">{String(submission.status || 'locked').toUpperCase()} · {submission.submission_code}</span></td></tr>
                 })}
-                {!loadingExpenseSubmissions && !filteredExpenseSubmissions.length && <tr><td colSpan="10" className="daily-revenue-empty">{expenseSubmissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}
+                {!loadingExpenseSubmissions && !filteredExpenseSubmissions.length && <tr><td colSpan="9" className="daily-revenue-empty">{expenseSubmissions.length ? 'No expense submissions match these filters.' : 'No dispatch expense submissions yet.'}</td></tr>}
               </tbody>
             </> : <>
               <thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver / Conductor</th><th>Route Revenue</th><th>Route Expense</th><th>Net Return</th><th>Status</th></tr></thead>

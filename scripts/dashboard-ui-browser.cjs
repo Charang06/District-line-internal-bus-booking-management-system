@@ -87,11 +87,11 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
   const tripSelect = i => '.trip-controls-filters label:nth-child(' + i + ') select'
   try {
     await p.clickText('Dashboard'); await p.wait('document.querySelectorAll(".trip-overview-trip-card").length===2'); await p.wait('!!document.querySelector(".sms-balance-main strong")'); await p.evaluate('document.fonts.ready')
-    for (const width of [1440, 768, 390, 320]) {
+    for (const width of [1440, 1280, 1024, 768, 430, 390, 375, 360, 320]) {
       await p.call('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 }); await pause(120); await screenshot(p, 'dashboard-' + width)
       if (!baseline) await check('dashboard layout, KPI columns and contained charts/tables ' + width, async () => {
         const result = await p.evaluate('(()=>{const main=document.querySelector(".admin-dashboard-page"),k=document.querySelector(".dashboard-kpis"),o=document.querySelectorAll(".trip-overview-grid>section");return {overflow:document.documentElement.scrollWidth>innerWidth+1,font:getComputedStyle(main).fontFamily,columns:getComputedStyle(k).gridTemplateColumns.split(" ").length,overviewColumns:getComputedStyle(document.querySelector(".trip-overview-grid")).gridTemplateColumns.split(" ").length,clipped:[...main.querySelectorAll("button")].filter(e=>e.getClientRects().length&&e.scrollWidth>e.clientWidth+2).map(e=>e.textContent.trim()),tableScroll:document.querySelector(".daily-revenue-table-wrap").scrollWidth>document.querySelector(".daily-revenue-table-wrap").clientWidth}})()')
-        assert.equal(result.overflow, false); assert.match(result.font, /^Inter/); assert.equal(result.columns, width > 1100 ? 4 : width > 600 ? 2 : 1); assert.equal(result.overviewColumns, width > 850 ? 2 : 1); assert.deepEqual(result.clipped, []); if (width <= 768) assert.equal(result.tableScroll, true)
+        assert.equal(result.overflow, false); assert.match(result.font, /^Inter/); assert.equal(result.columns, width > 1100 ? 4 : width > 600 ? 2 : 1); assert.equal(result.overviewColumns, width > 850 ? 2 : 1); assert.deepEqual(result.clipped, []); if (width <= 1024) assert.equal(result.tableScroll, true)
       })
     }
     if (baseline) return
@@ -163,13 +163,21 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
       assert.equal(await p.evaluate('[...document.querySelectorAll(".trip-controls-filters label:nth-child(2) select option")].filter(e=>e.value==="BUS-THREE").length'), 1)
       await p.clickText('Reset filters')
     })
-    await check('opaque sticky header stays above content and preserves mobile navigation', async () => {
-      await p.evaluate('window.scrollTo(0,1500)'); await pause(100)
-      assert.equal(await p.evaluate('(()=>{const r=document.querySelector(".topbar").getBoundingClientRect();return r.top>=-1&&r.top<=1})()'), true)
-      assert.equal(await p.evaluate('getComputedStyle(document.querySelector(".topbar")).backgroundColor'), 'rgb(248, 250, 252)')
-      assert.equal(await p.evaluate('(()=>{const r=document.querySelector(".topbar").getBoundingClientRect();return !!document.elementFromPoint(r.width/2,r.height/2).closest(".topbar")})()'), true)
+    await check('mobile navigation drawer preserves keyboard, scroll and selection behavior', async () => {
+      await p.call('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+      assert.equal(await p.evaluate('document.querySelector(".mobile-nav-toggle").getBoundingClientRect().width>=44'), true, 'menu control has a comfortable touch target')
+      assert.equal(await p.evaluate('document.querySelector(".nav-tabs").getAttribute("aria-hidden")'), 'true', 'closed drawer is hidden from assistive technology')
+      await p.evaluate('document.querySelector(".mobile-nav-toggle").click()'); await p.wait('document.querySelector(".nav-tabs").classList.contains("is-open")')
+      assert.equal(await p.evaluate('document.querySelector(".nav-tabs").getAttribute("aria-hidden")'), 'false')
+      assert.equal(await p.evaluate('document.body.style.overflow'), 'hidden', 'opening the mobile menu locks background scroll')
+      assert.equal(await p.evaluate('document.querySelector(".nav-tabs").getAttribute("aria-hidden")'), 'false', 'open navigation is exposed to assistive technology')
+      await p.call('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 }); await p.call('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 })
+      await p.wait('!document.querySelector(".nav-tabs").classList.contains("is-open")')
+      assert.equal(await p.evaluate('document.body.style.overflow'), '', 'Escape restores background scroll')
+      assert.equal(await p.evaluate('document.activeElement.classList.contains("mobile-nav-toggle")'), true, 'Escape restores focus to menu button')
       await p.evaluate('document.querySelector(".mobile-nav-toggle").click()'); await p.wait('document.querySelector(".nav-tabs").classList.contains("is-open")')
       await p.clickText('Dashboard'); await p.wait('!document.querySelector(".nav-tabs").classList.contains("is-open")')
+      assert.equal(await p.evaluate('document.body.style.overflow'), '')
       await screenshot(p, 'sticky-mobile', false); await p.evaluate('window.scrollTo(0,0)')
     })
     await check('footer logo loads and keyboard focus/table semantics remain accessible', async () => {
@@ -182,6 +190,20 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
     await p.call('Emulation.setDeviceMetricsOverride', { width: 390, height: 1000, deviceScaleFactor: 1, mobile: true }); await p.evaluate('window.scrollTo(0,0)'); await screenshot(p, 'dashboard-top-mobile', false)
     await p.evaluate('document.querySelector(".dashboard-profit-report").scrollIntoView()'); await screenshot(p, 'profit-mobile', false)
   } finally { await p.close() }
+
+  const restricted = await page('staff', false, true)
+  try {
+    await check('restricted staff mobile navigation exposes only permitted pages', async () => {
+      await restricted.call('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+      const visibleBefore = await restricted.evaluate('[...document.querySelectorAll(".nav-button")].map(button=>button.textContent.trim())')
+      assert.deepEqual(visibleBefore, ['Home', 'Log', 'Info'])
+      await restricted.evaluate('document.querySelector(".mobile-nav-toggle").click()')
+      await restricted.wait('document.querySelector(".nav-tabs").classList.contains("is-open")')
+      const visibleOpen = await restricted.evaluate('[...document.querySelectorAll(".nav-button")].map(button=>button.textContent.trim())')
+      assert.deepEqual(visibleOpen, ['Home', 'Log', 'Info'])
+      assert.equal(await restricted.evaluate('document.documentElement.scrollWidth<=innerWidth+1'), true)
+    })
+  } finally { await restricted.close() }
 
   const empty = await page('admin', false, true)
   try { await check('empty dashboard shows genuine empty trip/chart/ledger states', async () => {
@@ -223,3 +245,6 @@ const compiled = new Module(__filename, module)
 compiled.filename = __filename
 compiled.paths = module.paths
 compiled._compile(harness, __filename)
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const vm = require('node:vm')

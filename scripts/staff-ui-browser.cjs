@@ -256,7 +256,7 @@ const additions = `
     source=source.replace(' window.fetch=async',${JSON.stringify(' if(${review}){' + fixtureSource + '}\n window.fetch=async').replace('\\n', '\\n')});
     source=source.replace(" if(p===", " if(window.__review){const response=await window.__reviewResponse(p,m,body);if(response)return response;}\\n if(p===");
     ${baseline ? "source=source.replace('for(const baseline of [false])','for(const baseline of [])');" : ''}
-    source=source.replace("fs.writeFileSync('artifacts/staff-ui-review/browser-results.json'",${JSON.stringify('await (' + staffChecks.toString() + ')({page,check,assert,pause,fs,baseline:' + baseline + '});\n')}+"fs.writeFileSync('artifacts/staff-ui-review/browser-results.json'");
+    source=source.replace("fs.writeFileSync('artifacts/security-local/browser-results.json'",${JSON.stringify('await (' + staffChecks.toString() + ')({page,check,assert,pause,fs,baseline:' + baseline + '});\n')}+"fs.writeFileSync('artifacts/security-local/browser-results.json'");
 `
 // Baseline capture uses only the immutable initial UI and fixture data, no actions.
 if (baseline) {

@@ -1,0 +1,86 @@
+{
+  "candidateVerification": {
+    "files": 74,
+    "checksumsVerified": true,
+    "sourceMatches": true,
+    "sourceDifferences": [],
+    "unexpectedFiles": 0,
+    "missingRelativeImports": 0,
+    "candidateSyntaxChecks": 25,
+    "lockRootMatches": true,
+    "manifestSha256": "df7a9232d32139a69b0b8866b05fa04ff8eb60c8be3762d7a28dcd30ae2cd018",
+    "noSymlinkEscape": true,
+    "prohibitedPaths": 0,
+    "declaredExternalImports": [
+      "@vercel/functions",
+      "@vitejs/plugin-react",
+      "bcryptjs",
+      "cors",
+      "express",
+      "pg",
+      "react",
+      "react-dom",
+      "vite"
+    ]
+  },
+  "frontendBuild": {
+    "pass": true,
+    "outputs": 3,
+    "inMemory": true,
+    "envFilesLoaded": false,
+    "publicFilesCopied": false,
+    "node": "v24.11.0"
+  },
+  "regressions": {
+    "firstSelection": {
+      "tests": 22,
+      "passed": 21,
+      "failed": 0,
+      "skipped": 1
+    },
+    "preparationSelection": {
+      "tests": 9,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "distinctOfflinePasses": 30,
+    "distinctFailed": 0,
+    "realPostgreSQL": {
+      "executed": 0,
+      "passed": 0,
+      "skipped": 1,
+      "reason": "No independently approved disposable PostgreSQL instance/attestation"
+    }
+  },
+  "syntax": {
+    "checked": 62,
+    "failed": 0,
+    "latestIntegrationEditParsed": true
+  },
+  "browser": {
+    "rerun": false,
+    "historicalPassed": 58
+  },
+  "localToolDiscovery": {
+    "postgresqlCommandsFound": [],
+    "dockerCommandFound": false,
+    "standardInstallDirectoriesFound": [],
+    "matchingWindowsServicesFound": [],
+    "openssl": "Git for Windows OpenSSL 3.5.4; version command only"
+  },
+  "localNativeDependency": {
+    "nativeWindowsSqlite3Load": true,
+    "sqliteVersion": "3.52.0",
+    "databaseOpened": false,
+    "providerLinuxCompatibility": "unverified"
+  },
+  "gitSecurity": {
+    "trackedChromeProfilePaths": 136,
+    "trackedArtifactProfileImages": 9,
+    "privateContentsRead": false,
+    "remoteExposure": "unverified",
+    "wholesalePush": "blocked pending review"
+  },
+  "modifiedRuntimeFiles": []
+}

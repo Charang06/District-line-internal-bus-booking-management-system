@@ -364,6 +364,7 @@ function parsePermissions(role, raw) {
   } catch {
     parsed = {}
   }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) parsed = {}
   const permissions = {
     home: parsed.home !== false,
     log: parsed.log !== false,
@@ -1391,6 +1392,36 @@ app.post('/api/profile/password', authMiddleware, requireAdmin, async (req, res)
   res.json({ message: 'Password updated.' })
 })
 
+// Accounts selectors never expose crew contacts or the staff directory.
+app.get('/api/accounts/crew-options', authMiddleware, requirePageManage('accounts'), async (req, res) => {
+  const rows = await all("SELECT id, full_name, role FROM crew_members WHERE status = 'active' AND role IN ('driver', 'conductor') ORDER BY role, full_name")
+  res.json({ crew: rows.map(({ id, full_name, role }) => ({ id, full_name, role })) })
+})
+
+// Read stored duty state without getAdminDutyData's reconciliation UPDATE.
+app.get('/api/accounts/duties', authMiddleware, requirePageManage('accounts'), async (req, res) => {
+  const [rows, trips] = await Promise.all([
+    all('SELECT id, duty_code, bus_id, first_trip_id, return_trip_id, start_date, completion_date, status, snapshot_json FROM bus_duties ORDER BY start_date DESC, id DESC'),
+    all(`SELECT t.id, t.trip_code, t.route_code, t.route_label, t.travel_date, t.status,
+      COALESCE(t.bus_no, b.registration_no) AS registration_no
+      FROM trips t LEFT JOIN buses b ON b.id = t.bus_id
+      WHERE t.status != 'cancelled'
+        AND NOT EXISTS (SELECT 1 FROM bus_duties d WHERE d.first_trip_id = t.id OR d.return_trip_id = t.id)
+      ORDER BY t.travel_date, t.id`),
+  ])
+  const pick = (row, keys) => Object.fromEntries(keys.map(key => [key, row[key]]))
+  const tripKeys = ['id', 'trip_code', 'route_code', 'route_label', 'travel_date', 'status']
+  const duties = (await Promise.all(rows.map(row => serializeDuty(row)))).filter(Boolean).map(duty => ({
+    ...pick(duty, ['id', 'duty_code', 'bus_id', 'bus_no', 'start_date', 'completion_date', 'status', 'total_revenue', 'total_collected', 'total_outstanding', 'total_expenses', 'net_profit']),
+    first_trip: { ...pick(duty.first_trip, tripKeys), revenue: pick(duty.first_trip.revenue, ['total', 'collected', 'outstanding']) },
+    return_trip: { ...pick(duty.return_trip, tripKeys), revenue: pick(duty.return_trip.revenue, ['total', 'collected', 'outstanding']) },
+    adjustment_totals: pick(duty.adjustment_totals, ['refunds', 'cancellation_fees', 'other_income']),
+    expenses: duty.expenses.map(row => pick(row, ['id', 'expense_date', 'category', 'description', 'amount', 'trip_id'])),
+    adjustments: duty.adjustments.map(row => pick(row, ['id', 'adjustment_date', 'type', 'description', 'amount', 'trip_id', 'seat_number'])),
+  }))
+  res.json({ duties, dutyTrips: trips.map(row => pick(row, [...tripKeys, 'registration_no'])) })
+})
+
 app.get('/api/admin/crew', authMiddleware, requireAdmin, async (req, res) => {
   const crew = await all("SELECT id, full_name, mobile_number, role, status, created_at FROM crew_members WHERE status = 'active' ORDER BY role, full_name")
   res.json({ crew })
@@ -1659,8 +1690,7 @@ app.post('/api/admin/revenue-entries', authMiddleware, requirePageManage('accoun
   if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
   if (driverName.length > 80 || conductorName.length > 80) return res.status(400).json({ message: 'Driver and conductor names must be 80 characters or fewer.' })
   if (tripId !== null && (!Number.isSafeInteger(tripId) || tripId < 1)) return res.status(400).json({ message: 'Choose a valid trip.' })
-  const normalizedSeatRows = normalizeRevenueSeatRows(seatRows)
-  if (normalizedSeatRows.error) return res.status(400).json({ message: normalizedSeatRows.error })
+  if (!Array.isArray(seatRows) || seatRows.length !== 4) return res.status(400).json({ message: 'Enter all four seat fare categories.' })
   if (!Array.isArray(cargoRows) || cargoRows.length > 30) return res.status(400).json({ message: 'Cargo rows are invalid or exceed the 30-row limit.' })
 
   if (tripId !== null) {
@@ -1670,6 +1700,8 @@ app.post('/api/admin/revenue-entries', authMiddleware, requirePageManage('accoun
     }
   }
 
+  const normalizedSeatRows = normalizeRevenueSeatRows(seatRows)
+  if (normalizedSeatRows.error) return res.status(400).json({ message: normalizedSeatRows.error })
   const cleanSeatRows = normalizedSeatRows.rows
   const seatCount = normalizedSeatRows.seatCount
 

@@ -1,0 +1,339 @@
+{
+  "browser": {
+    "results": [
+      {
+        "name": "admin Home navigation",
+        "pass": true
+      },
+      {
+        "name": "admin Log navigation",
+        "pass": true
+      },
+      {
+        "name": "admin Info navigation",
+        "pass": true
+      },
+      {
+        "name": "admin Dashboard navigation",
+        "pass": true
+      },
+      {
+        "name": "admin Customers navigation",
+        "pass": true
+      },
+      {
+        "name": "admin Staff navigation",
+        "pass": true
+      },
+      {
+        "name": "admin Home layout at all four widths",
+        "pass": true
+      },
+      {
+        "name": "admin Log layout at all four widths",
+        "pass": true
+      },
+      {
+        "name": "admin Info layout at all four widths",
+        "pass": true
+      },
+      {
+        "name": "admin Dashboard layout at all four widths",
+        "pass": true
+      },
+      {
+        "name": "admin Customers layout at all four widths",
+        "pass": true
+      },
+      {
+        "name": "admin Staff layout at all four widths",
+        "pass": true
+      },
+      {
+        "name": "trip selection, seat selection and synthetic booking submission",
+        "pass": true
+      },
+      {
+        "name": "cancellation interface and Escape keeps booking",
+        "pass": true
+      },
+      {
+        "name": "dashboard loading, local error and retry",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 320",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 390",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 768",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 1440",
+        "pass": true
+      },
+      {
+        "name": "admin manual revenue four categories, combined 49 cap, submit and locked ledger",
+        "pass": true
+      },
+      {
+        "name": "admin expense submission, locked ledger and refresh",
+        "pass": true
+      },
+      {
+        "name": "admin duty creation and refresh",
+        "pass": true
+      },
+      {
+        "name": "admin duty expense and adjustment actions with refresh",
+        "pass": true
+      },
+      {
+        "name": "admin duty entry deletion confirmation and refresh",
+        "pass": true
+      },
+      {
+        "name": "admin finalization modal initial focus, tab containment and Escape",
+        "pass": true
+      },
+      {
+        "name": "admin minimized crew selectors populated",
+        "pass": true
+      },
+      {
+        "name": "admin manual revenue fixed count inputs",
+        "pass": true
+      },
+      {
+        "name": "admin duty review and finalization refresh",
+        "pass": true
+      },
+      {
+        "name": "admin finalized duty controls hidden",
+        "pass": true
+      },
+      {
+        "name": "admin no unmatched synthetic API calls",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 320",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 390",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 768",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 1440",
+        "pass": true
+      },
+      {
+        "name": "manager manual revenue four categories, combined 49 cap, submit and locked ledger",
+        "pass": true
+      },
+      {
+        "name": "manager expense submission, locked ledger and refresh",
+        "pass": true
+      },
+      {
+        "name": "manager duty creation and refresh",
+        "pass": true
+      },
+      {
+        "name": "manager duty expense and adjustment actions with refresh",
+        "pass": true
+      },
+      {
+        "name": "manager duty entry deletion confirmation and refresh",
+        "pass": true
+      },
+      {
+        "name": "manager finalization modal initial focus, tab containment and Escape",
+        "pass": true
+      },
+      {
+        "name": "manager minimized crew selectors populated",
+        "pass": true
+      },
+      {
+        "name": "manager manual revenue fixed count inputs",
+        "pass": true
+      },
+      {
+        "name": "manager duty review and finalization refresh",
+        "pass": true
+      },
+      {
+        "name": "manager finalized duty controls hidden",
+        "pass": true
+      },
+      {
+        "name": "manager no unmatched synthetic API calls",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 320",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 390",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 768",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 1440",
+        "pass": true
+      },
+      {
+        "name": "View-only forms hidden and scoped manager reads absent",
+        "pass": true
+      },
+      {
+        "name": "View-only Expense form remains read-only",
+        "pass": true
+      },
+      {
+        "name": "view no unmatched synthetic API calls",
+        "pass": true
+      },
+      {
+        "name": "ungranted staff Accounts navigation absent",
+        "pass": true
+      },
+      {
+        "name": "signed-out login screen",
+        "pass": true
+      },
+      {
+        "name": "login responsive at all four widths",
+        "pass": true
+      },
+      {
+        "name": "synthetic login, sign-out and expired-session transitions",
+        "pass": true
+      },
+      {
+        "name": "no uncaught browser exceptions",
+        "pass": true
+      },
+      {
+        "name": "no failed local resources or unexpected network errors",
+        "pass": true
+      }
+    ],
+    "passed": 58,
+    "failed": 0,
+    "consoleErrors": [],
+    "profile": "fresh temporary profile; retained outside release",
+    "mocked": true,
+    "diagnostics": {
+      "executable": "C:/Program Files/Google/Chrome/Application/chrome.exe",
+      "exitCode": 0,
+      "stderr": "\r\nDevTools listening on ws://127.0.0.1:54936/devtools/browser/bd0330fc-6169-4beb-914b-b6f8f7f98989\r\n",
+      "commandTimeoutMs": 30000,
+      "resourceErrors": [],
+      "networkErrors": []
+    },
+    "testedCandidate": "C:\\Users\\Abbishathanan\\Desktop\\p1\\New folder\\last\\D BUS BOOKING M\\release-candidates\\districtline-2026-11-12T15-17-59-452Z"
+  },
+  "candidateBuild": {
+    "pass": true,
+    "modules": "see Vite output",
+    "outputs": 3
+  },
+  "offlineRegression": {
+    "tests": 17,
+    "passed": 16,
+    "failed": 0,
+    "skipped": 1,
+    "command": "node --test server/disposable-attestation.test.js server/disposable-local-integration.test.js server/release-safety.test.js server/financial-policy.test.js src/data/revenueSeatRows.test.js src/data/staffPageAccess.test.js",
+    "categories": "Pure/unit, source, React server-render and fake-pg HTTP; real PostgreSQL skipped"
+  },
+  "syntax": {
+    "files": 62,
+    "failed": 0,
+    "roots": [
+      "server",
+      "src",
+      "api",
+      "scripts/release"
+    ]
+  },
+  "postgresql": {
+    "executed": 0,
+    "skipped": 1,
+    "reason": "No independently verified disposable instance and lifecycle attestation; no connection attempted"
+  },
+  "localNativeDependency": {
+    "platform": "Windows",
+    "node": "v24.11.0",
+    "sqlite3ModuleLoaded": true,
+    "sqliteVersion": "3.52.0",
+    "databaseOpened": false,
+    "linuxProviderCompatibility": "unverified"
+  },
+  "historicalCandidateVerification": {
+    "files": 74,
+    "checksumsVerified": true,
+    "sourceMatches": false,
+    "sourceDifferences": [
+      "src/App.jsx",
+      "src/components/InfoGuide.jsx"
+    ],
+    "unexpectedFiles": 0,
+    "missingRelativeImports": 0,
+    "candidateSyntaxChecks": 25,
+    "lockRootMatches": true,
+    "manifestSha256": "cd17e60fdbeb43a9d178f57afd6fd75dff269978e5678b5401e02cfb00ebb6f5",
+    "noSymlinkEscape": true,
+    "prohibitedPaths": 0,
+    "declaredExternalImports": [
+      "@vercel/functions",
+      "@vitejs/plugin-react",
+      "bcryptjs",
+      "cors",
+      "express",
+      "pg",
+      "react",
+      "react-dom",
+      "vite"
+    ]
+  },
+  "candidateVerification": {
+    "files": 74,
+    "checksumsVerified": true,
+    "sourceMatches": true,
+    "sourceDifferences": [],
+    "unexpectedFiles": 0,
+    "missingRelativeImports": 0,
+    "candidateSyntaxChecks": 25,
+    "lockRootMatches": true,
+    "manifestSha256": "df7a9232d32139a69b0b8866b05fa04ff8eb60c8be3762d7a28dcd30ae2cd018",
+    "noSymlinkEscape": true,
+    "prohibitedPaths": 0,
+    "declaredExternalImports": [
+      "@vercel/functions",
+      "@vitejs/plugin-react",
+      "bcryptjs",
+      "cors",
+      "express",
+      "pg",
+      "react",
+      "react-dom",
+      "vite"
+    ]
+  }
+}

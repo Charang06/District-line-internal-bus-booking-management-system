@@ -1,46 +1,78 @@
 # District Line Bus Booking
 
-Current delivery documentation: [handover index](docs/handover/README.md). Production
-security activation is not authorized. Use an approved disposable database for local
-startup; never point development/preview at production or the populated restore project.
+Internal React/Vite frontend with Express API functions and PostgreSQL-backed sessions.
+Current release assessment: [final blocker resolution](docs/handover/districtline-final-blocker-resolution.md).
+Previous evidence: [complete readiness report](docs/handover/districtline-complete-release-readiness.md).
+Historical Phase 12-14 reports retain their original scope/results.
 
-## Run locally
+## Local startup
 
-1. Obtain approval for an empty disposable PostgreSQL target before setting `DATABASE_URL` in a private root `.env`. Startup applies only registered migrations 001–004 and can seed data; later migrations require separate manual approval. Do not run this against production or the populated restore database.
-2. Install dependencies with `npm ci`.
-3. Start the frontend and API together with `npm run dev`.
-4. Open the Vite address shown in the terminal. Demo accounts and buses require separately approved local seeding; normal startup never creates them.
-5. For local admin email recovery, set `RESEND_API_KEY`, `RECOVERY_EMAIL_FROM`, and `APP_URL=http://localhost:5173` in the root `.env`. Use a sender verified in Resend; `APP_URL` must match the browser origin used to open the app. `APP_URL` only sets the reset link destination; it does not configure Resend delivery or affect recovery rate limits.
+Use only an independently verified disposable synthetic database. Never point development,
+Preview, integration tests or browser tests at production or protected backup/restore projects.
+Normal startup **verifies the existing database baseline read-only**. It applies no migrations,
+seeds no data and creates/updates no administrator accounts. Required schema_meta versions
+are 1-4; existing approved recovery features have additional schema dependencies.
+Missing prerequisites fail readiness instead of being repaired automatically.
 
-## Deploy to Vercel
+Dependencies must already be installed for the current offline verification workflow.
+For a separately authorized development setup, npm ci installs the lockfile dependencies;
+npm run dev starts frontend/API and will attempt database readiness checks. Do not run
+startup with protected configuration. Initialization/seeding/migrations require a separate
+reviewed disposable-target procedure; they are never deployment hooks.
 
-The React frontend builds as static files in `dist`; Express API routes run as Vercel Functions from `api/`. The Vercel routing config is in `vercel.json`. Uploaded images use a Supabase Storage bucket rather than the function's temporary filesystem.
+## Approved financial access and policy
 
-1. Push the project to a private Git repository and import it into Vercel. Keep `.env` out of Git; `.gitignore` excludes it.
-2. In Vercel Project Settings, use the repository root, `npm run build` as the build command, and `dist` as the output directory. `vercel.json` already defines these values.
-3. In Supabase Storage, create a public bucket named `district-line-uploads` (or choose another name and set `SUPABASE_STORAGE_BUCKET` to match). Public access means uploaded images can be viewed by anyone with their URL; upload and delete operations remain server-side.
-4. Add these in Vercel Project Settings → Environment Variables. Use **Secret** visibility for credentials and select the intended environments:
-   - `DATABASE_URL`: Supabase transaction-pooler URI from the Connect panel.
-   - `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_FULL_NAME` are legacy/bootstrap inputs. The candidate never creates or updates accounts during normal startup, and its local maintenance tool rejects production. First production administrator setup requires a separate reviewed procedure. Existing password hashes remain authoritative.
-   - `RESEND_API_KEY`, `RECOVERY_EMAIL_FROM`, and `APP_URL` for email recovery. Verify the sender domain in Resend and use an address on that domain. Set `APP_URL` to the canonical HTTPS production origin (for example `https://booking.example.com`), not a Vercel preview URL. Keep these variables server-side; never expose them with a `VITE_` prefix. Redeploy after changing Vercel environment variables.
-   - `CORS_ORIGIN` if the frontend and API use different origins. `SESSION_COOKIE_SAME_SITE` defaults to `lax`; use `none` only for a cross-site HTTPS deployment with an explicit origin allowlist.
-   - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SUPABASE_STORAGE_BUCKET`. Mark the service role key as Secret; never expose it with a `VITE_` prefix.
-   - `SMS_USER_ID`, `SMS_API_KEY`, `SMS_SENDER_ID`, and `SMS_HOTLINE` if SMS sending is required. Keep SMS credentials Secret.
-   - `NODE_ENV=production` and `DATABASE_SSL=require`.
-5. Deploy a Preview first. Confirm `/api/health`, login, booking, cargo, and image upload. Then deploy Production. Vercel environment-variable changes apply to new deployments, so redeploy after changing them. Normal startup checks the existing baseline read-only; it does not apply migrations or seed.
+Explicit Accounts View + Manage permits staff financial writes. View alone is read-only;
+legacy Accounts permission does not grant Manage. Staff/crew administration stays admin-only.
+Booking and cancellation permissions remain independent. Server guards enforce every write.
+Accounts selector reads return only required crew fields and scoped duty financial data.
 
-Vercel Functions use temporary local storage. Do not switch uploads back to local filesystem paths. Startup checks the PostgreSQL baseline read-only; initialization is a separate approved local operation. Set a strong production admin password before the first production deployment.
+Manual revenue accepts exactly Standard, Intermediate, Special and Agent / Extra positional
+rows: each count and the combined count must be at most 49. Fares use original nonnegative
+whole-rupee validation, up to Rs. 100,000,000 per fare. Cargo has its own original 30-row,
+description/tag and whole-rupee validation. No extra manual seat rows are supported.
+Totals, locked persistence, dashboard arithmetic and duty finalization follow the verified
+production baseline; expense-submission limits are independent of manual-revenue limits.
 
-Production startup creates no accounts or demo data. Initial administrator setup requires a separate reviewed bootstrap procedure. Login uses persistent PostgreSQL-backed sessions in an HttpOnly cookie; the cookie lasts at most eight hours and expires after 30 minutes idle. The server stores only a hash of the session identifier. `ADMIN_PASSWORD` is a bootstrap value and is never used to replace an existing production password hash.
+## Safe verification
 
-After the first admin signs in, register the recovery email in **Admin profile → Password recovery email**. The Forgot password flow sends a single-use reset link only to this stored address through Resend. The random token expires after 20 minutes; PostgreSQL stores only its SHA-256 hash. Recovery requests are rate-limited; a successful reset updates the persistent PostgreSQL bcrypt hash, revokes all admin sessions, invalidates outstanding links, and records an audit event. Staff should contact the administrator for password resets. If `RESEND_API_KEY`, `RECOVERY_EMAIL_FROM`, or `APP_URL` is missing, the API returns a configuration error naming the required variables instead of claiming an email was sent.
+Do not use broad npm test without reviewing every included test; it includes integration
+and backup-related files. The final readiness report records the exact offline selection.
+The release preparation scripts use installed dependencies, disable environment-file loading,
+and never start the real API. Browser checks use synthetic fetch responses and fresh profiles.
+An offline mock success is not PostgreSQL, provider, delivery or production acceptance.
 
-If Resend is unavailable or not configured, the UI reports that email recovery requires owner assistance. The owner must verify the administrator through a separate trusted channel. To prepare SQL without connecting to the database, set `RECOVERY_NEW_PASSWORD` through a secure secret manager and set `RECOVERY_SQL_OUTPUT` to a restricted temporary file path, then run `node scripts/owner-admin-recovery.mjs <admin-username>`. Inspect and execute the generated transaction in an owner-controlled PostgreSQL session. It updates only an active admin, revokes their sessions, invalidates their outstanding reset links, and records an audit event. Never use a shared/default password or send credentials by email. Clear the secret-manager variable and securely delete the SQL file after use.
+npm run build normally writes dist and copies public files, including local uploads if present.
+Release verification instead compiles a reviewed clean candidate in memory. Never build/upload
+the complete working directory or copy historical dist/node_modules/artifacts into a candidate.
 
-Never commit `.env`, database credentials, or uploaded user files. Use `.env.example` as a variable checklist, and set real secrets in your host's secret/environment settings. Existing SQLite records must be imported separately; adding `DATABASE_URL` does not copy them.
+## Existing Vercel project: future authorized release only
 
-## Checks
+Target the existing project serving https://districtlinebooking.com/; do not create/import a
+new project or push the current HEAD wholesale. Tracked artifacts include browser profiles and
+personal-image copies; .gitignore does not remove these from Git history or ordinary Git uploads.
+Use only the final reviewed explicit manifest and checksums, without .git, environment files,
+credentials, uploads, backups, artifacts, operational tools, tests or unapproved SQL.
 
-- `npm test` runs named safe tests. Five PostgreSQL integration checks remain blocked until a separately approved disposable baseline database exists.
-- `npm run lint` runs Oxlint.
-- `npm run build` creates the production frontend in `dist/`.
+Local configuration uses Vite, npm run build, dist, sin1 and existing API/SPA rewrites.
+Only inert registered baseline SQL 001-004 plus the public TLS CA/helper are explicitly included;
+008/009 are explicitly excluded. This does not run migrations or certify Vercel tracing.
+No Node engine is pinned; confirm the provider runtime matches installed build requirements.
+Native sqlite3 clean-Linux installation and function tracing still require external verification.
+
+Before any Preview approval, independently confirm project identity, source/deployment IDs,
+non-secret build settings/flag states and isolation of Preview database/storage/providers.
+Never connect Preview to production Supabase. Keep unapproved MFA/login-limiter/recovery flags
+off; frontend VITE flags are build-time and must match approved server feature states.
+Keep secrets server-side and never expose them through VITE variables. No secret values belong
+in repository documentation or candidate manifests.
+
+Normal hosted uploads require separately approved persistent storage; the function filesystem
+is ephemeral. Preserve strict certificate/hostname verification and the included public CA.
+Sessions remain persistent hashed tokens in HttpOnly cookies with existing idle/absolute expiry;
+verify origin/CORS/Secure/SameSite behavior on an isolated target. Existing recovery flows require
+their original approved schema/provider configuration; release preparation sends no email/SMS.
+
+Promotion requires actual isolated database/browser/Preview acceptance, verified compatible
+rollback deployment and explicit production approval. Code rollback does not restore data,
+schema, storage or feature configuration. Follow the exact gates in the final readiness report.
