@@ -35,6 +35,10 @@ export function acceptanceHelpers({evaluate,call,pause}) {
 
 export async function accountWorkflows(ctx,mode) {
  const {check,evaluate,click,wait,pause,call}=ctx,{value,field,assert,responsive,keyboard}=acceptanceHelpers(ctx)
+ await check(mode+' Accounts starts with Revenue and Expenses and omits Bus duties',async()=>{
+  const view=await evaluate('(()=>{const main=document.querySelector(".accounts-revenue-page");return{firstSection:main?.firstElementChild?.classList.contains("accounts-revenue-titlebar"),heading:main?.querySelector("h1")?.textContent.trim(),dutyPanel:!!document.querySelector(".accounts-duty-panel"),dutyHeading:document.body.textContent.includes("Bus duties")}})()')
+  if(!view.firstSection||view.heading!=="Revenue and Expenses"||view.dutyPanel||view.dutyHeading)throw Error(JSON.stringify(view))
+ })
  await check(mode+' manual revenue four categories, combined 49 cap, submit and locked ledger',async()=>{
   await field('.accounts-route-revenue-form','Bus number','SYN-BUS')
   await value('document.querySelectorAll(".accounts-seat-table input")[0]','25')
@@ -60,52 +64,7 @@ export async function accountWorkflows(ctx,mode) {
   await responsive()
   await click('Revenue')
  })
- await check(mode+' duty creation and refresh',async()=>{
-  await field('.accounts-duty-panel','Duty bus','SYN-BUS')
-  await field('.accounts-duty-panel','First journey','11')
-  await field('.accounts-duty-panel','Return journey','12')
-  await click('Create duty')
-  await wait('window.__requests.some(r=>r.path==="/api/admin/duties"&&r.method==="POST")')
-  await wait('document.body.textContent.includes("Add duty expense")')
- })
- await check(mode+' duty expense and adjustment actions with refresh',async()=>{
-  await field('.accounts-duty-panel form:nth-of-type(1)','Description','Synthetic browser fuel')
-  await field('.accounts-duty-panel','Expense amount','10')
-  await click('Add duty expense')
-  await wait('window.__requests.some(r=>r.path.endsWith("/expenses")&&r.method==="POST")')
-  await wait('document.querySelector(".accounts-duty-panel table").textContent.includes("Synthetic browser fuel")')
-  await field('.accounts-duty-panel form:nth-of-type(2)','Description','Synthetic browser income')
-  await field('.accounts-duty-panel','Adjustment amount','5')
-  await click('Add duty adjustment')
-  await wait('document.querySelector(".accounts-duty-panel table").textContent.includes("Synthetic browser income")')
- })
- await check(mode+' duty entry deletion confirmation and refresh',async()=>{
-  await evaluate('[...document.querySelectorAll(".accounts-duty-panel tr")].find(r=>r.textContent.includes("Synthetic browser income")).querySelector("button").click()')
-  await wait('document.querySelector("[role=alertdialog]")')
-  await evaluate('document.querySelector("[role=alertdialog] .danger-button").click()')
-  await wait('window.__requests.some(r=>r.method==="DELETE"&&r.path.includes("/adjustments/"))')
-  await wait('!document.querySelector(".accounts-duty-panel table").textContent.includes("Synthetic browser income")')
-  await evaluate('[...document.querySelectorAll(".accounts-duty-panel tr")].find(r=>r.textContent.includes("Synthetic browser fuel")).querySelector("button").click()')
-  await wait('document.querySelector("[role=alertdialog]")')
-  await evaluate('document.querySelector("[role=alertdialog] .danger-button").click()')
-  await wait('!document.querySelector(".accounts-duty-panel table").textContent.includes("Synthetic browser fuel")')
- })
- await check(mode+' finalization modal initial focus, tab containment and Escape',async()=>{
-  await click('Review and finalize duty');await wait('document.querySelector(".duty-finalize-modal")')
-  try {
-   await assert('document.querySelector(".duty-finalize-modal").contains(document.activeElement)','Initial focus outside finalization dialog')
-   await responsive()
-   await call('Emulation.setDeviceMetricsOverride',{width:390,height:360,deviceScaleFactor:1,mobile:true});await pause(80)
-   const compactDialog=await evaluate('(()=>{const e=document.querySelector(".duty-finalize-modal"),r=e.getBoundingClientRect();return{viewport:innerHeight,top:r.top,bottom:r.bottom,height:e.clientHeight,scrollHeight:e.scrollHeight,overflow:getComputedStyle(e).overflowY}})()')
-   if(compactDialog.top<0||compactDialog.bottom>compactDialog.viewport+1||compactDialog.height>compactDialog.viewport-20||compactDialog.overflow!=='auto')throw Error('Finalize dialog does not fit/scroll with compact keyboard viewport: '+JSON.stringify(compactDialog))
-   await evaluate('document.querySelector(".duty-finalize-modal").scrollTop=document.querySelector(".duty-finalize-modal").scrollHeight')
-   await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await pause(60)
-   await evaluate('document.querySelector(".duty-finalize-modal .primary-button").focus()')
-   await keyboard('Tab')
-   await assert('document.querySelector(".duty-finalize-modal").contains(document.activeElement)','Tab escaped finalization dialog')
-   await keyboard('Escape');await wait('!document.querySelector(".duty-finalize-modal")')
-  } finally {if(await evaluate('!!document.querySelector(".duty-finalize-modal")'))await click('Go back')}
- })
+
 }
 
 export async function adminWorkflows(ctx) {

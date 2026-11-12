@@ -19,7 +19,7 @@ test('Vercel assets are explicit approved registered SQL plus TLS, with optional
  for(const p of excluded)assert.ok(!included.includes(p))
  assert.deepEqual(config.rewrites,[{source:'/api/:path*',destination:'/api?path=:path*'},{source:'/(.*)',destination:'/index.html'}])
 })
-test('scoped financial route registration and client wiring do not expose the admin dashboard',()=>{
+test('scoped financial and duty APIs remain available without Accounts UI wiring',()=>{
  for(const route of ['/api/accounts/crew-options','/api/accounts/duties']){
   assert.equal(server.split("app.get('"+route+"', authMiddleware, requirePageManage('accounts')").length,2)
   assert.ok(!server.includes("app.post('"+route+"'"))
@@ -30,16 +30,21 @@ test('scoped financial route registration and client wiring do not expose the ad
  assert.ok(!source.includes('getAdminDutyData('));assert.ok(!source.includes('await run('));assert.ok(!source.includes('await exec('))
  const app=read('src/App.jsx'),api=read('src/api.js'),accounts=read('src/components/AccountsRevenue.jsx')
  assert.ok(app.includes('else if (staffPermissions.accountsManage) api.accountsCrewOptions(token)'))
- assert.ok(app.includes("scope === 'accounts' && (isAdmin || staffPermissions.accountsManage) ? api.accountsDutyData(token)"))
- assert.ok(app.includes('(isAdmin || staffPermissions.accountsManage) && <AccountsDuties'))
- assert.ok(accounts.includes('{!readOnly && dutyPanel}'))
+ assert.ok(!app.includes('AccountsDuties'))
+ assert.ok(!app.includes('api.accountsDutyData(token)'))
+ assert.ok(!accounts.includes('dutyPanel'))
+ assert.ok(accounts.includes('accounts-revenue-titlebar'))
  assert.ok(accounts.includes('staff with Accounts Manage permission'))
  for(const path of ['/accounts/crew-options','/accounts/duties'])assert.ok(api.includes(path))
  const handler=read('api/_handler.js');assert.ok(handler.includes("import app from '../server/server.js'"))
 })
-test('duty panel renders existing actions, locks finalized duties and gates finalization on completed journeys',()=>{
- const result=spawnSync(process.execPath,['--experimental-vm-modules',fileURLToPath(new URL('./test-support/accounts-duty-render-worker.mjs',import.meta.url))],{encoding:'utf8',windowsHide:true,timeout:30000})
- assert.equal(result.status,0,result.stderr+result.stdout);assert.match(result.stdout,/ACCOUNTS_DUTY_RENDER_PASS/)
+test('duty API adapters and backend routes remain available',()=>{
+ const api=read('src/api.js')
+ assert.ok(api.includes('accountsDutyData:'))
+ assert.ok(api.includes('createBusDuty:'))
+ assert.ok(api.includes('finalizeBusDuty:'))
+ assert.ok(server.includes("app.get('/api/accounts/duties'"))
+ assert.ok(server.includes("app.post('/api/admin/duties/:id/finalize'"))
 })
 
 test('API adapters preserve endpoint, method, body and query for rewritten and direct requests',()=>{

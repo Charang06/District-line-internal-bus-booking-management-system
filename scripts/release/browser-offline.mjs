@@ -156,10 +156,6 @@ try{
    await accountWorkflows(context,mode)
    await check(mode+' minimized crew selectors populated',async()=>{if(!await evaluate('[...document.querySelectorAll("select option")].some(e=>e.textContent==="Synthetic Driver")'))throw Error('Missing crew')})
    await check(mode+' manual revenue fixed count inputs',async()=>{const values=await evaluate('[...document.querySelectorAll(".accounts-seat-table input[type=number]")].map(e=>({max:e.max,step:e.step}))');if(values.length!==16||values.some((v,i)=>i%2===0&&v.max!=='49'))throw Error(JSON.stringify(values))})
-   await check(mode+' duty review and finalization refresh',async()=>{
-    await evaluate('(()=>{const e=[...document.querySelectorAll("select")].find(e=>[...e.options].some(o=>o.textContent.includes("DUTY-SYNTHETIC")));e.value="501";e.dispatchEvent(new Event("change",{bubbles:true}))})()');await pause(120);await click('Review and finalize duty');await wait('document.body.textContent.includes("Confirm and finalize")');await click('Confirm and finalize');await pause(180);if(!await evaluate('window.__requests.some(r=>r.path.endsWith("/finalize")&&r.method==="POST")&&window.__requests.filter(r=>r.path==="/api/accounts/duties").length>=2'))throw Error('Finalize/refresh missing')
-   })
-   await check(mode+' finalized duty controls hidden',async()=>{await wait('!document.body.textContent.includes("Add duty expense")');if(await evaluate('!!document.querySelector(".accounts-duty-panel fieldset")'))throw Error('Finalized duty remains editable')})
   }
   await check(mode+' no unmatched synthetic API calls',async()=>{const unmatched=await evaluate('window.__unhandled');if(unmatched.length)throw Error(JSON.stringify(unmatched))})
  }

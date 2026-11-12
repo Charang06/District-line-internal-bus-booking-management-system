@@ -10,7 +10,6 @@ import StaffDialog from './components/StaffDialog'
 import CustomersPage from './components/CustomersPage'
 import AdminProfile from './components/AdminProfile'
 import AccountsRevenue from './components/AccountsRevenue'
-import AccountsDuties from './components/AccountsDuties'
 import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
 import InfoGuide from './components/InfoGuide'
 import SmsBalanceCard from './components/SmsBalanceCard'
@@ -246,14 +245,6 @@ function App() {
   const [monthlyExpenseMonth, setMonthlyExpenseMonth] = useState(() => todayIso().slice(0, 7))
   const [expenseForm, setExpenseForm] = useState({ expense_date: todayIso(), bus_no: '', category: 'Fuel', description: '', amount: '' })
   const [expenseSaving, setExpenseSaving] = useState(false)
-  const [dutyForm, setDutyForm] = useState({ bus_no: '', first_trip_id: '', return_trip_id: '' })
-  const [dutyExpenseForm, setDutyExpenseForm] = useState({ expense_date: todayIso(), trip_id: '', category: 'Fuel', description: '', amount: '' })
-  const [dutyAdjustmentForm, setDutyAdjustmentForm] = useState({ adjustment_date: todayIso(), trip_id: '', type: 'other_income', description: '', amount: '', seat_number: '' })
-  const [dutySaving, setDutySaving] = useState(false)
-  const [selectedDutyId, setSelectedDutyId] = useState(null)
-  const [finalizeDutyTarget, setFinalizeDutyTarget] = useState(null)
-  const [acknowledgeNoDutyExpenses, setAcknowledgeNoDutyExpenses] = useState(false)
-  const [dutyFilters, setDutyFilters] = useState({ bus_id: '', status: '', start_from: '', start_to: '', completion_from: '', completion_to: '' })
   const [printMode, setPrintMode] = useState(null)
   const [entryFocus, setEntryFocus] = useState(null)
   const [showProfile, setShowProfile] = useState(false)
@@ -414,29 +405,6 @@ function App() {
   const accountsExpenseTotal = useMemo(() => accountsExpenses.reduce((total, expense) => total + Number(expense.amount || 0), 0), [accountsExpenses])
   const monthlyExpenses = useMemo(() => (adminStats?.expenses || []).filter((expense) => !expense.duty_id && expense.expense_date?.slice(0, 7) === monthlyExpenseMonth), [adminStats, monthlyExpenseMonth])
   const monthlyExpenseTotal = useMemo(() => monthlyExpenses.reduce((total, expense) => total + Number(expense.amount || 0), 0), [monthlyExpenses])
-  const visibleDuties = useMemo(() => (adminStats?.duties || []).filter((duty) => (
-    (!dutyFilters.bus_id || String(duty.bus_id) === dutyFilters.bus_id)
-    && (!dutyFilters.status || duty.status === dutyFilters.status)
-    && (!dutyFilters.start_from || duty.start_date >= dutyFilters.start_from)
-    && (!dutyFilters.start_to || duty.start_date <= dutyFilters.start_to)
-    && (!dutyFilters.completion_from || (duty.completion_date && duty.completion_date >= dutyFilters.completion_from))
-    && (!dutyFilters.completion_to || (duty.completion_date && duty.completion_date <= dutyFilters.completion_to))
-  )), [adminStats, dutyFilters])
-  const selectedDuty = (adminStats?.duties || []).find((duty) => duty.id === selectedDutyId) || null
-  const unassignedDutyTrips = adminStats?.dutyTrips || []
-  const firstDutyTrip = unassignedDutyTrips.find((trip) => String(trip.id) === dutyForm.first_trip_id) || null
-  const eligibleFirstDutyTrips = unassignedDutyTrips.filter((trip) => dutyForm.bus_no && String(trip.registration_no || '').trim().toLocaleLowerCase() === dutyForm.bus_no.trim().toLocaleLowerCase())
-  const eligibleReturnDutyTrips = firstDutyTrip ? unassignedDutyTrips.filter((trip) => (
-    String(trip.registration_no || '').trim().toLocaleLowerCase() === dutyForm.bus_no.trim().toLocaleLowerCase()
-    && trip.id !== firstDutyTrip.id
-    && ((firstDutyTrip.route_code === 'KTY_CMB' && trip.route_code === 'CMB_KTY') || (firstDutyTrip.route_code === 'CMB_KTY' && trip.route_code === 'KTY_CMB'))
-    && trip.travel_date > firstDutyTrip.travel_date
-  )) : []
-  const visibleDutyTotals = useMemo(() => visibleDuties.reduce((total, duty) => ({
-    revenue: total.revenue + Number(duty.total_revenue || 0),
-    expenses: total.expenses + Number(duty.total_expenses || 0),
-    profit: total.profit + Number(duty.net_profit || 0),
-  }), { revenue: 0, expenses: 0, profit: 0 }), [visibleDuties])
   const profitReport = useMemo(() => {
     const month = profitPeriod === 'month' ? profitDate.slice(0, 7) : ''
     const selectedDate = new Date(`${profitDate}T00:00:00`)
@@ -1312,7 +1280,7 @@ function App() {
       return
     }
     const cachedScope = adminStatsCacheRef.current[scope] ? scope : scope !== 'full' && scope !== 'customers' && adminStatsCacheRef.current.full ? 'full' : ''
-    if (cachedScope && !forceData && (scope !== 'accounts' || !(isAdmin || staffPermissions.accountsManage) || Array.isArray(adminStatsCacheRef.current[cachedScope].duties))) {
+    if (cachedScope && !forceData) {
       if (scope === 'dashboard') setDashboardDataError('')
       if (scope === 'full' || scope === 'customers') setCustomerDataError('')
       setAdminStats(adminStatsCacheRef.current[cachedScope])
@@ -1329,11 +1297,7 @@ function App() {
       if (canViewFinancialData) setProfitLedgerError('')
       const ledgerPending = canViewFinancialData ? loadProfitLedger(forceLedger) : Promise.resolve()
       try {
-        const [data, dutyData] = await Promise.all([
-          api.adminDashboard(token, scope === 'full' ? undefined : scope),
-          scope === 'accounts' && (isAdmin || staffPermissions.accountsManage) ? api.accountsDutyData(token) : Promise.resolve(null),
-        ])
-        if (dutyData) Object.assign(data, dutyData)
+        const data = await api.adminDashboard(token, scope === 'full' ? undefined : scope)
         if (requestId === adminDashboardRequestIdRef.current) {
           if (scope === 'full') adminStatsCacheRef.current = { full: data, dashboard: data, accounts: data }
           else adminStatsCacheRef.current[scope] = data
@@ -1386,11 +1350,7 @@ function App() {
       setExpenseForm((current) => ({ ...current, description: '', amount: '' }))
       showMessage('Monthly expense saved.')
       try {
-        const [data, dutyData] = await Promise.all([
-          api.adminDashboard(token, 'accounts'),
-          isAdmin || staffPermissions.accountsManage ? api.accountsDutyData(token) : Promise.resolve(null),
-        ])
-        if (dutyData) Object.assign(data, dutyData)
+        const data = await api.adminDashboard(token, 'accounts')
         adminStatsCacheRef.current.accounts = data
         setAdminStats(data)
         setAdminStatsScope('accounts')
@@ -1406,11 +1366,9 @@ function App() {
 
   const refreshAccountsData = async () => {
     try {
-      const [data, revenueData, expenseData, dutyData] = await Promise.all([
+      const [data, revenueData, expenseData] = await Promise.all([
         api.adminDashboard(token, 'accounts'), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token),
-        isAdmin || staffPermissions.accountsManage ? api.accountsDutyData(token) : Promise.resolve(null),
       ])
-      if (dutyData) Object.assign(data, dutyData)
       adminStatsCacheRef.current.accounts = data
       setAdminStats(data)
       setAdminStatsScope('accounts')
@@ -1421,93 +1379,6 @@ function App() {
     } catch (err) {
       setProfitLedgerError(err.message || 'Request failed')
       throw err
-    }
-  }
-
-  const handleCreateDuty = async (event) => {
-    event.preventDefault()
-    setDutySaving(true)
-    try {
-      const result = await api.createBusDuty(token, dutyForm)
-      const data = await refreshAccountsData()
-      setSelectedDutyId(result.duty.id)
-      setDutyForm({ bus_no: '', first_trip_id: '', return_trip_id: '' })
-      showMessage(`Created ${result.duty.duty_code}.`)
-      return data
-    } catch (err) {
-      showMessage(err.message, true)
-    } finally {
-      setDutySaving(false)
-    }
-  }
-
-  const handleAddDutyExpense = async (event) => {
-    event.preventDefault()
-    if (!selectedDuty) return
-    setDutySaving(true)
-    try {
-      await api.addDutyExpense(token, selectedDuty.id, { ...dutyExpenseForm, amount: Number(dutyExpenseForm.amount), trip_id: dutyExpenseForm.trip_id || null })
-      await refreshAccountsData()
-      setDutyExpenseForm((current) => ({ ...current, description: '', amount: '', trip_id: '' }))
-      showMessage(`Expense added to ${selectedDuty.duty_code}.`)
-    } catch (err) {
-      showMessage(err.message, true)
-    } finally {
-      setDutySaving(false)
-    }
-  }
-
-  const handleAddDutyAdjustment = async (event) => {
-    event.preventDefault()
-    if (!selectedDuty) return
-    setDutySaving(true)
-    try {
-      await api.addDutyAdjustment(token, selectedDuty.id, { ...dutyAdjustmentForm, amount: Number(dutyAdjustmentForm.amount), trip_id: dutyAdjustmentForm.trip_id || null })
-      await refreshAccountsData()
-      setDutyAdjustmentForm((current) => ({ ...current, description: '', amount: '', trip_id: '', seat_number: '' }))
-      showMessage(`Financial adjustment added to ${selectedDuty.duty_code}.`)
-    } catch (err) {
-      showMessage(err.message, true)
-    } finally {
-      setDutySaving(false)
-    }
-  }
-
-  const handleDeleteDutyEntry = async (entry) => {
-    if (!selectedDuty || selectedDuty.status === 'finalized') return
-    setConfirmDialog({
-      title: `Delete ${entry.kind === 'expense' ? 'expense' : 'financial entry'}?`,
-      message: `${entry.description} · Rs. ${Number(entry.amount).toLocaleString('en-US')}. This will update the duty totals and cannot be undone.`,
-      confirmLabel: 'Delete entry',
-      onConfirm: async () => {
-    setDutySaving(true)
-    try {
-      if (entry.kind === 'expense') await api.deleteDutyExpense(token, selectedDuty.id, entry.id)
-      else await api.deleteDutyAdjustment(token, selectedDuty.id, entry.id)
-      await refreshAccountsData()
-      showMessage('Duty financial entry deleted.')
-    } catch (err) {
-      showMessage(err.message, true)
-    } finally {
-      setDutySaving(false)
-    }
-      },
-    })
-  }
-
-  const handleFinalizeDuty = async () => {
-    if (!finalizeDutyTarget) return
-    setDutySaving(true)
-    try {
-      await api.finalizeBusDuty(token, finalizeDutyTarget.id, acknowledgeNoDutyExpenses)
-      await refreshAccountsData()
-      setFinalizeDutyTarget(null)
-      setAcknowledgeNoDutyExpenses(false)
-      showMessage(`${finalizeDutyTarget.duty_code} profit finalized and saved.`)
-    } catch (err) {
-      showMessage(err.message, true)
-    } finally {
-      setDutySaving(false)
     }
   }
 
@@ -2238,15 +2109,6 @@ function App() {
       )}
 
       {activeTab === 'Accounts' && staffPermissions.accounts && adminStats && <AccountsRevenue
-        dutyPanel={(isAdmin || staffPermissions.accountsManage) && <AccountsDuties
-          duties={visibleDuties} selectedDuty={selectedDuty} onSelect={setSelectedDutyId}
-          form={dutyForm} setForm={setDutyForm} firstTrips={eligibleFirstDutyTrips} returnTrips={eligibleReturnDutyTrips}
-          buses={[...new Set(unassignedDutyTrips.map(trip => trip.registration_no).filter(Boolean))]}
-          expense={dutyExpenseForm} setExpense={setDutyExpenseForm} adjustment={dutyAdjustmentForm} setAdjustment={setDutyAdjustmentForm}
-          saving={dutySaving} onCreate={handleCreateDuty} onExpense={handleAddDutyExpense} onAdjustment={handleAddDutyAdjustment}
-          onDelete={handleDeleteDutyEntry} setFinalizeTarget={setFinalizeDutyTarget}
-          setAcknowledged={setAcknowledgeNoDutyExpenses}
-        />}
         readOnly={!isAdmin && !staffPermissions.accountsManage}
         data={{ ...adminStats, crewMembers: crewList }}
         token={token}
@@ -2364,28 +2226,6 @@ function App() {
             </form>
           </section>
         </div>
-      )}
-
-      {finalizeDutyTarget && (
-        <StaffDialog title={`Finalize ${finalizeDutyTarget.duty_code} profit?`} className="duty-finalize-modal" busy={dutySaving} onClose={() => { setFinalizeDutyTarget(null); setAcknowledgeNoDutyExpenses(false) }}>
-            <p>{finalizeDutyTarget.bus_no}: {finalizeDutyTarget.first_trip.route_label} ({finalizeDutyTarget.first_trip.travel_date}) and {finalizeDutyTarget.return_trip.route_label} ({finalizeDutyTarget.return_trip.travel_date})</p>
-            <div className="duty-finalize-summary">
-              <span>First journey revenue <strong>Rs. {Number(finalizeDutyTarget.first_trip.revenue.total).toLocaleString('en-US')}</strong></span>
-              <span>Return journey revenue <strong>Rs. {Number(finalizeDutyTarget.return_trip.revenue.total).toLocaleString('en-US')}</strong></span>
-              <span>Total revenue <strong>Rs. {Number(finalizeDutyTarget.total_revenue).toLocaleString('en-US')}</strong></span>
-              <span>Total expenses <strong>Rs. {Number(finalizeDutyTarget.total_expenses).toLocaleString('en-US')}</strong></span>
-              <span>Net profit <strong>Rs. {Number(finalizeDutyTarget.net_profit).toLocaleString('en-US')}</strong></span>
-            </div>
-            <span>Other income <strong>Rs. {Number(finalizeDutyTarget.adjustment_totals?.other_income || 0).toLocaleString('en-US')}</strong></span>
-            <span>Cancellation fees <strong>Rs. {Number(finalizeDutyTarget.adjustment_totals?.cancellation_fees || 0).toLocaleString('en-US')}</strong></span>
-            <span>Refunds <strong>Rs. {Number(finalizeDutyTarget.adjustment_totals?.refunds || 0).toLocaleString('en-US')}</strong></span>
-            {(!finalizeDutyTarget.expenses.length && !(finalizeDutyTarget.adjustments || []).length) && <label className="duty-expense-acknowledgement"><input type="checkbox" checked={acknowledgeNoDutyExpenses} onChange={(event) => setAcknowledgeNoDutyExpenses(event.target.checked)} /> I reviewed this duty and confirm it has no expenses or financial adjustments to record.</label>}
-            <p>Finalizing saves a historical financial snapshot. The report and its linked trips, bookings, expenses, and adjustments will be locked.</p>
-            <div className="reservation-actions staff-dialog-footer">
-              <button type="button" className="ghost-button" disabled={dutySaving} onClick={() => { setFinalizeDutyTarget(null); setAcknowledgeNoDutyExpenses(false) }}>Go back</button>
-              <button type="button" className="primary-button" disabled={dutySaving || (!finalizeDutyTarget.expenses.length && !(finalizeDutyTarget.adjustments || []).length && !acknowledgeNoDutyExpenses)} onClick={handleFinalizeDuty}>{dutySaving ? 'Finalizing…' : 'Confirm and finalize'}</button>
-            </div>
-        </StaffDialog>
       )}
 
       {showBusForm && isAdmin && (

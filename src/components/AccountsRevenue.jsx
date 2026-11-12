@@ -133,7 +133,7 @@ const EXPENSE_CATEGORY_ICONS = ['fuel', 'person', 'person', 'shield', 'toll', 'c
 const DEFAULT_EXPENSE_ITEMS = EXPENSE_CATEGORIES.map((category) => ({ category, description: '', amount: '0' }))
 const EXPENSE_DRAFT_KEY = 'district-line-expense-form-draft'
 
-export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense, revenueEntries = [], expenseSubmissionEntries = [], ledgerLoading = false, onRevenueEntrySaved, onExpenseSubmissionSaved, readOnly = false, dutyPanel = null }) {
+export default function AccountsRevenue({ data, token, showMessage, onPrint, onRefresh, monthlyExpenseForm, setMonthlyExpenseForm, monthlyExpenseSaving, onAddMonthlyExpense, revenueEntries = [], expenseSubmissionEntries = [], ledgerLoading = false, onRevenueEntrySaved, onExpenseSubmissionSaved, readOnly = false }) {
   const [activeSection, setActiveSection] = useState('revenue')
   const [date, setDate] = useState(todayIso)
   const [routeCode, setRouteCode] = useState(ROUTES[0].code)
@@ -453,7 +453,6 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
 
   return (
     <main className={`content-page accounts-revenue-page${readOnly ? ' is-read-only' : ''}`}>
-    {!readOnly && dutyPanel}
     <section className={`content-card accounts-revenue-titlebar${activeSection === 'revenue' ? ' is-revenue-view' : ' is-expense-view'}`}>
         <div className="accounts-revenue-banner-title"><span className="accounts-revenue-banner-icon"><RevenueIcon name="accounts" /></span><div><span className="accounts-kicker">Passenger and Cargo Accounts</span><h1>Revenue and Expenses</h1></div></div>
         {readOnly && <p className="accounts-read-only-notice">View-only access. Financial entries require an administrator or staff with Accounts Manage permission.</p>}
