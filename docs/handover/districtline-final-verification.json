@@ -2,6 +2,10 @@
   "browser": {
     "results": [
       {
+        "name": "admin mobile navigation permission visibility",
+        "pass": true
+      },
+      {
         "name": "admin Home navigation",
         "pass": true
       },
@@ -26,27 +30,31 @@
         "pass": true
       },
       {
-        "name": "admin Home layout at all four widths",
+        "name": "admin Home layout at requested widths",
         "pass": true
       },
       {
-        "name": "admin Log layout at all four widths",
+        "name": "admin Log layout at requested widths",
         "pass": true
       },
       {
-        "name": "admin Info layout at all four widths",
+        "name": "admin Info layout at requested widths",
         "pass": true
       },
       {
-        "name": "admin Dashboard layout at all four widths",
+        "name": "admin Dashboard layout at requested widths",
         "pass": true
       },
       {
-        "name": "admin Customers layout at all four widths",
+        "name": "admin Customers layout at requested widths",
         "pass": true
       },
       {
-        "name": "admin Staff layout at all four widths",
+        "name": "admin Staff layout at requested widths",
+        "pass": true
+      },
+      {
+        "name": "admin mobile navigation drawer, keyboard and scroll locking",
         "pass": true
       },
       {
@@ -66,7 +74,19 @@
         "pass": true
       },
       {
+        "name": "admin Accounts responsive 360",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 375",
+        "pass": true
+      },
+      {
         "name": "admin Accounts responsive 390",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 430",
         "pass": true
       },
       {
@@ -74,7 +94,19 @@
         "pass": true
       },
       {
+        "name": "admin Accounts responsive 1024",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 1280",
+        "pass": true
+      },
+      {
         "name": "admin Accounts responsive 1440",
+        "pass": true
+      },
+      {
+        "name": "admin Accounts responsive 1920",
         "pass": true
       },
       {
@@ -122,7 +154,19 @@
         "pass": true
       },
       {
+        "name": "manager mobile navigation permission visibility",
+        "pass": true
+      },
+      {
         "name": "manager Accounts responsive 320",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 360",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 375",
         "pass": true
       },
       {
@@ -130,11 +174,27 @@
         "pass": true
       },
       {
+        "name": "manager Accounts responsive 430",
+        "pass": true
+      },
+      {
         "name": "manager Accounts responsive 768",
         "pass": true
       },
       {
+        "name": "manager Accounts responsive 1024",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 1280",
+        "pass": true
+      },
+      {
         "name": "manager Accounts responsive 1440",
+        "pass": true
+      },
+      {
+        "name": "manager Accounts responsive 1920",
         "pass": true
       },
       {
@@ -182,7 +242,19 @@
         "pass": true
       },
       {
+        "name": "view mobile navigation permission visibility",
+        "pass": true
+      },
+      {
         "name": "view Accounts responsive 320",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 360",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 375",
         "pass": true
       },
       {
@@ -190,11 +262,27 @@
         "pass": true
       },
       {
+        "name": "view Accounts responsive 430",
+        "pass": true
+      },
+      {
         "name": "view Accounts responsive 768",
         "pass": true
       },
       {
+        "name": "view Accounts responsive 1024",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 1280",
+        "pass": true
+      },
+      {
         "name": "view Accounts responsive 1440",
+        "pass": true
+      },
+      {
+        "name": "view Accounts responsive 1920",
         "pass": true
       },
       {
@@ -207,6 +295,10 @@
       },
       {
         "name": "view no unmatched synthetic API calls",
+        "pass": true
+      },
+      {
+        "name": "none mobile navigation permission visibility",
         "pass": true
       },
       {
@@ -234,20 +326,20 @@
         "pass": true
       }
     ],
-    "passed": 58,
+    "passed": 81,
     "failed": 0,
     "consoleErrors": [],
     "profile": "fresh temporary profile; retained outside release",
     "mocked": true,
+    "testedCandidate": "C:\\Users\\Abbishathanan\\Desktop\\p1\\New folder\\last\\D BUS BOOKING M\\release-candidates\\districtline-2026-11-12T17-27-07-297Z",
     "diagnostics": {
       "executable": "C:/Program Files/Google/Chrome/Application/chrome.exe",
       "exitCode": 0,
-      "stderr": "\r\nDevTools listening on ws://127.0.0.1:54936/devtools/browser/bd0330fc-6169-4beb-914b-b6f8f7f98989\r\n",
+      "stderr": "\r\nDevTools listening on ws://127.0.0.1:51536/devtools/browser/2c091999-1efc-4bb3-8d02-b4ef822dd6a2\r\n",
       "commandTimeoutMs": 30000,
       "resourceErrors": [],
       "networkErrors": []
-    },
-    "testedCandidate": "C:\\Users\\Abbishathanan\\Desktop\\p1\\New folder\\last\\D BUS BOOKING M\\release-candidates\\districtline-2026-11-12T15-17-59-452Z"
+    }
   },
   "candidateBuild": {
     "pass": true,
@@ -321,7 +413,7 @@
     "missingRelativeImports": 0,
     "candidateSyntaxChecks": 25,
     "lockRootMatches": true,
-    "manifestSha256": "df7a9232d32139a69b0b8866b05fa04ff8eb60c8be3762d7a28dcd30ae2cd018",
+    "manifestSha256": "8b1652aee7cf792ff39ddb53f224616ffc667c2e1269fe4972298918b7f018b0",
     "noSymlinkEscape": true,
     "prohibitedPaths": 0,
     "declaredExternalImports": [

@@ -528,6 +528,13 @@
   .log-page .log-trip-summary-card {
     grid-column: 1 / -1;
   }
+  .log-page .log-calendar-controls button {
+    min-height: 44px;
+    height: auto;
+  }
+  .log-page .log-calendar-date {
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 900px) {

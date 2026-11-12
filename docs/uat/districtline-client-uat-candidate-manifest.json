@@ -1,0 +1,378 @@
+{
+  "candidate": "C:\\Users\\Abbishathanan\\Desktop\\p1\\New folder\\last\\D BUS BOOKING M\\release-candidates\\districtline-2026-11-12T16-52-50-275Z",
+  "sourceHead": "8a2d8c6a5b6d705950c166accc45df38d819653d",
+  "sourceBranch": "ui/admin-dashboard-handover",
+  "createdAt": "2026-11-12T16:52:50.502Z",
+  "files": [
+    {
+      "path": "api/[...route].js",
+      "bytes": 40,
+      "sha256": "b0c77a7f9cef02e7d2c453bf6284bc4e2f1453fdf07c02d7448f64b636c6581c"
+    },
+    {
+      "path": "api/_handler.js",
+      "bytes": 764,
+      "sha256": "5215f2ff8024a564c2fbdc6c07529ef01acb660c441d181cb85879f993d6e7ad"
+    },
+    {
+      "path": "api/admin/revenue-entries.js",
+      "bytes": 418,
+      "sha256": "aa321f45a7314964d34a93ddb8c16da3c634db8c93d10d7e20f85b632c9938e9"
+    },
+    {
+      "path": "api/index.js",
+      "bytes": 40,
+      "sha256": "b0c77a7f9cef02e7d2c453bf6284bc4e2f1453fdf07c02d7448f64b636c6581c"
+    },
+    {
+      "path": "certs/supabase-prod-ca-2021.crt",
+      "bytes": 1367,
+      "sha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+    },
+    {
+      "path": "index.html",
+      "bytes": 528,
+      "sha256": "88e3c29d5ccdc46a90937af0c930617126cbe549bb31bdec68b1233888a735cf"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 120126,
+      "sha256": "5fefd1527e63780cf26109232b33a250de91de12e375d1932f6876bca0403ea5"
+    },
+    {
+      "path": "package.json",
+      "bytes": 946,
+      "sha256": "2ad0fa2288e6ba871bb18b3356c26ecc6d009101ae8d9b85e5f0d98378add55b"
+    },
+    {
+      "path": "public/Inter-LICENSE.txt",
+      "bytes": 4380,
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "public/InterVariable.woff2",
+      "bytes": 352240,
+      "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3"
+    },
+    {
+      "path": "public/bus.webp",
+      "bytes": 381002,
+      "sha256": "80b88304b3ad311f0b5a7ba8df2ced63daef491e9fc703d5612c1aa4abc90751"
+    },
+    {
+      "path": "public/login-bg-1920x1080.jpg",
+      "bytes": 421931,
+      "sha256": "26a114a62261bd70685ade8cd4d14d14902c35aaa237d1f76b36257b5466f062"
+    },
+    {
+      "path": "public/login-bg-clean-v2.jpg",
+      "bytes": 479497,
+      "sha256": "b013e93eeb92152b040e509c311f5f8866998cc7c339806708539ebd09b1048f"
+    },
+    {
+      "path": "public/login-bg-clean-v2.png",
+      "bytes": 3381347,
+      "sha256": "a3012bb3abd539ef0249298f39929f1b48a4c0fc3dddbeeacb7715f6615267b2"
+    },
+    {
+      "path": "public/login-bg.png",
+      "bytes": 2347477,
+      "sha256": "1c1de610fe8856ea2b6b30372660c80db7bd9edb8f8ee96ddadfafbfa1447306"
+    },
+    {
+      "path": "public/login-tropical-sunset.png",
+      "bytes": 2397174,
+      "sha256": "1866e5ad0cb5281e4740b3e94c350a7a55bb267607339c549c25b7ff555d07b9"
+    },
+    {
+      "path": "public/logo-transparent.png",
+      "bytes": 100833,
+      "sha256": "869bd4d24f31b8c8be70f405998f4cb97c8e865d70005b19e60aa84f1fa1cee5"
+    },
+    {
+      "path": "public/logo.png",
+      "bytes": 30887,
+      "sha256": "3639965333ad27cd3a19ea865a1c03cfaa7f2af132de697bdbb7761f0e5e6341"
+    },
+    {
+      "path": "scripts/lib/supabase-verified-tls.cjs",
+      "bytes": 2864,
+      "sha256": "f8b3e4935d06f7cd45e8d66d0e9ce2ef972130111378ebb943aa7de7fa5ed2dc"
+    },
+    {
+      "path": "server/admin-mfa.js",
+      "bytes": 11402,
+      "sha256": "a55b50412369740cac60ef1a07c44906ffdef7f8f73499a71d39b5f9bea78030"
+    },
+    {
+      "path": "server/admin-profile-username.js",
+      "bytes": 3968,
+      "sha256": "5f63082065b92a676c54ea5527be17bc18cf8a4c601b0d53dd23c831a6f577f3"
+    },
+    {
+      "path": "server/admin-recovery-email-verification.js",
+      "bytes": 14637,
+      "sha256": "5c5f4d9b344d04a4a1a5dd97c8318be055e444e5a1ad9d3b76a8832c2be23a37"
+    },
+    {
+      "path": "server/admin-username-recovery.js",
+      "bytes": 9897,
+      "sha256": "4ddd1a5b732af170c93e43b73efe957096fd1d0d3d15777ffd062701c99a08bc"
+    },
+    {
+      "path": "server/database-startup.js",
+      "bytes": 3737,
+      "sha256": "b76b2d9eaacf95670f00e6b36bd66a6f9321970a48e7e23f42456f9b03afcc4f"
+    },
+    {
+      "path": "server/database-tls.js",
+      "bytes": 1593,
+      "sha256": "701adc96f16ff8044283e5a139d8f49c17552d4acc47499ffcd075d2a689aba7"
+    },
+    {
+      "path": "server/env.js",
+      "bytes": 901,
+      "sha256": "cb03b46e645f5984cff4268ce7d9b4fcd2b45fa6c43656f5d053a8c55f043299"
+    },
+    {
+      "path": "server/login-rate-limit.js",
+      "bytes": 3266,
+      "sha256": "17f61587aaf58e21798b2a17bf8d098cac4c7a254dfd8ce9f96f43b87e33bd39"
+    },
+    {
+      "path": "server/migrations/001_initial_postgres.sql",
+      "bytes": 11672,
+      "sha256": "9fea40d0a03f7d5d67b3efe94c2240badb2403720a202ab933b35615e1ce3ee5"
+    },
+    {
+      "path": "server/migrations/002_auth_sessions.sql",
+      "bytes": 648,
+      "sha256": "adf5cf68c7842af38ebb2e946fcba106ae50c8078ac48143f9738b2224e788ad"
+    },
+    {
+      "path": "server/migrations/003_password_recovery.sql",
+      "bytes": 696,
+      "sha256": "a4e7817f37adc9ac30ba92e7e9024fb0c3fdbc9216edc1b982157e5ae4501009"
+    },
+    {
+      "path": "server/migrations/004_admin_email_recovery.sql",
+      "bytes": 108,
+      "sha256": "90755524f9d37f5f45b2b68d40d631492cbf23c088da21e3cff4966943d20d19"
+    },
+    {
+      "path": "server/revenue-seat-rows.js",
+      "bytes": 1280,
+      "sha256": "f4e48a0e3d2610897ec9a59fa4ed0e6616a21901feab15a5e31287c59fa7bc53"
+    },
+    {
+      "path": "server/server.js",
+      "bytes": 177916,
+      "sha256": "54a6dd4a408b78c926634b654ae90680afa0626d92d47240634282c01e5c7222"
+    },
+    {
+      "path": "server/sms.js",
+      "bytes": 4345,
+      "sha256": "52a6efec9a07a4f2203f0d61c8fab568143b6161249df0f837ea7de6b3e4e27b"
+    },
+    {
+      "path": "server/smslenz-balance.js",
+      "bytes": 4246,
+      "sha256": "aa41aed758652cee15e8033203c635f11f3e4c12106c4d92b76190c2ae500540"
+    },
+    {
+      "path": "src/App.css",
+      "bytes": 247257,
+      "sha256": "01a2e449d788ed9593cdc99ccfb29b4fa2c44e735dfb42aad1b169901932e33d"
+    },
+    {
+      "path": "src/App.jsx",
+      "bytes": 159666,
+      "sha256": "af91bfe5d8d81847286282dad0094ff81151bf04259bcb6c5b1069a26d679161"
+    },
+    {
+      "path": "src/api.js",
+      "bytes": 12854,
+      "sha256": "aa29b0675b5d7205138fcec413462cf3b275b3122182a0fc7eb49c828dfc25c6"
+    },
+    {
+      "path": "src/components/AccountsDuties.jsx",
+      "bytes": 6268,
+      "sha256": "169e8269c52ad9859dcf41fc445e2a07dae89c6768017d34fab1ea8b5a279377"
+    },
+    {
+      "path": "src/components/AccountsExpense.css",
+      "bytes": 19386,
+      "sha256": "f9d96c6a32f2606f560927f654a994598ef94145a4db3ede96fa0fb563e2c5fd"
+    },
+    {
+      "path": "src/components/AccountsRevenue.css",
+      "bytes": 17429,
+      "sha256": "f1833054b7aea4c9c546ad2682a9d21368116e0798f46cc6f7ce1f8f2d5a6ece"
+    },
+    {
+      "path": "src/components/AccountsRevenue.jsx",
+      "bytes": 55034,
+      "sha256": "68e85a2a65db84635717f824fd9fc2146293543698b7957081bb132251faf8dc"
+    },
+    {
+      "path": "src/components/AdminDashboard.css",
+      "bytes": 36057,
+      "sha256": "8d1d81bfb6ff98ff7fe85002ea3e1d29151958c6fec2d56445d02fac99ede8bd"
+    },
+    {
+      "path": "src/components/AdminMfaEnrollment.jsx",
+      "bytes": 3195,
+      "sha256": "b9ffeb9da692559544a4e890078f4f967cd19612a1900ff77b783dfb66079d3f"
+    },
+    {
+      "path": "src/components/AdminProfile.css",
+      "bytes": 14832,
+      "sha256": "fd9163ae8381b2a7b21833580075fde692aa51bbcecae9dbb7cbcd28cf17300a"
+    },
+    {
+      "path": "src/components/AdminProfile.jsx",
+      "bytes": 24779,
+      "sha256": "11f3e2f598675e5f6386943cae895c039a30411eda18d84af59ce320952a757f"
+    },
+    {
+      "path": "src/components/CustomersPage.css",
+      "bytes": 11040,
+      "sha256": "4d84df54e0c9c4ce6e7b6b6ae79f8837803f90c5af047c38c95efa2212100389"
+    },
+    {
+      "path": "src/components/CustomersPage.jsx",
+      "bytes": 6890,
+      "sha256": "a29cb15a6f4633bf6600436fe904afa49801846f4071630897cf3dd8ded6c4b6"
+    },
+    {
+      "path": "src/components/DashboardWidgets.jsx",
+      "bytes": 2284,
+      "sha256": "461a30025337b4116409efbc0a02ca9a0dae12d6402e0e3b07a4b46a16249aef"
+    },
+    {
+      "path": "src/components/ExpenseSubmissionsTable.jsx",
+      "bytes": 16206,
+      "sha256": "ae59157e2cbcb0240cd19f66ed959a99eb4d2e0f60e5a6f2378a2e7854b4beb1"
+    },
+    {
+      "path": "src/components/HomePage.css",
+      "bytes": 9279,
+      "sha256": "4f531f7b3e1033c9bf55b399bc53abf1a1682e06b5e45b7ed77f4309ceb08607"
+    },
+    {
+      "path": "src/components/InfoGuide.css",
+      "bytes": 12264,
+      "sha256": "dcc4e6e1ceb3103537d28ce20ef113d1c81e8a3fbe4f046dd0f221aa5f4bf4c3"
+    },
+    {
+      "path": "src/components/InfoGuide.jsx",
+      "bytes": 11201,
+      "sha256": "52dd9833cac0aa05562f3c74a48133bbf0462d96e86ed06dec0db37e5176b774"
+    },
+    {
+      "path": "src/components/LogPage.css",
+      "bytes": 12309,
+      "sha256": "565ec764f50e78e9a81b0e78bbf831a244c9f785fc632a87cbb25913aa2f56ac"
+    },
+    {
+      "path": "src/components/RecoveryEmailVerification.css",
+      "bytes": 1445,
+      "sha256": "23dcf0f9be6e106c8a31a82d86ab77af1abfef0ba3198e1ab2f56258944b19cb"
+    },
+    {
+      "path": "src/components/RecoveryEmailVerification.jsx",
+      "bytes": 2417,
+      "sha256": "e00eacfd58c877e2dca7e1bef86938f0141a136c71c349b50cc34bca349fbe39"
+    },
+    {
+      "path": "src/components/SeatMap.jsx",
+      "bytes": 2279,
+      "sha256": "98afc9d080fdf137299e812b4b3045ca498b4239d2a56443e9176bf3351bae0e"
+    },
+    {
+      "path": "src/components/SmsBalanceCard.jsx",
+      "bytes": 5890,
+      "sha256": "7c303b27e9e9c90cdfe2abb736fa65085246fae40b9296a2090d8790318ffc68"
+    },
+    {
+      "path": "src/components/StaffDialog.jsx",
+      "bytes": 2367,
+      "sha256": "2355dd51f2bb2558702557043a397fd1ff4474a7ca87f7678dcd581e04506216"
+    },
+    {
+      "path": "src/components/StaffIcon.jsx",
+      "bytes": 864,
+      "sha256": "b2e0776190c803f25ac4483dd8867e7d921b9c06a896c68bfa09452688d01819"
+    },
+    {
+      "path": "src/components/StaffManagement.jsx",
+      "bytes": 27476,
+      "sha256": "0fd50f5e1765c4cc79e45eaed5ced1d2e9588135f2f556f42ec7edde9577044f"
+    },
+    {
+      "path": "src/components/StaffPage.css",
+      "bytes": 23954,
+      "sha256": "af0636d6238147c57e3193c70079f2a69eb70837876d9ee5146522b9d2be2ed9"
+    },
+    {
+      "path": "src/components/TripWorkspace.jsx",
+      "bytes": 18201,
+      "sha256": "bbfe476029c4a18dbdf095605565573ee871ed51f696a48117bacb5612b48b45"
+    },
+    {
+      "path": "src/components/UsernameRecoveryForm.jsx",
+      "bytes": 2620,
+      "sha256": "d9a6dd8a711b16eb4f42a0a8c38d78d8bd941e5e5c3b553d0d94adf186d01bb1"
+    },
+    {
+      "path": "src/data/busRegistrations.js",
+      "bytes": 385,
+      "sha256": "e3632cf1aa21ece3c18b6b9569df14cef372c868dcdba772fd1c5a6567151edc"
+    },
+    {
+      "path": "src/data/recoveryEmailVerification.js",
+      "bytes": 585,
+      "sha256": "c2c1638c5cc4b90f12ada6313a6b84f9b12aa1e058ca43fadcf1c92bf37f8602"
+    },
+    {
+      "path": "src/data/revenueSeatRows.js",
+      "bytes": 1855,
+      "sha256": "6604f7098f9154b91e1b233fe4bd3ca02695d1f21c66e509a2254197367eafc9"
+    },
+    {
+      "path": "src/data/seatLayout.js",
+      "bytes": 2675,
+      "sha256": "9dfb10bd00d6e03128d825e18b1febf2a6512ee19cb5adc8bf829a78bf4edd63"
+    },
+    {
+      "path": "src/data/staffPageAccess.js",
+      "bytes": 1310,
+      "sha256": "b587627ea02e59e203f1cda1dfda6f01bd2f00f0214f66e86e8baef87a53b67f"
+    },
+    {
+      "path": "src/data/tripOverview.js",
+      "bytes": 3505,
+      "sha256": "f5581dd5b243a943d0267461986d4d0c52e4b3de325ae1aded59a84bdf69f943"
+    },
+    {
+      "path": "src/index.css",
+      "bytes": 1825,
+      "sha256": "da406fbbbe8351c8a8b2cb6e60c23d18b91358f9a41ea2a824d864e69c226c37"
+    },
+    {
+      "path": "src/main.jsx",
+      "bytes": 841,
+      "sha256": "3ee87d6afe0b7c35ef6c6a09b612dfb8c8af1875766990529dc8b93e9be33a1e"
+    },
+    {
+      "path": "vercel.json",
+      "bytes": 855,
+      "sha256": "708dbcdad66ff9e3bcbb35cd835f3b114babed88c2466a9c0aa816ddee698913"
+    },
+    {
+      "path": "vite.config.js",
+      "bytes": 339,
+      "sha256": "f05772c25db7430a30daf9052bfbbe3de32c4008a4d3db9c40217f0728ab6999"
+    }
+  ]
+}
