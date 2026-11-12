@@ -1969,7 +1969,7 @@ function App() {
               </select>
               <button type="button" className="ghost-button small" onClick={() => loadLogs(token, activeTrip)}>Search</button>
             </div>
-            <div className="log-table-scroll passenger-log-table-scroll">
+            <div className="log-table-scroll passenger-log-table-scroll" role="region" aria-label="Passenger manifest table" tabIndex={0}>
             <table className="print-passengers">
               <thead>
                 <tr>
@@ -2060,7 +2060,7 @@ function App() {
                 {staffPermissions.logCargo && <button type="button" className="primary-button small customer-entry-button cargo-entry-button" onClick={() => openEntryForm('cargo')}>New Freight Entry</button>}
               </div>
             </div>
-            <div className="log-table-scroll cargo-log-table-scroll">
+            <div className="log-table-scroll cargo-log-table-scroll" role="region" aria-label="Cargo manifest table" tabIndex={0}>
             <table className="print-cargo cargo-log-table">
               <thead>
                 <tr>

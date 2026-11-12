@@ -10648,3 +10648,44 @@ button,
 @media (max-width: 479px) {
   .auth-redesign.login-page .login-card { padding: 24px 20px; border-radius: 20px; }
 }
+
+/* Touch-friendly controls and scrollable data regions on compact layouts only. */
+@media (max-width: 1024px) {
+  .app-shell :is(button, [role='button'], input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']), select, textarea) {
+    min-height: 48px !important;
+  }
+
+  .app-shell .mobile-nav-toggle,
+  .app-shell .topbar-logout-button {
+    min-width: 44px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app-shell :is(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']), select, textarea) {
+    font-size: 16px;
+  }
+
+  .app-shell :is(.daily-revenue-table-wrap, .log-table-scroll, .customers-table-scroll) {
+    scrollbar-width: thin;
+    scrollbar-color: #b38a50 #edf1f5;
+    scroll-padding-inline: 12px;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .app-shell :is(.daily-revenue-table-wrap, .log-table-scroll, .customers-table-scroll):focus-visible {
+    outline: 3px solid #c99954;
+    outline-offset: -3px;
+  }
+
+  .app-shell :is(.daily-revenue-table-wrap, .log-table-scroll, .customers-table-scroll)::-webkit-scrollbar {
+    height: 7px;
+  }
+
+  .app-shell :is(.daily-revenue-table-wrap, .log-table-scroll, .customers-table-scroll)::-webkit-scrollbar-thumb {
+    border: 2px solid #edf1f5;
+    border-radius: 999px;
+    background: #b38a50;
+  }
+}

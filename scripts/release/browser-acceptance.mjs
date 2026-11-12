@@ -6,17 +6,35 @@ export function acceptanceHelpers({evaluate,call,pause}) {
  }
  const field=async(scope,label,text)=>value(`(()=>{const l=[...document.querySelectorAll(${JSON.stringify(scope+' label')})].find(e=>e.textContent.trim().startsWith(${JSON.stringify(label)}));return l?.control||l?.querySelector('input,select')})()`,text)
  const assert=async(expression,message)=>{if(!await evaluate('Boolean('+expression+')'))throw Error(message)}
- const responsive=async()=>{for(const width of [320,390,768,1440]){
+ const responsive=async()=>{for(const width of [320,360,375,390,430,768,1024,1280,1440,1920]){
   await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<768});await pause(60)
-  await assert('document.documentElement.scrollWidth<=innerWidth+2','Horizontal overflow at '+width)
+  const viewport=await evaluate('({innerWidth,clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth})')
+  if(viewport.innerWidth!==width||viewport.scrollWidth>width+2){const staff=await evaluate('JSON.stringify([...document.querySelectorAll(".staff-ui-page,.staff-ui-page-header,.staff-ui-section-header,.staff-ui-header-actions,.staff-ui-search,.staff-ui-summary,.staff-ui-workspace,.staff-ui-directory,.staff-ui-details,.staff-ui-bus-grid,.staff-ui-bus-card")].map(e=>({className:e.className,x:Math.round(e.getBoundingClientRect().x),right:Math.round(e.getBoundingClientRect().right),width:Math.round(e.getBoundingClientRect().width),scrollWidth:e.scrollWidth,minWidth:getComputedStyle(e).minWidth,columns:getComputedStyle(e).gridTemplateColumns})))');throw Error('Horizontal overflow or viewport expansion at '+width+': '+JSON.stringify(viewport)+' staff='+staff)}
   await assert('[...document.querySelectorAll("button,input,select")].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden").every(e=>e.getBoundingClientRect().height>=12)','Unusable control height at '+width)
+  if(width<=1024){const targets=await evaluate('[...document.querySelectorAll("button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range])")].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden"&&e.getBoundingClientRect().height<44).map(e=>({tag:e.tagName,className:e.className,text:e.textContent.trim().slice(0,32),height:Math.round(e.getBoundingClientRect().height)}))');if(targets.length)throw Error('Touch targets below 44px at '+width+': '+JSON.stringify(targets))}
  }}
  const keyboard=async(key,modifiers=0)=>{await call('Input.dispatchKeyEvent',{type:'keyDown',key,code:key,modifiers,windowsVirtualKeyCode:key==='Tab'?9:27});await call('Input.dispatchKeyEvent',{type:'keyUp',key,code:key,modifiers,windowsVirtualKeyCode:key==='Tab'?9:27});await pause(60)}
- return {value,field,assert,responsive,keyboard}
+ const navigation=async(click)=>{
+  for(const width of [320,360,375,390,430,768,1024]){
+   await call('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<768});await pause(80)
+   const viewport=await evaluate('({innerWidth,scrollWidth:document.documentElement.scrollWidth})')
+   if(viewport.innerWidth!==width||viewport.scrollWidth>width+2)throw Error('Navigation overflow or viewport expansion at '+width+': '+JSON.stringify(viewport))
+   await assert('document.querySelector(".mobile-nav-toggle").getBoundingClientRect().width>=44','Menu touch target below 44px at '+width)
+   await assert('document.querySelector(".nav-tabs").getAttribute("aria-hidden")==="true"&&document.querySelector(".nav-tabs").inert','Closed navigation is not hidden/inert at '+width)
+   await evaluate('document.querySelector(".mobile-nav-toggle").click()');await assert('document.querySelector(".nav-tabs").classList.contains("is-open")','Drawer did not open at '+width)
+   await assert('document.body.style.overflow==="hidden"','Background scroll not locked at '+width)
+   await assert('document.querySelector(".nav-tabs").getAttribute("aria-hidden")==="false"&&!document.querySelector(".nav-tabs").inert','Open drawer is inaccessible at '+width)
+   await keyboard('Escape');await assert('!document.querySelector(".nav-tabs").classList.contains("is-open")','Escape did not close drawer at '+width)
+   await assert('document.body.style.overflow===""&&document.activeElement.classList.contains("mobile-nav-toggle")','Escape did not restore scroll/focus at '+width)
+   await evaluate('document.querySelector(".mobile-nav-toggle").click()');await click('Dashboard')
+   await assert('!document.querySelector(".nav-tabs").classList.contains("is-open")&&document.body.style.overflow===""','Page selection did not close drawer at '+width)
+  }
+ }
+ return {value,field,assert,responsive,keyboard,navigation}
 }
 
 export async function accountWorkflows(ctx,mode) {
- const {check,evaluate,click,wait,pause}=ctx,{value,field,assert,responsive,keyboard}=acceptanceHelpers(ctx)
+ const {check,evaluate,click,wait,pause,call}=ctx,{value,field,assert,responsive,keyboard}=acceptanceHelpers(ctx)
  await check(mode+' manual revenue four categories, combined 49 cap, submit and locked ledger',async()=>{
   await field('.accounts-route-revenue-form','Bus number','SYN-BUS')
   await value('document.querySelectorAll(".accounts-seat-table input")[0]','25')
@@ -77,6 +95,11 @@ export async function accountWorkflows(ctx,mode) {
   try {
    await assert('document.querySelector(".duty-finalize-modal").contains(document.activeElement)','Initial focus outside finalization dialog')
    await responsive()
+   await call('Emulation.setDeviceMetricsOverride',{width:390,height:360,deviceScaleFactor:1,mobile:true});await pause(80)
+   const compactDialog=await evaluate('(()=>{const e=document.querySelector(".duty-finalize-modal"),r=e.getBoundingClientRect();return{viewport:innerHeight,top:r.top,bottom:r.bottom,height:e.clientHeight,scrollHeight:e.scrollHeight,overflow:getComputedStyle(e).overflowY}})()')
+   if(compactDialog.top<0||compactDialog.bottom>compactDialog.viewport+1||compactDialog.height>compactDialog.viewport-20||compactDialog.overflow!=='auto')throw Error('Finalize dialog does not fit/scroll with compact keyboard viewport: '+JSON.stringify(compactDialog))
+   await evaluate('document.querySelector(".duty-finalize-modal").scrollTop=document.querySelector(".duty-finalize-modal").scrollHeight')
+   await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});await pause(60)
    await evaluate('document.querySelector(".duty-finalize-modal .primary-button").focus()')
    await keyboard('Tab')
    await assert('document.querySelector(".duty-finalize-modal").contains(document.activeElement)','Tab escaped finalization dialog')
@@ -86,8 +109,9 @@ export async function accountWorkflows(ctx,mode) {
 }
 
 export async function adminWorkflows(ctx) {
- const {check,evaluate,click,wait,pause}=ctx,{field,assert,responsive,keyboard}=acceptanceHelpers(ctx)
- for(const tab of ['Home','Log','Info','Dashboard','Customers','Staff'])await check('admin '+tab+' layout at all four widths',async()=>{await click(tab);await responsive()})
+ const {check,evaluate,click,wait,pause}=ctx,{field,assert,responsive,keyboard,navigation}=acceptanceHelpers(ctx)
+ for(const tab of ['Home','Log','Info','Dashboard','Customers','Staff'])await check('admin '+tab+' layout at requested widths',async()=>{await click(tab);await responsive()})
+ await check('admin mobile navigation drawer, keyboard and scroll locking',()=>navigation(click))
  await check('trip selection, seat selection and synthetic booking submission',async()=>{
   await click('Home');await wait('document.querySelector(".seat.available")')
   await evaluate('document.querySelector(".seat.available").click()')

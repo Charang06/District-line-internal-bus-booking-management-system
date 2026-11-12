@@ -1,0 +1,26 @@
+{
+  "candidateVerification": {
+    "files": 74,
+    "checksumsVerified": true,
+    "sourceMatches": true,
+    "sourceDifferences": [],
+    "unexpectedFiles": 0,
+    "missingRelativeImports": 0,
+    "candidateSyntaxChecks": 25,
+    "lockRootMatches": true,
+    "manifestSha256": "852ee9ce5d6d99b582edf81a6a72284761577c501099d4f664c86b50c3dbe436",
+    "noSymlinkEscape": true,
+    "prohibitedPaths": 0,
+    "declaredExternalImports": [
+      "@vercel/functions",
+      "@vitejs/plugin-react",
+      "bcryptjs",
+      "cors",
+      "express",
+      "pg",
+      "react",
+      "react-dom",
+      "vite"
+    ]
+  }
+}

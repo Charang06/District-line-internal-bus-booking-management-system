@@ -27,7 +27,7 @@ const chrome=spawn(executable,['--headless=new','--no-first-run','--disable-back
 let browserStderr='';chrome.stderr.on('data',chunk=>{browserStderr=(browserStderr+chunk).slice(-6000)})
 let launchError;chrome.on('error',e=>launchError=e)
 const pause=ms=>new Promise(r=>setTimeout(r,ms)),results=[],consoleErrors=[],networkErrors=[]
-async function check(name,fn){try{await fn();results.push({name,pass:true})}catch(e){results.push({name,pass:false,error:String(e.message).slice(0,300)})}console.log(JSON.stringify(results.at(-1)))}
+async function check(name,fn){try{await fn();results.push({name,pass:true})}catch(e){results.push({name,pass:false,error:String(e.message).slice(0,1800)})}console.log(JSON.stringify(results.at(-1)))}
 function fixture(mode){
  const pages=['home','log','info','dashboard','accounts','customers','staff'];const access=Object.fromEntries(pages.map(p=>[p,{view:mode==='admin'||(['manager','view'].includes(mode)&&p==='accounts')||(mode==='none'&&p==='home'),manage:mode==='admin'||(mode==='manager'&&p==='accounts')}]))
  const user={id:1,username:'synthetic',fullName:'Synthetic Tester',role:mode==='admin'?'admin':'staff',permissions:{...Object.fromEntries(pages.map(p=>[p,access[p].view])),passengers:mode==='admin',trips:mode==='admin',cargo:mode==='admin',pageAccess:access}}
@@ -80,6 +80,31 @@ const evaluate=async expression=>{const r=await call('Runtime.evaluate',{express
 async function wait(expression){for(let i=0;i<80;i++){if(await evaluate('Boolean('+expression+')'))return;await pause(75)}throw Error('UI condition timed out: '+expression)}
 async function click(text){const ok=await evaluate('(()=>{const b=[...document.querySelectorAll("button")].find(e=>e.textContent.trim()==='+JSON.stringify(text)+');if(!b)return false;b.click();return true})()');if(!ok)throw Error('Missing button '+text);await pause(180)}
 const context={evaluate,call,check,click,wait,pause}
+const screenshotDir=process.argv[3]
+const desktopPixelDiffs=[]
+const screenshotMetrics=[]
+async function captureReviewScreenshot(name,width,height=900){
+ if(!screenshotDir)return
+ await call('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<768})
+ await pause(250)
+ const dimensions=await evaluate('({innerWidth,scrollWidth:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight})')
+ screenshotMetrics.push({name,requestedWidth:width,...dimensions})
+ const image=await call('Page.captureScreenshot',{format:'png',fromSurface:true,captureBeyondViewport:true,clip:{x:0,y:0,width,height:dimensions.height,scale:1}})
+ const target=path.resolve(screenshotDir,`${name}-${width}.png`)
+ fs.mkdirSync(path.dirname(target),{recursive:true})
+ fs.writeFileSync(target,Buffer.from(image.data,'base64'))
+ if(name==='admin-dashboard'&&width>=1280){
+  const baseline=path.resolve('artifacts/mobile-responsive-ux/before',`${name}-${width}.png`)
+  if(fs.existsSync(baseline)){
+   const before=fs.readFileSync(baseline).toString('base64')
+   await call('Fetch.disable')
+   try{
+    const comparison=await evaluate(`(async()=>{const load=src=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});const [a,b]=await Promise.all([load('data:image/png;base64,${before}'),load('data:image/png;base64,${image.data}')]);if(a.width!==b.width||a.height!==b.height)return{baseline:{width:a.width,height:a.height},after:{width:b.width,height:b.height},dimensionMatch:false,differentPixels:null};const canvas=document.createElement('canvas');canvas.width=a.width;canvas.height=a.height;const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(a,0,0);const first=ctx.getImageData(0,0,a.width,a.height).data;ctx.clearRect(0,0,a.width,a.height);ctx.drawImage(b,0,0);const second=ctx.getImageData(0,0,b.width,b.height).data;let differentPixels=0;for(let i=0;i<first.length;i+=4)if(first[i]!==second[i]||first[i+1]!==second[i+1]||first[i+2]!==second[i+2]||first[i+3]!==second[i+3])differentPixels++;return{width:a.width,height:a.height,dimensionMatch:true,differentPixels,totalPixels:a.width*a.height}})()`)
+    desktopPixelDiffs.push({width,...comparison})
+   }finally{await call('Fetch.enable',{patterns:[{urlPattern:'*'}]})}
+  }
+ }
+}
 try{
  const ready=await fetch(origin+'/',{signal:AbortSignal.timeout(3000)});if(!ready.ok)throw Error('Local candidate server is not ready')
  for(let i=0;i<80&&!fs.existsSync(path.join(profile,'DevToolsActivePort'));i++){if(launchError)throw launchError;if(chrome.exitCode!==null)throw Error('Browser exited '+chrome.exitCode);await pause(100)}
@@ -98,14 +123,32 @@ try{
   injection=(await call('Page.addScriptToEvaluateOnNewDocument',{source:'('+fixture.toString()+')('+JSON.stringify(mode)+')'})).identifier
   await call('Page.navigate',{url:origin+'/'});await wait('document.querySelector(".login-panel")||document.querySelector(".app-shell")||document.querySelector("nav")');await pause(350)
   if(mode==='login'){await check('signed-out login screen',async()=>{if(!await evaluate('!!document.querySelector("input[type=password]")'))throw Error('No login form')});await loginWorkflows(context);continue}
+  await check(mode+' mobile navigation permission visibility',async()=>{
+   await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true})
+   const allowed=await evaluate('[...document.querySelectorAll(".nav-button")].map(e=>e.textContent.trim())')
+   if(allowed.includes('Dashboard')!== (mode==='admin')||allowed.includes('Accounts')!==(['admin','manager','view'].includes(mode))||allowed.includes('Staff')!== (mode==='admin'))throw Error('Unexpected permitted navigation: '+JSON.stringify(allowed))
+   await evaluate('document.querySelector(".mobile-nav-toggle").click()')
+   if(!await evaluate('document.querySelector(".nav-tabs").classList.contains("is-open")'))throw Error('Drawer did not open')
+   const opened=await evaluate('[...document.querySelectorAll(".nav-button")].map(e=>e.textContent.trim())')
+   if(JSON.stringify(opened)!==JSON.stringify(allowed))throw Error('Drawer permission list changed: '+JSON.stringify(opened))
+   await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
+   if(!await evaluate('!document.querySelector(".nav-tabs").classList.contains("is-open")&&document.body.style.overflow===""&&document.activeElement.classList.contains("mobile-nav-toggle")'))throw Error('Escape did not close drawer and restore focus/scroll')
+  })
   if(mode==='admin')for(const tab of ['Home','Log','Info','Dashboard','Customers','Staff'])await check('admin '+tab+' navigation',async()=>{await click(tab);if(!await evaluate('document.body.textContent.length>100'))throw Error('Empty screen: '+await evaluate('window.__lastError'))})
+  if(mode==='admin'&&screenshotDir){
+   await click('Dashboard');await wait('document.querySelector(".admin-dashboard-page")')
+   for(const width of [320,375,390,430,768,1024,1280,1440,1920])await captureReviewScreenshot('admin-dashboard',width,width>=1280?1100:900)
+   await click('Staff');await wait('document.querySelector(".staff-ui-page")');await captureReviewScreenshot('admin-staff',390)
+  }
   if(mode==='admin')await adminWorkflows(context)
   if(mode==='none'){await check('ungranted staff Accounts navigation absent',async()=>{if(await evaluate('[...document.querySelectorAll("button")].some(b=>b.textContent.trim()==="Accounts")'))throw Error('Unauthorized Accounts navigation')});continue}
   await click('Accounts');await wait('document.body.textContent.includes("Revenue and Expenses")');await pause(200)
-  for(const width of [320,390,768,1440])await check(mode+' Accounts responsive '+width,async()=>{
+  if(mode==='manager'&&screenshotDir){await captureReviewScreenshot('staff-accounts',390);await captureReviewScreenshot('staff-accounts',768)}
+  for(const width of [320,360,375,390,430,768,1024,1280,1440,1920])await check(mode+' Accounts responsive '+width,async()=>{
    await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<768});await pause(80)
-   const metrics=await evaluate('({width:innerWidth,scroll:document.documentElement.scrollWidth,zero:[...document.querySelectorAll("button,select,input")].filter(e=>e.getBoundingClientRect().width>0&&e.getBoundingClientRect().height<12).length})')
-   if(metrics.scroll>metrics.width+2)throw Error('Page overflow '+JSON.stringify(metrics))
+   const metrics=await evaluate('({innerWidth,scroll:document.documentElement.scrollWidth,zero:[...document.querySelectorAll("button,select,input")].filter(e=>e.getBoundingClientRect().width>0&&e.getBoundingClientRect().height<12).length,smallTargets:[...document.querySelectorAll("button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range])")].filter(e=>e.getBoundingClientRect().width>0&&getComputedStyle(e).visibility!=="hidden"&&e.getBoundingClientRect().height<44).map(e=>({tag:e.tagName,className:e.className,text:e.textContent.trim().slice(0,40),height:Math.round(e.getBoundingClientRect().height)}))})')
+   if(metrics.innerWidth!==width||metrics.scroll>width+2)throw Error('Page overflow or viewport expansion '+JSON.stringify(metrics))
+   if(width<=1024&&metrics.smallTargets.length)throw Error('Touch target below 44px '+JSON.stringify(metrics))
   })
   if(mode==='view')await check('View-only forms hidden and scoped manager reads absent',async()=>{const v=await evaluate('({panel:!!document.querySelector(".accounts-duty-panel"),visible:[...document.querySelectorAll("button[type=submit]")].some(b=>b.getBoundingClientRect().width>0),reads:window.__requests.filter(r=>r.path.startsWith("/api/accounts/")).length})');if(v.panel||v.visible||v.reads)throw Error(JSON.stringify(v))})
   if(mode==='view')await check('View-only Expense form remains read-only',async()=>{await click('Expense');if(await evaluate('[...document.querySelectorAll("button[type=submit]")].some(e=>e.getBoundingClientRect().width>0)||window.__requests.some(r=>r.method==="POST")'))throw Error('View-only expense mutation control exposed')})
@@ -132,6 +175,7 @@ finally{
  server.closeAllConnections();await new Promise(r=>server.close(r))
 }
 const evidencePath='docs/handover/districtline-final-verification.json'
+if(screenshotDir){fs.writeFileSync(path.resolve(screenshotDir,'desktop-pixel-diff.json'),JSON.stringify(desktopPixelDiffs,null,2)+'\n');fs.writeFileSync(path.resolve(screenshotDir,'screenshot-metrics.json'),JSON.stringify(screenshotMetrics,null,2)+'\n')}
 const previousEvidence=fs.existsSync(evidencePath)?JSON.parse(fs.readFileSync(evidencePath,'utf8')):{}
 const output={...previousEvidence,browser:{results,passed:results.filter(r=>r.pass).length,failed:results.filter(r=>!r.pass).length,consoleErrors,profile:'fresh temporary profile; retained outside release',mocked:true,testedCandidate:meta.candidate},candidateBuild:{pass:true,modules:'see Vite output',outputs:built.output.length}}
 output.browser.diagnostics={executable,exitCode:chrome.exitCode,stderr:browserStderr,commandTimeoutMs:30000,resourceErrors,networkErrors}

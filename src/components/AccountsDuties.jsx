@@ -20,7 +20,7 @@ export default function AccountsDuties({ duties, selectedDuty, onSelect, form, s
     <label>Review duty<select value={selectedDuty?.id || ''} onChange={event => onSelect(Number(event.target.value) || null)}><option value="">Select duty</option>{duties.map(duty => <option key={duty.id} value={duty.id}>{duty.duty_code} · {duty.bus_no} · {duty.status}</option>)}</select></label>
     {selectedDuty && <>
       <p>{selectedDuty.first_trip.travel_date} — {selectedDuty.return_trip.travel_date}: revenue {money(selectedDuty.total_revenue)}, expenses {money(selectedDuty.total_expenses)}, net profit {money(selectedDuty.net_profit)}.</p>
-      <div className="daily-revenue-table-wrap"><table><caption>Duty expenses and adjustments</caption><thead><tr><th>Date</th><th>Kind</th><th>Description</th><th>Amount</th><th>Action</th></tr></thead><tbody>
+      <div className="daily-revenue-table-wrap" role="region" aria-label="Duty expenses and adjustments" tabIndex={0}><table><caption>Duty expenses and adjustments</caption><thead><tr><th>Date</th><th>Kind</th><th>Description</th><th>Amount</th><th>Action</th></tr></thead><tbody>
         {[...selectedDuty.expenses.map(row => ({ ...row, kind: 'expense' })), ...selectedDuty.adjustments.map(row => ({ ...row, kind: 'adjustment' }))].map(row => <tr key={`${row.kind}-${row.id}`}><td>{row.expense_date || row.adjustment_date}</td><td>{row.category || row.type}</td><td>{row.description}</td><td>{money(row.amount)}</td><td>{mutable && <button type="button" disabled={saving} onClick={() => onDelete(row)}>Delete entry</button>}</td></tr>)}
       </tbody></table></div>
       {mutable && <fieldset disabled={saving}>
