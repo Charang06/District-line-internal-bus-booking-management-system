@@ -1,0 +1,31 @@
+{
+  "browser": {
+    "results": [
+      {
+        "name": "browser harness",
+        "pass": false,
+        "error": "CDP timeout Page.enable"
+      }
+    ],
+    "passed": 0,
+    "failed": 1,
+    "consoleErrors": [],
+    "profile": "fresh temporary profile; retained outside release",
+    "mocked": true
+  },
+  "candidateBuild": {
+    "pass": true,
+    "modules": "see Vite output",
+    "outputs": 3
+  },
+  "candidateVerification": {
+    "files": 74,
+    "checksumsVerified": true,
+    "sourceMatches": true,
+    "unexpectedFiles": 0,
+    "missingRelativeImports": 0,
+    "candidateSyntaxChecks": 25,
+    "lockRootMatches": true,
+    "manifestSha256": "cd17e60fdbeb43a9d178f57afd6fd75dff269978e5678b5401e02cfb00ebb6f5"
+  }
+}

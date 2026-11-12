@@ -5,7 +5,8 @@
   "regions": ["sin1"],
   "functions": {
     "api/**/*.js": {
-      "includeFiles": "{server/migrations/**/*.sql,certs/*.crt,scripts/lib/supabase-verified-tls.cjs}"
+      "includeFiles": "{server/migrations/001_initial_postgres.sql,server/migrations/002_auth_sessions.sql,server/migrations/003_password_recovery.sql,server/migrations/004_admin_email_recovery.sql,certs/supabase-prod-ca-2021.crt,scripts/lib/supabase-verified-tls.cjs}",
+      "excludeFiles": "{server/migrations/008_login_rate_limits.sql,server/migrations/009_admin_mfa.sql}"
     }
   },
   "rewrites": [

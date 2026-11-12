@@ -35,3 +35,16 @@ public/uploads/**
 *.njsproj
 *.sln
 *.sw?
+
+# Reviewed release preparation outputs; historical/private exclusions remain.
+/release-candidates/
+!docs/handover/
+docs/handover/*
+!docs/handover/districtline-complete-release-readiness.md
+!docs/handover/districtline-clean-candidate-manifest.json
+!docs/handover/districtline-local-verification.json
+!docs/handover/districtline-final-blocker-resolution.md
+!docs/handover/districtline-final-candidate-manifest.json
+!docs/handover/districtline-final-verification.json
+!docs/handover/districtline-database-security-release-verification.md
+!docs/handover/districtline-database-security-verification.json

@@ -10,6 +10,7 @@ import StaffDialog from './components/StaffDialog'
 import CustomersPage from './components/CustomersPage'
 import AdminProfile from './components/AdminProfile'
 import AccountsRevenue from './components/AccountsRevenue'
+import AccountsDuties from './components/AccountsDuties'
 import ExpenseSubmissionsTable from './components/ExpenseSubmissionsTable'
 import InfoGuide from './components/InfoGuide'
 import SmsBalanceCard from './components/SmsBalanceCard'
@@ -160,6 +161,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('Home')
   const [infoTopic, setInfoTopic] = useState('overview')
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [isCompactNavigation, setIsCompactNavigation] = useState(() => window.matchMedia('(max-width: 1024px)').matches)
   const [loginForm, setLoginForm] = useState({ username: '', password: '' })
   const [mfaChallenge, setMfaChallenge] = useState('')
   const [mfaCode, setMfaCode] = useState('')
@@ -343,8 +345,10 @@ function App() {
   useEffect(() => {
     if (!token) return
     api.adminBusContacts(token).then((contactResult) => setBusContactList(contactResult.contacts || [])).catch(() => {})
+    setCrewList([])
     if (isAdmin) api.adminCrew(token).then((crewResult) => setCrewList(crewResult.crew || [])).catch(() => {})
-  }, [token, isAdmin])
+    else if (staffPermissions.accountsManage) api.accountsCrewOptions(token).then((result) => setCrewList(result.crew || [])).catch((err) => showMessage(err.message, true))
+  }, [token, isAdmin, staffPermissions.accountsManage])
   const bookedSeatCount = customerLogs.filter((log) => log.status !== 'cancelled').length
 
   const dashboardRange = useMemo(() => {
@@ -845,6 +849,29 @@ function App() {
   }, [user, activeTab, navTabs])
 
   useEffect(() => {
+    const media = window.matchMedia('(max-width: 1024px)')
+    const update = () => setIsCompactNavigation(media.matches)
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileNavOpen) return undefined
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event) => {
+      if (event.key !== 'Escape') return
+      setMobileNavOpen(false)
+      document.querySelector('.mobile-nav-toggle')?.focus()
+    }
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [mobileNavOpen])
+
+  useEffect(() => {
     if (token && activeTripId) {
       loadLogs(token, trips.find((trip) => trip.id === activeTripId)).catch((err) => {
         if (err.status !== 401 && err.status !== 403) showMessage(err.message, true)
@@ -1285,7 +1312,7 @@ function App() {
       return
     }
     const cachedScope = adminStatsCacheRef.current[scope] ? scope : scope !== 'full' && scope !== 'customers' && adminStatsCacheRef.current.full ? 'full' : ''
-    if (cachedScope && !forceData) {
+    if (cachedScope && !forceData && (scope !== 'accounts' || !(isAdmin || staffPermissions.accountsManage) || Array.isArray(adminStatsCacheRef.current[cachedScope].duties))) {
       if (scope === 'dashboard') setDashboardDataError('')
       if (scope === 'full' || scope === 'customers') setCustomerDataError('')
       setAdminStats(adminStatsCacheRef.current[cachedScope])
@@ -1302,7 +1329,11 @@ function App() {
       if (canViewFinancialData) setProfitLedgerError('')
       const ledgerPending = canViewFinancialData ? loadProfitLedger(forceLedger) : Promise.resolve()
       try {
-        const data = await api.adminDashboard(token, scope === 'full' ? undefined : scope)
+        const [data, dutyData] = await Promise.all([
+          api.adminDashboard(token, scope === 'full' ? undefined : scope),
+          scope === 'accounts' && (isAdmin || staffPermissions.accountsManage) ? api.accountsDutyData(token) : Promise.resolve(null),
+        ])
+        if (dutyData) Object.assign(data, dutyData)
         if (requestId === adminDashboardRequestIdRef.current) {
           if (scope === 'full') adminStatsCacheRef.current = { full: data, dashboard: data, accounts: data }
           else adminStatsCacheRef.current[scope] = data
@@ -1355,7 +1386,11 @@ function App() {
       setExpenseForm((current) => ({ ...current, description: '', amount: '' }))
       showMessage('Monthly expense saved.')
       try {
-        const data = await api.adminDashboard(token, 'accounts')
+        const [data, dutyData] = await Promise.all([
+          api.adminDashboard(token, 'accounts'),
+          isAdmin || staffPermissions.accountsManage ? api.accountsDutyData(token) : Promise.resolve(null),
+        ])
+        if (dutyData) Object.assign(data, dutyData)
         adminStatsCacheRef.current.accounts = data
         setAdminStats(data)
         setAdminStatsScope('accounts')
@@ -1371,7 +1406,11 @@ function App() {
 
   const refreshAccountsData = async () => {
     try {
-      const [data, revenueData, expenseData] = await Promise.all([api.adminDashboard(token, 'accounts'), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token)])
+      const [data, revenueData, expenseData, dutyData] = await Promise.all([
+        api.adminDashboard(token, 'accounts'), api.adminRevenueEntries(token, { summary: true }), api.adminExpenseSubmissions(token),
+        isAdmin || staffPermissions.accountsManage ? api.accountsDutyData(token) : Promise.resolve(null),
+      ])
+      if (dutyData) Object.assign(data, dutyData)
       adminStatsCacheRef.current.accounts = data
       setAdminStats(data)
       setAdminStatsScope('accounts')
@@ -1624,7 +1663,7 @@ function App() {
           <span aria-hidden="true" />
         </button>
         {mobileNavOpen && <button type="button" className="mobile-nav-backdrop" aria-label="Close navigation menu" onClick={() => setMobileNavOpen(false)} />}
-        <nav id="primary-navigation" className={`nav-tabs${mobileNavOpen ? ' is-open' : ''}`} aria-label="Main navigation">
+        <nav id="primary-navigation" className={`nav-tabs${mobileNavOpen ? ' is-open' : ''}`} aria-label="Main navigation" aria-hidden={!mobileNavOpen && isCompactNavigation} inert={!mobileNavOpen && isCompactNavigation}>
           {navTabs.map((tab) => (
             <button
               key={tab}
@@ -2199,6 +2238,15 @@ function App() {
       )}
 
       {activeTab === 'Accounts' && staffPermissions.accounts && adminStats && <AccountsRevenue
+        dutyPanel={(isAdmin || staffPermissions.accountsManage) && <AccountsDuties
+          duties={visibleDuties} selectedDuty={selectedDuty} onSelect={setSelectedDutyId}
+          form={dutyForm} setForm={setDutyForm} firstTrips={eligibleFirstDutyTrips} returnTrips={eligibleReturnDutyTrips}
+          buses={[...new Set(unassignedDutyTrips.map(trip => trip.registration_no).filter(Boolean))]}
+          expense={dutyExpenseForm} setExpense={setDutyExpenseForm} adjustment={dutyAdjustmentForm} setAdjustment={setDutyAdjustmentForm}
+          saving={dutySaving} onCreate={handleCreateDuty} onExpense={handleAddDutyExpense} onAdjustment={handleAddDutyAdjustment}
+          onDelete={handleDeleteDutyEntry} setFinalizeTarget={setFinalizeDutyTarget}
+          setAcknowledged={setAcknowledgeNoDutyExpenses}
+        />}
         readOnly={!isAdmin && !staffPermissions.accountsManage}
         data={{ ...adminStats, crewMembers: crewList }}
         token={token}
@@ -2285,17 +2333,13 @@ function App() {
           <footer className="staff-dialog-footer"><button type="button" className="ghost-button" autoFocus onClick={() => setConfirmDialog(null)}>Cancel</button><button type="button" className={confirmDialog.destructive === false ? 'primary-button' : 'danger-button'} onClick={() => { const action = confirmDialog.onConfirm; setConfirmDialog(null); action() }}>{confirmDialog.confirmLabel}</button></footer>
         </StaffDialog>
       ) : confirmDialog && (
-        <div className="modal-backdrop no-print" onMouseDown={(event) => { if (event.target === event.currentTarget) setConfirmDialog(null) }}>
-          <section className="modal confirm-action-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-action-title" aria-describedby="confirm-action-description">
+        <StaffDialog title={confirmDialog.title} subtitle={confirmDialog.message} className="confirm-action-modal" alert onClose={() => setConfirmDialog(null)}>
             <div className="confirm-action-icon" aria-hidden="true">!</div>
-            <h2 id="confirm-action-title">{confirmDialog.title}</h2>
-            <p id="confirm-action-description">{confirmDialog.message}</p>
-            <div className="reservation-actions">
+            <div className="reservation-actions staff-dialog-footer">
               <button type="button" className="ghost-button" onClick={() => setConfirmDialog(null)}>Cancel</button>
               <button type="button" className={confirmDialog.destructive === false ? 'primary-button' : 'danger-button'} onClick={() => { const action = confirmDialog.onConfirm; setConfirmDialog(null); action() }}>{confirmDialog.confirmLabel}</button>
             </div>
-          </section>
-        </div>
+        </StaffDialog>
       )}
 
       {editingCustomerLog && (
@@ -2323,9 +2367,7 @@ function App() {
       )}
 
       {finalizeDutyTarget && (
-        <div className="modal-backdrop no-print">
-          <div className="modal duty-finalize-modal">
-            <h2>Finalize {finalizeDutyTarget.duty_code} profit?</h2>
+        <StaffDialog title={`Finalize ${finalizeDutyTarget.duty_code} profit?`} className="duty-finalize-modal" busy={dutySaving} onClose={() => { setFinalizeDutyTarget(null); setAcknowledgeNoDutyExpenses(false) }}>
             <p>{finalizeDutyTarget.bus_no}: {finalizeDutyTarget.first_trip.route_label} ({finalizeDutyTarget.first_trip.travel_date}) and {finalizeDutyTarget.return_trip.route_label} ({finalizeDutyTarget.return_trip.travel_date})</p>
             <div className="duty-finalize-summary">
               <span>First journey revenue <strong>Rs. {Number(finalizeDutyTarget.first_trip.revenue.total).toLocaleString('en-US')}</strong></span>
@@ -2339,12 +2381,11 @@ function App() {
             <span>Refunds <strong>Rs. {Number(finalizeDutyTarget.adjustment_totals?.refunds || 0).toLocaleString('en-US')}</strong></span>
             {(!finalizeDutyTarget.expenses.length && !(finalizeDutyTarget.adjustments || []).length) && <label className="duty-expense-acknowledgement"><input type="checkbox" checked={acknowledgeNoDutyExpenses} onChange={(event) => setAcknowledgeNoDutyExpenses(event.target.checked)} /> I reviewed this duty and confirm it has no expenses or financial adjustments to record.</label>}
             <p>Finalizing saves a historical financial snapshot. The report and its linked trips, bookings, expenses, and adjustments will be locked.</p>
-            <div className="reservation-actions">
+            <div className="reservation-actions staff-dialog-footer">
               <button type="button" className="ghost-button" disabled={dutySaving} onClick={() => { setFinalizeDutyTarget(null); setAcknowledgeNoDutyExpenses(false) }}>Go back</button>
               <button type="button" className="primary-button" disabled={dutySaving || (!finalizeDutyTarget.expenses.length && !(finalizeDutyTarget.adjustments || []).length && !acknowledgeNoDutyExpenses)} onClick={handleFinalizeDuty}>{dutySaving ? 'Finalizing…' : 'Confirm and finalize'}</button>
             </div>
-          </div>
-        </div>
+        </StaffDialog>
       )}
 
       {showBusForm && isAdmin && (
@@ -2362,17 +2403,14 @@ function App() {
       )}
 
       {cancelTarget && (
-        <div className="modal-backdrop no-print">
-          <div className="modal">
-            <h2>Cancel booking</h2>
+        <StaffDialog title="Cancel booking" onClose={() => setCancelTarget(null)}>
             <p>Cancel {cancelTarget.passenger_name} on {cancelTarget.route_label} / {cancelTarget.travel_date} / {cancelTarget.registration_no} seat{cancelTarget.seat_numbers?.length === 1 ? '' : 's'} {(cancelTarget.seat_numbers || [cancelTarget.seat_number]).join(', ')}?</p>
             <p>After cancelling, you can send a cancellation notice from the SMS column.</p>
-            <div className="reservation-actions">
+            <div className="reservation-actions staff-dialog-footer">
               <button type="button" className="ghost-button" onClick={() => setCancelTarget(null)}>Keep booking</button>
               <button type="button" className="primary-button" onClick={confirmCancel}>Confirm cancellation</button>
             </div>
-          </div>
-        </div>
+        </StaffDialog>
       )}
 
       {printMode === 'passengers' && (

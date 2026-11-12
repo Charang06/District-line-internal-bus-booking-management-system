@@ -46,7 +46,7 @@ const CONTENT = {
     label: 'ACCOUNTS · AUTHORIZED USERS', title: 'Accounts & Reconciliation',
     intro: 'The Accounts page is available to authorized accounting users. It provides revenue entry, expense entry and historical submission views.',
     groups: [
-      ['Revenue entries', ['Review revenue from seats and cargo and use the available additional revenue rows.', 'Revenue entries are submitted and locked using the existing Submit & Lock Revenue Entry control.']],
+      ['Revenue entries', ['Enter the four original seat categories with at most 49 seats combined; add cargo rows separately when needed.', 'Revenue entries are submitted and locked using the existing Submit & Lock Revenue Entry control.']],
       ['Expenses and records', ['Enter operating expenses and allocate expense between route legs using the existing form.', 'Save an expense draft when the draft control is available, then submit and lock expenses through the existing control.', 'Add and review monthly expenses in the monthly expenses section.', 'Review historical locked submissions in the available tables.']],
     ],
     note: 'Locked entries follow the application’s existing rules. This guide contains no financial records and does not change calculations or approval steps.',
@@ -86,7 +86,7 @@ function GuideBody({ topic }) {
 
 export default function InfoGuide({ topic, onTopicChange }) {
   return <main className="content-page info-guide-page">
-    <section className="ig-hero"><div className="ig-hero-copy"><span className="ig-kicker">DISTRICT LINE <i /> OPERATIONS RESOURCE</span><h1>Information &amp;<br />Operations Guide</h1><p>A central guide for administrators and staff to manage bookings, cargo, trip records, and daily operations.</p><span className="ig-internal"><b /> Internal Use — Authorized Staff &amp; Administrators</span></div><div className="ig-hero-art" aria-hidden="true"><img src="/bus.jpg" alt="" onError={(event) => { event.currentTarget.style.display = 'none' }} /><div className="ig-hero-art-overlay" /><span className="ig-art-caption">DISTRICT LINE <i /> DAILY OPERATIONS</span></div><div className="ig-hero-watermark">DL</div></section>
+    <section className="ig-hero"><div className="ig-hero-copy"><span className="ig-kicker">DISTRICT LINE <i /> OPERATIONS RESOURCE</span><h1>Information &amp;<br />Operations Guide</h1><p>A central guide for administrators and staff to manage bookings, cargo, trip records, and daily operations.</p><span className="ig-internal"><b /> Internal Use — Authorized Staff &amp; Administrators</span></div><div className="ig-hero-art" aria-hidden="true"><img src="/bus.webp" alt="" onError={(event) => { event.currentTarget.style.display = 'none' }} /><div className="ig-hero-art-overlay" /><span className="ig-art-caption">DISTRICT LINE <i /> DAILY OPERATIONS</span></div><div className="ig-hero-watermark">DL</div></section>
     <div className="ig-layout">
       <nav className="ig-nav" aria-label="Operations guide topics"><div className="ig-nav-title">OPERATIONS GUIDE</div>{TOPICS.map(([id, label, number]) => <button type="button" key={id} className={topic === id ? 'active' : ''} aria-current={topic === id ? 'page' : undefined} onClick={() => onTopicChange(id)}><span className="ig-nav-number">{number}</span><span>{label}</span><b aria-hidden="true">›</b></button>)}<div className="ig-nav-foot"><span className="ig-shield">◈</span><p>Internal staff resource<br /><small>Use your authorized account</small></p></div></nav>
       <div className="ig-center"><GuideBody topic={topic} /></div>
