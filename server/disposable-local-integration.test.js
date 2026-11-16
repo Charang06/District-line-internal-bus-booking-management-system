@@ -76,14 +76,14 @@ test('real disposable local PostgreSQL: schema, booking conflicts, finance, perm
   assert.equal(conflicts.filter(r=>r.status==='fulfilled').length,1)
   assert.equal(conflicts.filter(r=>r.status==='rejected'&&r.reason.message.endsWith('(409)')).length,1)
  } finally {await Promise.all(racers.map(r=>r.close()))}
- const revenue={travel_date:first.travel_date,route_code:first.route_code,bus_no:bus.registration_no,seat_rows:[{count:49,amount:10},...Array.from({length:3},()=>({count:0,amount:0}))],cargo_rows:[{description:'Synthetic cargo',amount:25}]}
+ const revenue={travel_date:first.travel_date,route_code:first.route_code,bus_no:bus.registration_no,seat_rows:[{count:47,amount:10},...Array.from({length:3},()=>({count:0,amount:0})),{category:'Agent / Extra',count:2,amount:75}],cargo_rows:[{description:'Synthetic cargo',amount:25}]}
  const saved=(await request('POST','/api/admin/revenue-entries',revenue,201)).entry
- assert.equal(saved.status,'locked');assert.equal(Number(saved.total_revenue),515)
- assert.equal(JSON.parse(saved.seat_rows_json).length,4)
- const submission=(await request('POST','/api/admin/expense-submissions',{expense_date:first.travel_date,first_leg_date:first.travel_date,return_leg_date:second.travel_date,bus_no:bus.registration_no,route_code:first.route_code,gross_revenue:515,items:[{category:'Fuel',description:'Synthetic dispatch',amount:20}]},201)).submission
+ assert.equal(saved.status,'locked');assert.equal(Number(saved.total_revenue),645)
+ assert.equal(JSON.parse(saved.seat_rows_json).length,5)
+ const submission=(await request('POST','/api/admin/expense-submissions',{expense_date:first.travel_date,first_leg_date:first.travel_date,return_leg_date:second.travel_date,bus_no:bus.registration_no,route_code:first.route_code,gross_revenue:645,items:[{category:'Fuel',description:'Synthetic dispatch',amount:20}]},201)).submission
  assert.equal(submission.status,'locked');assert.equal(Number(submission.total_expense),20)
  await request('POST','/api/admin/revenue-entries',{...revenue,seat_rows:[{count:50,amount:10},...revenue.seat_rows.slice(1)]},400)
- await request('POST','/api/admin/revenue-entries',{...revenue,seat_rows:[...revenue.seat_rows,{count:0,amount:0}]},400)
+ await request('POST','/api/admin/revenue-entries',{...revenue,seat_rows:[...revenue.seat_rows,{category:'Other category',count:0,amount:0}]},400)
  await request('POST','/api/admin/revenue-entries',{...revenue,seat_rows:[{count:25,amount:10},{count:25,amount:10},...revenue.seat_rows.slice(2)]},400)
  const duty=(await request('POST','/api/admin/duties',{bus_no:bus.registration_no,first_trip_id:first.id,return_trip_id:second.id},201)).duty
  const expenseBody={expense_date:first.travel_date,category:'Fuel',description:'Synthetic fuel',amount:10}

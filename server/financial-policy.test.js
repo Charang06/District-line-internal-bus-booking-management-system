@@ -29,7 +29,7 @@ test('manual revenue API matches production validation, totals, persistence and 
  const body={travel_date:'2026-11-12',route_code:'KTY_CMB',bus_no:'SYNTHETIC',seat_rows:rows(),cargo_rows:[]}
  const cases=[body,{...body,seat_rows:rows(49,100000000)},{...body,seat_rows:rows(50)},{...body,seat_rows:[{count:25,amount:1},{count:25,amount:1},{count:0,amount:0},{count:0,amount:0}]},
  {...body,seat_rows:rows(1,1.5)},{...body,seat_rows:rows(1,100000001)},{...body,seat_rows:rows(1.5)},
- {...body,seat_rows:rows('',null)},{...body,seat_rows:[...rows(),{category:'Extra',count:1,amount:1}]},
+ {...body,seat_rows:rows('',null)},
  {...body,seat_rows:rows().slice(0,3)},{...body,seat_rows:rows(0),cargo_rows:[{description:'Cargo only',amount:50}]},
  {...body,cargo_rows:Array.from({length:30},()=>({description:'Cargo',amount:100000000}))},
  {...body,cargo_rows:Array.from({length:31},()=>({description:'Cargo',amount:1}))},
@@ -39,6 +39,10 @@ test('manual revenue API matches production validation, totals, persistence and 
  const saved=await runRoute(current,body);assert.equal(saved.code,201)
  const insert=saved.calls.find(call=>call[0]==='run'&&call[1].includes('INSERT INTO revenue_entries'))
  assert.match(insert[1],/'locked'.*CURRENT_TIMESTAMP/s);assert.equal(insert[2][11],100)
+ const extra=await runRoute(current,{...body,seat_rows:[...rows(),{category:'Agent / Extra',count:2,amount:75}]})
+ assert.equal(extra.code,201);assert.equal(extra.calls.find(call=>call[0]==='run'&&call[1].includes('INSERT INTO revenue_entries'))[2][9],250)
+ const unsupported=await runRoute(current,{...body,seat_rows:[...rows(),{category:'Other category',count:1,amount:1}]})
+ assert.equal(unsupported.code,400)
 })
 test('financial middleware matrix on actual HTTP routes with fake pg and no provider delivery',()=>{
  const result=spawnSync(process.execPath,['--experimental-vm-modules',fileURLToPath(new URL('./test-support/financial-policy-local-worker.mjs',import.meta.url))],{encoding:'utf8',timeout:30000,windowsHide:true})
@@ -65,7 +69,7 @@ test('dashboard financial formulas and Accounts route-ledger precedence remain t
  assert.equal(slice(accounts,'                  const legs =','                  return legs.map'),slice(oldAccounts,'                  const legs =','                  return legs.map'))
  assert.equal(slice(accounts,'                    const matches =','                    return <tr'),slice(oldAccounts,'                    const matches =','                    return <tr'))
  assert.ok(!accounts.includes('const revenueForLeg ='))
- assert.ok(!accounts.includes('Add Extra Row'))
+ assert.ok(accounts.includes('+ Add Extra Row'))
  assert.match(accounts,/max={MAX_REVENUE_SEAT_ROW_COUNT}/)
  assert.ok(accounts.includes('if (seatError) return showMessage'))
  assert.ok(accounts.includes('if (validationError) return showMessage(validationError, true)'))
