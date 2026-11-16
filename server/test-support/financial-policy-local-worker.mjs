@@ -94,11 +94,11 @@ try{
     }
     for(const [method,url,allowed]of writes){const before=calls.length;await request(method,url,{},row.write?allowed:403);if(!row.write)assertNoFinance(before)}
     if(row.write){
-      const body={travel_date:'2026-11-12',route_code:'KTY_CMB',bus_no:'SYNTHETIC-BUS',seat_rows:[{count:49,amount:100},...Array.from({length:3},()=>({count:0,amount:0}))],cargo_rows:[{description:'Synthetic cargo',amount:25}]}
+      const body={travel_date:'2026-11-12',route_code:'KTY_CMB',bus_no:'SYNTHETIC-BUS',seat_rows:[{count:47,amount:100},...Array.from({length:3},()=>({count:0,amount:0})),{category:'Agent / Extra',count:2,amount:75}],cargo_rows:[{description:'Synthetic cargo',amount:25}]}
       const result=await request('POST','/api/admin/revenue-entries',body,201)
-      assert.equal(result.entry.status,'locked');assert.equal(result.entry.total_revenue,4925)
-      assert.equal(JSON.parse(result.entry.seat_rows_json).length,4)
-      body.seat_rows[0].count=50;await request('POST','/api/admin/revenue-entries',body,400)
+      assert.equal(result.entry.status,'locked');assert.equal(result.entry.total_revenue,4875)
+      assert.equal(JSON.parse(result.entry.seat_rows_json).length,5)
+      body.seat_rows[0].count=48;await request('POST','/api/admin/revenue-entries',body,400)
       // Accounts Manage alone does not grant unrelated Home/Log or staff actions.
       if(user.role==='staff')for(const [method,url]of [['POST','/api/bookings'],['POST','/api/bookings/999/cancel'],['POST','/api/trips'],['POST','/api/cargo']])await request(method,url,{},403)
     }

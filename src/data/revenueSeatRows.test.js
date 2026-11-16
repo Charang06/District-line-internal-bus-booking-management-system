@@ -12,6 +12,16 @@ test('four default categories, 49-seat cap and explicit draft preservation',()=>
   assert.ok(calculateRevenueSeatRows(restored).validationError)
   assert.equal(draft.length,5)
 })
+test('extra fare rows submit as additional Agent / Extra lines within the four-category policy',()=>{
+  const rows=createDefaultRevenueSeatRows()
+  rows.push({category:'Agent / Extra',rowLabel:'Extra row 1',count:'2',amount:'75'})
+  const client=calculateRevenueSeatRows(rows),server=normalizeRevenueSeatRows(rows)
+  assert.equal(client.validationError,'');assert.equal(server.error,undefined)
+  assert.equal(client.seatCount,2);assert.equal(server.seatCount,2)
+  assert.equal(client.seatSubtotal,150);assert.equal(server.subtotal,150)
+  rows[0].count='48';assert.match(calculateRevenueSeatRows(rows).validationError,/49-seat/)
+  assert.match(normalizeRevenueSeatRows(rows).error,/49-seat/)
+})
 test('frontend/backend agree on production count, fare, blank coercion and totals',()=>{
   const values=[0,1,24,25,49,50,1000000,-1,1.5,'','1.0',null,undefined,NaN,Infinity]
   for(const count of values)for(const amount of [0,10,100000000,100000001,-1,1.5,'',null,undefined]){

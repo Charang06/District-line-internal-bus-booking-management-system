@@ -1690,7 +1690,7 @@ app.post('/api/admin/revenue-entries', authMiddleware, requirePageManage('accoun
   if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
   if (driverName.length > 80 || conductorName.length > 80) return res.status(400).json({ message: 'Driver and conductor names must be 80 characters or fewer.' })
   if (tripId !== null && (!Number.isSafeInteger(tripId) || tripId < 1)) return res.status(400).json({ message: 'Choose a valid trip.' })
-  if (!Array.isArray(seatRows) || seatRows.length !== 4) return res.status(400).json({ message: 'Enter all four seat fare categories.' })
+  if (!Array.isArray(seatRows) || seatRows.length < 4) return res.status(400).json({ message: 'Enter all four seat fare categories.' })
   if (!Array.isArray(cargoRows) || cargoRows.length > 30) return res.status(400).json({ message: 'Cargo rows are invalid or exceed the 30-row limit.' })
 
   if (tripId !== null) {

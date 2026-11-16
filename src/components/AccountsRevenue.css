@@ -50,12 +50,14 @@
 .accounts-revenue-page .accounts-seat-count-cell input { flex-basis: 54px; width: 54px !important; }
 .accounts-revenue-page .accounts-seat-table .accounts-seat-count-cell.has-extra { display: grid; grid-template-columns: minmax(0, 1fr) 54px auto; align-items: center; gap: 6px; }
 .accounts-revenue-page .accounts-seat-count-cell .accounts-seat-remove { flex: 0 0 26px; width: 26px; min-height: 26px; padding: 2px; }
-.accounts-revenue-page .accounts-seat-add-row:disabled { cursor: not-allowed; opacity: .55; }
 .accounts-revenue-page .accounts-revenue-panel td:last-child { color: #102b46; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
 .accounts-revenue-page .accounts-cargo-description { display: flex; align-items: center; gap: 6px; }
 .accounts-revenue-page .accounts-cargo-description input { flex: 1 1 auto; min-width: 80px; }
 .accounts-revenue-page .accounts-cargo-description .accounts-remove-row { flex: 0 0 28px; width: 28px; min-height: 28px; border-radius: 6px; }
 .accounts-revenue-page .accounts-add-row { align-self: flex-start; min-height: 34px; padding: 6px 9px; border: 1px dashed #c99a45; border-radius: 6px; background: #fffaf0; color: #80652f; font-size: 11px; }
+.accounts-revenue-page .accounts-seat-add-row { min-width: 124px; min-height: 38px; margin-top: 8px; cursor: pointer; touch-action: manipulation; }
+.accounts-revenue-page .accounts-seat-add-row:disabled { cursor: not-allowed; opacity: .55; }
+.accounts-revenue-page .accounts-seat-policy-note { margin: 7px 0 0; color: #854d0e; font-size: 10px; line-height: 1.4; }
 .accounts-revenue-page .accounts-subtotal { min-height: 36px; margin-top: 9px; padding: 7px 9px; border: 1px solid #eadbbd; border-radius: 6px; background: #fbf4e5; color: #42536b; font-size: 11px; }
 .accounts-revenue-page .accounts-subtotal strong { padding: 0; border: 0; background: transparent; color: #102b46; font-size: 13px; font-variant-numeric: tabular-nums; }
 .accounts-revenue-page .accounts-revenue-entry-card .accounts-total-card { display: grid; gap: 12px; margin: 0; padding: 12px 14px; border: 1px solid #102b46; border-radius: 9px; background: #102b46; }
