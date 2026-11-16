@@ -91,7 +91,7 @@ export const api = {
   confirmAdminUsernameRecovery: (body) => request(`${API_BASE}/username-recovery/confirm`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
   }),
-  login: (body) => request(`${API_BASE}/login`, {
+  login: (body) => timedRequest('login', `${API_BASE}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -104,13 +104,13 @@ export const api = {
   }),
   logout: () => request(`${API_BASE}/logout`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }),
   buses: (token, includeInactive = false) =>
-    apiFetch(`${API_BASE}/buses${includeInactive ? '?includeInactive=1' : ''}`, { headers: authHeaders(token) }).then(parse),
+    timedRequest('buses', `${API_BASE}/buses${includeInactive ? '?includeInactive=1' : ''}`, { headers: authHeaders(token) }),
   createBus: (token, body) => apiFetch(`${API_BASE}/buses`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   updateBus: (token, id, body) => apiFetch(`${API_BASE}/buses/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   deleteBus: (token, id) => apiFetch(`${API_BASE}/buses/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
   uploadBusImage: (token, id, image) => apiFetch(`${API_BASE}/buses/${id}/image`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ image }) }).then(parse),
-  trips: (token, query = '') => apiFetch(`${API_BASE}/trips${query}`, { headers: authHeaders(token) }).then(parse),
-  trip: (token, id) => apiFetch(`${API_BASE}/trips/${id}`, { headers: authHeaders(token) }).then(parse),
+  trips: (token, query = '') => timedRequest('trips', `${API_BASE}/trips${query}`, { headers: authHeaders(token) }),
+  trip: (token, id) => timedRequest('trip_detail', `${API_BASE}/trips/${id}`, { headers: authHeaders(token) }),
   createTrip: (token, body) => apiFetch(`${API_BASE}/trips`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   updateTrip: (token, id, body) => apiFetch(`${API_BASE}/trips/${id}`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   deleteTrip: (token, id) => apiFetch(`${API_BASE}/trips/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
@@ -125,7 +125,7 @@ export const api = {
   cargo: (token, query = '') => apiFetch(`${API_BASE}/cargo${query}`, { headers: authHeaders(token) }).then(parse),
   createCargo: (token, body) => apiFetch(`${API_BASE}/cargo`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   deleteCargo: (token, id) => apiFetch(`${API_BASE}/cargo/${id}`, { method: 'DELETE', headers: authHeaders(token) }).then(parse),
-  me: (token) => apiFetch(`${API_BASE}/me`, { headers: authHeaders(token) }).then(parse),
+  me: (token) => timedRequest('session', `${API_BASE}/me`, { headers: authHeaders(token) }),
   updateProfile: (token, body) => apiFetch(`${API_BASE}/profile`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   changeUsername: (token, body) => apiFetch(`${API_BASE}/profile/username`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(body) }).then(parse),
   updateRecoveryEmail: (token, email) => apiFetch(`${API_BASE}/profile/recovery-email`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ email }) }).then(parse),
