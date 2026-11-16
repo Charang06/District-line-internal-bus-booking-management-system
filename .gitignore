@@ -47,5 +47,6 @@ docs/handover/*
 !docs/handover/districtline-final-candidate-manifest.json
 !docs/handover/districtline-final-verification.json
 !docs/handover/districtline-first-login-performance-fix.md
+!docs/handover/districtline-initial-loading-performance.md
 !docs/handover/districtline-database-security-release-verification.md
 !docs/handover/districtline-database-security-verification.json

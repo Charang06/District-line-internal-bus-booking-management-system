@@ -23,7 +23,7 @@ async function main() {
     let file = path.resolve(dist,'.'+decodeURIComponent(requested.pathname))
     if (!file.startsWith(dist+path.sep) && file !== dist) {res.writeHead(403);res.end();return}
     if (!localFs.existsSync(file) || !localFs.statSync(file).isFile())file=path.join(dist,'index.html')
-    const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png'}
+    const mime={'.html':'text/html','.js':'application/javascript','.css':'text/css','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg'}
     res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'})
     localFs.createReadStream(file).pipe(res)
   })

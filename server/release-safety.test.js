@@ -19,6 +19,18 @@ test('Vercel assets are explicit approved registered SQL plus TLS, with optional
  for(const p of excluded)assert.ok(!included.includes(p))
  assert.deepEqual(config.rewrites,[{source:'/api/:path*',destination:'/api?path=:path*'},{source:'/(.*)',destination:'/index.html'}])
 })
+test('login background preload and versioned cached image match the optimized existing photograph',()=>{
+ const config=JSON.parse(read('vercel.json')),index=read('index.html'),app=read('src/App.jsx'),css=read('src/App.css')
+ const source=fs.statSync(new URL('../public/login-tropical-sunset.png',import.meta.url)).size
+ const optimized=fs.statSync(new URL('../public/login-tropical-sunset-v2.jpg',import.meta.url)).size
+ assert.ok(optimized<source*0.25,`optimized login background is ${optimized} bytes from ${source}`)
+ assert.ok(app.includes("preload.href = '/login-tropical-sunset-v2.jpg'"))
+ assert.ok(app.includes("preload.fetchPriority = 'high'"))
+ assert.ok(!index.includes('rel="preload" as="image"'))
+ assert.equal((css.match(/login-tropical-sunset-v2\.jpg/g)||[]).length,2)
+ const header=config.headers.find(item=>item.source==='/login-tropical-sunset-v2.jpg')
+ assert.equal(header?.headers.find(item=>item.key==='Cache-Control')?.value,'public, max-age=31536000, immutable')
+})
 test('scoped financial and duty APIs remain available without Accounts UI wiring',()=>{
  for(const route of ['/api/accounts/crew-options','/api/accounts/duties']){
   assert.equal(server.split("app.get('"+route+"', authMiddleware, requirePageManage('accounts')").length,2)

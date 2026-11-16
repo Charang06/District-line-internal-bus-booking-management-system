@@ -15,6 +15,12 @@
   ],
   "headers": [
     {
+      "source": "/login-tropical-sunset-v2.jpg",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
       "source": "/bus.webp",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
