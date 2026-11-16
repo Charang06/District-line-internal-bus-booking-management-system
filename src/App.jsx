@@ -80,6 +80,13 @@ function measureDashboardChart(name, calculate) {
 }
 
 function AdminPageSkeleton({ label }) {
+  if (label === 'dashboard') return (
+    <div className="dashboard-data-skeleton" aria-hidden="true">
+      <div className="dashboard-skeleton-chart"><i /><i /><i /><i /><i /><span /></div>
+      <div className="dashboard-skeleton-details"><i /><i /><i /></div>
+      <div className="dashboard-skeleton-details"><i /><i /><i /></div>
+    </div>
+  )
   return (
     <div className="admin-data-skeleton" role="status" aria-label={`Loading ${label}`}>
       <span className="admin-skeleton-title" />
@@ -105,8 +112,8 @@ function FullSystemLoader() {
 function TripsLoadingState() {
   return (
     <div className="trips-loading-state" role="status" aria-label="Loading bus sections">
-      <span className="system-loading-spinner" aria-hidden="true" />
-      <span>Loading bus sections…</span>
+      <span className="trips-loading-copy"><span aria-hidden="true" />Loading bus information…</span>
+      <span className="trips-loading-placeholder" aria-hidden="true"><i /><i /><i /></span>
     </div>
   )
 }
@@ -149,8 +156,12 @@ function App() {
   const adminDashboardRequestRef = useRef(null)
   const adminDashboardRequestIdRef = useRef(0)
   const profitLedgerRequestRef = useRef(null)
+  const profitLedgerRequestIdRef = useRef(0)
   const adminStatsCacheRef = useRef({})
   const fleetRequestIdRef = useRef(0)
+  const fleetRequestRef = useRef(null)
+  const tripsRequestIdRef = useRef(0)
+  const tripsBootstrapRequestIdRef = useRef(0)
   const sessionCheckStartedRef = useRef(false)
   const loginRequestInFlightRef = useRef(false)
   const [token, setToken] = useState('')
@@ -185,6 +196,7 @@ function App() {
   const [buses, setBuses] = useState([])
   const [trips, setTrips] = useState([])
   const [tripsLoading, setTripsLoading] = useState(true)
+  const [tripsError, setTripsError] = useState('')
   const [activeTripId, setActiveTripId] = useState(null)
   const [customerLogs, setCustomerLogs] = useState([])
   const [editingCustomerDetailsId, setEditingCustomerDetailsId] = useState(null)
@@ -620,33 +632,49 @@ function App() {
   }, [notice, error])
 
   const clearTripView = () => {
+    tripsRequestIdRef.current++
     setTrips([])
+    setTripsLoading(true)
+    setTripsError('')
     setActiveTripId(null)
     setCustomerLogs([])
     setCargoLogs([])
   }
 
   const loadFleet = useCallback(async (authToken) => {
+    if (fleetRequestRef.current) return fleetRequestRef.current
     const requestId = ++fleetRequestIdRef.current
-    const data = await api.buses(authToken, true)
-    if (requestId === fleetRequestIdRef.current) {
-      const fleet = data.buses || []
-      setBuses(fleet)
-      setAdminStats((previous) => previous ? { ...previous, buses: fleet } : previous)
-      for (const [scope, cached] of Object.entries(adminStatsCacheRef.current)) {
-        adminStatsCacheRef.current[scope] = { ...cached, buses: fleet }
+    const pending = api.buses(authToken, true).then((data) => {
+      if (requestId === fleetRequestIdRef.current) {
+        const fleet = data.buses || []
+        setBuses(fleet)
+        setAdminStats((previous) => previous ? { ...previous, buses: fleet } : previous)
+        for (const [scope, cached] of Object.entries(adminStatsCacheRef.current)) {
+          adminStatsCacheRef.current[scope] = { ...cached, buses: fleet }
+        }
       }
-    }
+      return data
+    }).finally(() => {
+      if (fleetRequestRef.current === pending) fleetRequestRef.current = null
+    })
+    fleetRequestRef.current = pending
+    return pending
   }, [])
 
   const loadTrips = useCallback(async (authToken, date = selectedDate, routeValue = routeCode) => {
+    const requestId = ++tripsRequestIdRef.current
     setTripsLoading(true)
+    setTripsError('')
     try {
       const data = await api.trips(authToken, queryString({ date, route: routeValue }))
-      setTrips(data.trips || [])
-      return data.trips || []
+      const nextTrips = data.trips || []
+      if (requestId === tripsRequestIdRef.current) setTrips(nextTrips)
+      return nextTrips
+    } catch (err) {
+      if (requestId === tripsRequestIdRef.current) setTripsError(err.message || 'Unable to load bus information.')
+      throw err
     } finally {
-      setTripsLoading(false)
+      if (requestId === tripsRequestIdRef.current) setTripsLoading(false)
     }
   }, [routeCode, selectedDate])
 
@@ -718,6 +746,14 @@ function App() {
   }, [])
 
   const clearAuthState = useCallback(() => {
+    adminDashboardRequestIdRef.current++
+    adminDashboardRequestRef.current = null
+    profitLedgerRequestIdRef.current++
+    profitLedgerRequestRef.current = null
+    fleetRequestIdRef.current++
+    fleetRequestRef.current = null
+    tripsRequestIdRef.current++
+    tripsBootstrapRequestIdRef.current++
     setToken('')
     setUser(null)
     setAuthStatus('unauthenticated')
@@ -725,7 +761,15 @@ function App() {
     setAdminStats(null)
     setAdminStatsScope('')
     adminStatsCacheRef.current = {}
+    setAdminDataLoading(false)
+    setDashboardDataError('')
+    setProfitLedgerError('')
+    setProfitLedgerLoading(false)
+    setTrips([])
+    setActiveTripId(null)
     setTripsLoading(false)
+    setTripsError('')
+    setBuses([])
     setProfitLedger({ revenueEntries: [], expenseSubmissions: [] })
     setProfitLedgerLoaded(false)
   }, [])
@@ -739,6 +783,10 @@ function App() {
         clearAuthState()
         return
       }
+      setTrips([])
+      setTripsLoading(true)
+      setTripsError('')
+      setBuses([])
       setUser(data.user)
       setToken('cookie-session')
       setAuthStatus('authenticated')
@@ -770,15 +818,20 @@ function App() {
   }, [clearAuthState])
 
   const bootstrap = useCallback(async (authToken) => {
+    const requestId = ++tripsBootstrapRequestIdRef.current
     if (!isAdmin && !staffPermissions.home && !staffPermissions.log) {
       setTrips([])
       setActiveTripId(null)
+      setTripsLoading(false)
       return
     }
     try {
       const nextTrips = await loadTrips(authToken)
-      setActiveTripId((previousId) => nextTrips.find((trip) => trip.id === previousId)?.id || nextTrips[0]?.id || null)
+      if (requestId === tripsBootstrapRequestIdRef.current) {
+        setActiveTripId((previousId) => nextTrips.find((trip) => trip.id === previousId)?.id || nextTrips[0]?.id || null)
+      }
     } catch (err) {
+      if (requestId !== tripsBootstrapRequestIdRef.current) return
       if (err.status === 401) clearAuthState()
       showMessage(err.message, true)
     }
@@ -876,6 +929,10 @@ function App() {
       }
       setMfaChallenge('')
       setMfaCode('')
+      setTrips([])
+      setTripsLoading(true)
+      setTripsError('')
+      setBuses([])
       setToken('cookie-session')
       setUser(data.user)
       setAuthStatus('authenticated')
@@ -1248,22 +1305,27 @@ function App() {
   const loadProfitLedger = (force = false) => {
     if (profitLedgerLoaded && !force) return Promise.resolve()
     if (profitLedgerRequestRef.current) return profitLedgerRequestRef.current
+    const requestId = ++profitLedgerRequestIdRef.current
     setProfitLedgerLoading(true)
     setProfitLedgerError('')
     const pending = Promise.all([
       api.adminRevenueEntries(token, { summary: true }),
       api.adminExpenseSubmissions(token),
     ]).then(([revenueData, expenseData]) => {
-      setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
-      setProfitLedgerLoaded(true)
-      setProfitLedgerError('')
+      if (requestId === profitLedgerRequestIdRef.current) {
+        setProfitLedger({ revenueEntries: revenueData.entries || [], expenseSubmissions: expenseData.submissions || [] })
+        setProfitLedgerLoaded(true)
+        setProfitLedgerError('')
+      }
     }).catch((err) => {
-      setProfitLedgerError(err.message || 'Unable to load financial ledger data.')
-      setProfitLedgerLoaded(true)
-      showMessage(err.message || 'Unable to load financial ledger data.', true)
+      if (requestId === profitLedgerRequestIdRef.current) {
+        setProfitLedgerError(err.message || 'Unable to load financial ledger data.')
+        setProfitLedgerLoaded(true)
+        showMessage(err.message || 'Unable to load financial ledger data.', true)
+      }
     }).finally(() => {
-      setProfitLedgerLoading(false)
-      profitLedgerRequestRef.current = null
+      if (requestId === profitLedgerRequestIdRef.current) setProfitLedgerLoading(false)
+      if (profitLedgerRequestRef.current === pending) profitLedgerRequestRef.current = null
     })
     profitLedgerRequestRef.current = pending
     return pending
@@ -1550,6 +1612,11 @@ function App() {
                 }
                 setActiveTab(tab)
                 setMobileNavOpen(false)
+                if (tab === 'Dashboard') {
+                  setDashboardTripsLoading(true)
+                  setDashboardTripsError('')
+                  setDashboardTrips([])
+                }
                 if (tab === 'Dashboard' || tab === 'Accounts' || tab === 'Customers') {
                   const scope = tab === 'Dashboard' ? 'dashboard' : tab === 'Accounts' ? 'accounts' : 'customers'
                   if (!adminStats || adminStatsScope !== scope) openAdminDashboard(scope)
@@ -1657,7 +1724,7 @@ function App() {
             <div className="schedule-strip">
               <span className="schedule-badge">Scheduled run: {selectedDate}</span>
               <span>Super Luxury 49-Sleeper | {route.short}</span>
-              <span>{trips.length} bus section{trips.length === 1 ? '' : 's'} | {trips.reduce((sum, trip) => sum + Number(trip.booked_count || 0), 0)} seats booked</span>
+              <span>{tripsLoading ? 'Loading bus sections…' : tripsError ? 'Bus information unavailable' : `${trips.length} bus section${trips.length === 1 ? '' : 's'} | ${trips.reduce((sum, trip) => sum + Number(trip.booked_count || 0), 0)} seats booked`}</span>
             </div>
 
             <div className="home-bus-banner">
@@ -1689,7 +1756,12 @@ function App() {
                 />
               </article>
             ))}
-            {tripsLoading ? <TripsLoadingState /> : trips.length === 0 ? (
+            {tripsLoading ? <TripsLoadingState /> : tripsError ? (
+              <div className="empty-trip-state trip-load-error" role="alert">
+                <p>Unable to load bus information: {tripsError}</p>
+                <button type="button" className="ghost-button small" onClick={() => loadTrips(token).catch(() => {})}>Retry bus information</button>
+              </div>
+            ) : trips.length === 0 ? (
               <div className="empty-trip-state">
                 <p>No bus sections are set up for this date and route.</p>
                 {staffPermissions.trips ? <button type="button" className="primary-button small add-another-bus" onClick={handleAddBus}>+ Add bus section</button> : null}
@@ -2049,12 +2121,12 @@ function App() {
               <div className="trip-controls-title"><span className="trip-controls-icon"><TripVisualIcon name="sliders" /></span><div><h2>Trip Controls</h2><p>Filter trips by date, route, or individual trip.</p></div></div>
             </div>
             <div className="trip-controls-filters">
-              <label><span className="trip-filter-label"><TripVisualIcon name="date" />Choose date</span><input type="date" value={revenueDate} onChange={(event) => { setRevenueDate(event.target.value); setDashboardTrip('') }} /></label>
+              <label><span className="trip-filter-label"><TripVisualIcon name="date" />Choose date</span><input type="date" value={revenueDate} onChange={(event) => { if (event.target.value !== revenueDate) { setDashboardTripsLoading(true); setDashboardTripsError('') }; setRevenueDate(event.target.value); setDashboardTrip('') }} /></label>
               <label><span className="trip-filter-label"><TripVisualIcon name="bus" />Bus No</span><select value={dashboardBus} onChange={(event) => { setDashboardBus(event.target.value); setDashboardTrip('') }}><option value="">All buses</option>{busRegistrations(adminStats.buses || []).sort((a, b) => a.localeCompare(b)).map((busNo) => <option key={busNo} value={busNo}>{busNo}</option>)}</select></label>
-              <label><span className="trip-filter-label"><TripVisualIcon name="route" />Route</span><select value={dashboardRoute} onChange={(event) => { setDashboardRoute(event.target.value); setDashboardTrip('') }}>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
+              <label><span className="trip-filter-label"><TripVisualIcon name="route" />Route</span><select value={dashboardRoute} onChange={(event) => { if (event.target.value !== dashboardRoute) { setDashboardTripsLoading(true); setDashboardTripsError('') }; setDashboardRoute(event.target.value); setDashboardTrip('') }}>{ROUTES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}</select></label>
               <label><span className="trip-filter-label"><TripVisualIcon name="trip" />Trip</span><select value={dashboardTrip} disabled={dashboardTripsLoading} onChange={(event) => setDashboardTrip(event.target.value)}><option value="">All trips</option>{dashboardTrips.filter((trip) => isInDashboardRange(trip.travel_date) && (!dashboardRoute || trip.route_code === dashboardRoute) && matchesDashboardBus(trip)).map((trip) => <option key={trip.id} value={String(trip.id)}>{trip.registration_no || 'Unassigned'} · {trip.trip_code}</option>)}</select></label>
               <strong className="dashboard-selected-range"><span>Selected date range</span>{dashboardRange ? `${dashboardRange.start} – ${dashboardRange.end}` : 'Choose a valid date'}</strong>
-              <button type="button" className="dashboard-filter-reset" onClick={() => { setRevenueDate(todayIso()); setDashboardBus(''); setDashboardRoute('KTY_CMB'); setDashboardTrip('') }}><TripVisualIcon name="reset" />Reset filters</button>
+              <button type="button" className="dashboard-filter-reset" onClick={() => { const today = todayIso(); if (revenueDate !== today || dashboardRoute !== 'KTY_CMB') { setDashboardTripsLoading(true); setDashboardTripsError('') }; setRevenueDate(today); setDashboardBus(''); setDashboardRoute('KTY_CMB'); setDashboardTrip('') }}><TripVisualIcon name="reset" />Reset filters</button>
             </div>
             <section className="trip-overview" aria-labelledby="trip-overview-heading">
               <div className="trip-overview-heading"><span className="trip-overview-heading-icon"><TripVisualIcon name="analytics" /></span><div><h3 id="trip-overview-heading">Trip Overview</h3><p>Seat availability and trip-linked revenue for the filtered trips.</p></div></div>

@@ -4,6 +4,15 @@ const Module = require('node:module')
 
 function installDashboardFixture() {
   window.__review = true
+  window.__perfEvents = []
+  const originalConsoleInfo = console.info.bind(console)
+  console.info = (...args) => {
+    try {
+      const event = JSON.parse(args[0])
+      if (event.kind === 'frontend_api_perf') window.__perfEvents.push(event)
+    } catch { /* Ignore ordinary application info logs. */ }
+    originalConsoleInfo(...args)
+  }
   const RealDate = window.Date
   window.Date = class extends RealDate {
     constructor(...args) { super(...(args.length ? args : ['2026-11-10T06:00:00+05:30'])) }
@@ -38,6 +47,8 @@ function installDashboardFixture() {
     { expense_date: '2026-11-01', bus_no: 'BUS-TWO', expense_source: 'monthly', amount: 7000 },
   ]
   window.__dashboardScenario = 'populated'
+  window.__tripDelay = 450
+  window.__busDelay = 250
   window.__smsRequests = 0
   window.__reviewResponse = async (p, m, body) => {
     const response = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json' } })
@@ -64,7 +75,10 @@ function installDashboardFixture() {
       const params = new URLSearchParams(last.query)
       return response({ trips: window.__dashboardScenario === 'empty' ? [] : window.__trips.filter(trip => (!params.get('date') || trip.travel_date === params.get('date')) && (!params.get('route') || trip.route_code === params.get('route'))) })
     }
-    if (p === '/api/buses' && m === 'GET') return response({ buses: window.__fleet })
+    if (p === '/api/buses' && m === 'GET') {
+      if (window.__busDelay) await new Promise(resolve => setTimeout(resolve, window.__busDelay))
+      return response({ buses: window.__fleet })
+    }
     if (p === '/api/buses' && m === 'POST') {
       const bus = { ...body, id: 3, status: 'active' }; window.__fleet.push(bus); return response({ bus }, 201)
     }
@@ -86,6 +100,18 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
   const profit = () => p.evaluate('document.querySelector(".dashboard-profit-kpi-slot .dashboard-kpi-value").textContent')
   const tripSelect = i => '.trip-controls-filters label:nth-child(' + i + ') select'
   try {
+    await check('Home first-load hides Add Bus until the trip request confirms its result', async () => {
+      await p.wait('!!document.querySelector(".trips-loading-state")')
+      assert.equal(await p.evaluate('!!document.querySelector(".empty-trip-state")'), false)
+      assert.equal(await p.evaluate('[...document.querySelectorAll("button")].some(button=>button.textContent.trim()==="+ Add bus section")'), false)
+      await p.wait('!!document.querySelector(".trip-workspace-card")')
+      assert.match(await p.evaluate('document.querySelector(".trip-workspace-card").textContent'), /BUS-ONE/)
+      const timings = await p.evaluate('window.__perfEvents.filter(event=>["session","trips","buses"].includes(event.request)).map(({request,duration_ms,status})=>({request,duration_ms,status}))')
+      assert.ok(timings.some(event => event.request === 'trips' && event.status === 200))
+      assert.ok(timings.some(event => event.request === 'buses' && event.status === 200))
+      assert.ok(timings.some(event => event.request === 'session' && event.status === 200))
+      console.log('SYNTHETIC_HOME_REQUEST_TIMINGS ' + JSON.stringify(timings))
+    })
     await p.clickText('Dashboard'); await p.wait('document.querySelectorAll(".trip-overview-trip-card").length===2'); await p.wait('!!document.querySelector(".sms-balance-main strong")'); await p.evaluate('document.fonts.ready')
     for (const width of [1440, 1280, 1024, 768, 430, 390, 375, 360, 320]) {
       await p.call('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 }); await pause(120); await screenshot(p, 'dashboard-' + width)
@@ -212,6 +238,15 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
     assert.equal(await empty.evaluate('document.querySelectorAll(".dashboard-kpi-value")[0].textContent'), '0')
     assert.match(await empty.evaluate('document.querySelector(".profit-ledger-chart").textContent'), /No matching ledger entries/); await screenshot(empty, 'empty')
   }) } finally { await empty.close() }
+
+  const emptyHome = await page('admin', false, true)
+  try { await check('confirmed empty Home shows Add Bus only after successful empty response', async () => {
+    await emptyHome.evaluate('window.__dashboardScenario="empty"')
+    await emptyHome.wait('!!document.querySelector(".trips-loading-state")')
+    assert.equal(await emptyHome.evaluate('!!document.querySelector(".empty-trip-state")'), false)
+    await emptyHome.wait('!!document.querySelector(".empty-trip-state")')
+    assert.equal(await emptyHome.evaluate('[...document.querySelectorAll(".empty-trip-state button")].some(button=>button.textContent.includes("Add bus section"))'), true)
+  }) } finally { await emptyHome.close() }
 
   const loading = await page('admin', false, true)
   try { await check('primary dashboard and ledger loading do not display stale totals', async () => {

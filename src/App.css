@@ -2584,24 +2584,26 @@ th {
 }
 
 .trips-loading-state {
-  display: flex;
-  min-height: 92px;
-  align-items: center;
-  justify-content: center;
+  display: grid;
   gap: 12px;
-  padding: 18px 20px;
-  border: 1px dashed #c7d1dd;
-  border-radius: 6px;
+  min-height: 142px;
+  padding: 16px;
+  border: 1px solid #e0e6ef;
+  border-radius: 10px;
   background: #fff;
   color: #435468;
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
-.trips-loading-state .system-loading-spinner {
-  width: 22px;
-  height: 22px;
-  border-color: rgba(202, 160, 95, 0.25);
-  border-top-color: #caa05f;
+.trips-loading-copy { display: flex; align-items: center; gap: 9px; }
+.trips-loading-copy > span { width: 8px; height: 8px; border-radius: 50%; background: #c99a45; box-shadow: 0 0 0 4px rgb(201 154 69 / 15%); }
+.trips-loading-placeholder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.trips-loading-placeholder i { display: block; height: 64px; border: 1px solid #e7ecf2; border-radius: 8px; background: linear-gradient(100deg, #f0f3f7 20%, #fafbfc 45%, #f0f3f7 70%); background-size: 240% 100%; animation: admin-skeleton-shimmer 1.3s ease-in-out infinite; }
+.trips-loading-placeholder i:nth-child(2) { animation-delay: 100ms; }
+.trips-loading-placeholder i:nth-child(3) { animation-delay: 200ms; }
+@media (max-width: 600px) {
+  .trips-loading-placeholder { grid-template-columns: minmax(0, 1fr); }
+  .trips-loading-placeholder i:nth-child(n + 2) { display: none; }
 }
 
 .logs-loading-indicator {
