@@ -10545,7 +10545,7 @@ button,
   box-shadow: none;
   aspect-ratio: auto;
   container-type: inline-size;
-  background: url('/login-tropical-sunset.png') center / cover no-repeat;
+  background: #06182d url('/login-tropical-sunset-v2.jpg') center / cover no-repeat;
 }
 .login-page .login-stage .auth-branding { display: none; }
 .auth-redesign.login-page .login-panel {
@@ -10642,7 +10642,7 @@ button,
     grid-template-columns: minmax(0, 1fr);
     min-height: 100dvh;
     padding: 24px max(3vw, env(safe-area-inset-left)) 24px max(3vw, env(safe-area-inset-right));
-    background-image: linear-gradient(rgba(5, 17, 37, .38), rgba(5, 17, 37, .55)), url('/login-tropical-sunset.png');
+    background-image: linear-gradient(rgba(5, 17, 37, .38), rgba(5, 17, 37, .55)), url('/login-tropical-sunset-v2.jpg');
     background-position: right center;
   }
   .auth-redesign.login-page .login-panel { grid-column: 1; width: min(100%, 420px); }

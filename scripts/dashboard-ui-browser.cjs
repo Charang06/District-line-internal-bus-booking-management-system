@@ -110,9 +110,15 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
       assert.ok(timings.some(event => event.request === 'trips' && event.status === 200))
       assert.ok(timings.some(event => event.request === 'buses' && event.status === 200))
       assert.ok(timings.some(event => event.request === 'session' && event.status === 200))
+      const busListRequests = await p.evaluate('window.__requests.filter(request=>request.path==="/api/buses").length')
+      assert.equal(busListRequests, 1, 'StrictMode and initial Home mounting share one in-flight fleet request')
       console.log('SYNTHETIC_HOME_REQUEST_TIMINGS ' + JSON.stringify(timings))
     })
+    const homeBusListRequests = await p.evaluate('window.__requests.filter(request=>request.path==="/api/buses").length')
     await p.clickText('Dashboard'); await p.wait('document.querySelectorAll(".trip-overview-trip-card").length===2'); await p.wait('!!document.querySelector(".sms-balance-main strong")'); await p.evaluate('document.fonts.ready')
+    await check('Dashboard entry reuses dashboard fleet data without a redundant bus-list request', async () => {
+      assert.equal(await p.evaluate('window.__requests.filter(request=>request.path==="/api/buses").length'), homeBusListRequests)
+    })
     for (const width of [1440, 1280, 1024, 768, 430, 390, 375, 360, 320]) {
       await p.call('Emulation.setDeviceMetricsOverride', { width, height: 1000, deviceScaleFactor: 1, mobile: width < 768 }); await pause(120); await screenshot(p, 'dashboard-' + width)
       if (!baseline) await check('dashboard layout, KPI columns and contained charts/tables ' + width, async () => {
@@ -268,6 +274,17 @@ async function dashboardChecks({ page, check, assert, pause, fs, baseline }) {
     assert.equal(await ledger.evaluate('document.querySelectorAll(".dashboard-profit-report tbody tr").length'), 0); assert.equal(await ledger.evaluate('document.querySelector(".dashboard-profit-kpi-slot .dashboard-kpi-value").textContent'), '—')
     await screenshot(ledger, 'ledger-error'); await ledger.evaluate('window.__failLedger=false'); await ledger.clickText('Retry profit report'); await ledger.wait('document.querySelectorAll(".dashboard-profit-report tbody tr").length===2')
   }) } finally { await ledger.close() }
+
+  const login = await page('signedout', false, true)
+  try { await check('sign-in preloads the compressed existing background once and keeps the navy fallback', async () => {
+    await login.wait('!!document.querySelector("#login-username")')
+    await login.wait('performance.getEntriesByType("resource").some(entry=>entry.name.includes("/login-tropical-sunset-v2.jpg")&&entry.responseEnd>0)')
+    assert.equal(await login.evaluate('document.querySelectorAll("link[data-login-background-preload]").length'), 1)
+    assert.ok((await login.evaluate('getComputedStyle(document.querySelector(".login-stage")).backgroundImage')).includes('login-tropical-sunset-v2.jpg'))
+    assert.equal(await login.evaluate('getComputedStyle(document.querySelector(".login-page")).backgroundColor'), 'rgb(6, 24, 45)')
+    await login.call('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true })
+    assert.ok((await login.evaluate('getComputedStyle(document.querySelector(".login-stage")).backgroundImage')).includes('login-tropical-sunset-v2.jpg'))
+  }) } finally { await login.close() }
 }
 
 let harness = fs.readFileSync(path.join(__dirname, 'staff-ui-browser.cjs'), 'utf8')

@@ -9,7 +9,7 @@ const meta=JSON.parse(fs.readFileSync(manifestPath,'utf8'))
 const candidateRoot=path.resolve(meta.candidate),releaseRoot=path.resolve('release-candidates')+path.sep
 if(!candidateRoot.startsWith(releaseRoot)||fs.realpathSync(candidateRoot)!==candidateRoot)throw Error('Candidate root escapes release workspace or is redirected')
 const expected=new Set(meta.files.map(f=>f.path)), actual=[]
-if(expected.size!==74||meta.files.length!==74)throw Error('Unexpected reviewed manifest membership')
+if(expected.size!==75||meta.files.length!==75)throw Error('Unexpected reviewed manifest membership')
 const forbidden=/(^|\/)(?:\.git|\.env[^/]*|node_modules|artifacts|uploads|ops|backups|chrome-profile|dist|dist-ssr|test-support)(\/|$)|\.(?:db|sqlite|zip|7z|bak|test\.js)$/i
 for(const name of expected)if(forbidden.test(name)||path.posix.normalize(name)!==name||name.startsWith('../')||path.isAbsolute(name)||(name.endsWith('.sql')&&!/^server\/migrations\/00[1-4]_/.test(name)))throw Error('Forbidden candidate path')
 function walk(dir,prefix='') { for(const entry of fs.readdirSync(dir,{withFileTypes:true})) {

@@ -405,7 +405,7 @@
     ]
   },
   "candidateVerification": {
-    "files": 74,
+    "files": 75,
     "checksumsVerified": true,
     "sourceMatches": true,
     "sourceDifferences": [],
@@ -413,7 +413,7 @@
     "missingRelativeImports": 0,
     "candidateSyntaxChecks": 25,
     "lockRootMatches": true,
-    "manifestSha256": "c5d2c377b41101399d94277212187e7b41efcba93b8f0cc752f3cd3570736f36",
+    "manifestSha256": "0f0ac56a49fffbd2916a9f55cb5439b43790a30d1933f82950f5bd5d3940dea0",
     "noSymlinkEscape": true,
     "prohibitedPaths": 0,
     "declaredExternalImports": [

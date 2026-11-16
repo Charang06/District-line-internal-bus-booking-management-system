@@ -5,9 +5,9 @@ import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 const root=process.cwd()
 const report=fs.readFileSync('docs/handover/phase-14-technical-release-fixes.md','utf8')
-const section=report.slice(report.indexOf('**74 runtime paths'))
+const section=report.slice(report.indexOf('**75 runtime paths'))
 const names=section.split('~~~text\n')[1].split('\n~~~')[0].trim().split('\n').map(p=>p.trim())
-if(names.length!==74||new Set(names).size!==74)throw Error('Unexpected reviewed manifest')
+if(names.length!==75||new Set(names).size!==75)throw Error('Unexpected reviewed manifest')
 const deny=/(^|\/)(?:\.git|\.env[^/]*|node_modules|artifacts|uploads|ops|backups|chrome-profile|dist|dist-ssr|test-support)(\/|$)|\.(?:db|sqlite|zip|7z|bak|test\.js)$/i
 for(const p of names){
  if(deny.test(p)||p.split('/').includes('..')||path.isAbsolute(p))throw Error('Forbidden release path')

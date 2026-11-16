@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import './components/HomePage.css'
 import './components/LogPage.css'
@@ -160,6 +160,10 @@ function App() {
   const adminStatsCacheRef = useRef({})
   const fleetRequestIdRef = useRef(0)
   const fleetRequestRef = useRef(null)
+  const fleetRefreshTimerRef = useRef(null)
+  const homeLookupsRequestRef = useRef(null)
+  const homeLookupsRequestIdRef = useRef(0)
+  const homeLookupsLoadedRef = useRef(false)
   const tripsRequestIdRef = useRef(0)
   const tripsBootstrapRequestIdRef = useRef(0)
   const sessionCheckStartedRef = useRef(false)
@@ -167,6 +171,17 @@ function App() {
   const [token, setToken] = useState('')
   const [user, setUser] = useState(null)
   const [authStatus, setAuthStatus] = useState('checking')
+  useLayoutEffect(() => {
+    if (authStatus !== 'unauthenticated') return undefined
+    const preload = document.createElement('link')
+    preload.rel = 'preload'
+    preload.as = 'image'
+    preload.href = '/login-tropical-sunset-v2.jpg'
+    preload.fetchPriority = 'high'
+    preload.dataset.loginBackgroundPreload = 'true'
+    document.head.appendChild(preload)
+    return () => preload.remove()
+  }, [authStatus])
   const [authError, setAuthError] = useState('')
   const [activeTab, setActiveTab] = useState('Home')
   const [infoTopic, setInfoTopic] = useState('overview')
@@ -346,12 +361,11 @@ function App() {
   }, [token, activeTab, activeTabAllowed, fallbackTab, isAdmin])
 
   useEffect(() => {
-    if (!token) return
-    api.adminBusContacts(token).then((contactResult) => setBusContactList(contactResult.contacts || [])).catch(() => {})
+    if (!token || activeTab !== 'Accounts') return
     setCrewList([])
     if (isAdmin) api.adminCrew(token).then((crewResult) => setCrewList(crewResult.crew || [])).catch(() => {})
     else if (staffPermissions.accountsManage) api.accountsCrewOptions(token).then((result) => setCrewList(result.crew || [])).catch((err) => showMessage(err.message, true))
-  }, [token, isAdmin, staffPermissions.accountsManage])
+  }, [token, isAdmin, staffPermissions.accountsManage, activeTab])
   const bookedSeatCount = customerLogs.filter((log) => log.status !== 'cancelled').length
 
   const dashboardRange = useMemo(() => {
@@ -661,6 +675,25 @@ function App() {
     return pending
   }, [])
 
+  const loadHomeCrewLookups = useCallback((authToken = token) => {
+    if (homeLookupsLoadedRef.current) return Promise.resolve()
+    if (homeLookupsRequestRef.current) return homeLookupsRequestRef.current
+    const requestId = ++homeLookupsRequestIdRef.current
+    const crewRequest = isAdmin
+      ? api.adminCrew(authToken)
+      : staffPermissions.accountsManage ? api.accountsCrewOptions(authToken) : Promise.resolve({ crew: [] })
+    const pending = Promise.all([api.adminBusContacts(authToken), crewRequest]).then(([contactData, crewData]) => {
+      if (requestId !== homeLookupsRequestIdRef.current) return
+      setBusContactList(contactData.contacts || [])
+      setCrewList(crewData.crew || [])
+      homeLookupsLoadedRef.current = true
+    }).finally(() => {
+      if (homeLookupsRequestRef.current === pending) homeLookupsRequestRef.current = null
+    })
+    homeLookupsRequestRef.current = pending
+    return pending
+  }, [token, isAdmin, staffPermissions.accountsManage])
+
   const loadTrips = useCallback(async (authToken, date = selectedDate, routeValue = routeCode) => {
     const requestId = ++tripsRequestIdRef.current
     setTripsLoading(true)
@@ -752,6 +785,9 @@ function App() {
     profitLedgerRequestRef.current = null
     fleetRequestIdRef.current++
     fleetRequestRef.current = null
+    homeLookupsRequestIdRef.current++
+    homeLookupsRequestRef.current = null
+    homeLookupsLoadedRef.current = false
     tripsRequestIdRef.current++
     tripsBootstrapRequestIdRef.current++
     setToken('')
@@ -770,6 +806,8 @@ function App() {
     setTripsLoading(false)
     setTripsError('')
     setBuses([])
+    setCrewList([])
+    setBusContactList([])
     setProfitLedger({ revenueEntries: [], expenseSubmissions: [] })
     setProfitLedgerLoaded(false)
   }, [])
@@ -842,26 +880,32 @@ function App() {
   }, [token, selectedDate, routeCode, bootstrap])
 
   useEffect(() => {
-    if (!token || (!isAdmin && !staffPermissions.home && !staffPermissions.log)) return
+    const needsFleet = (activeTab === 'Home' && (isAdmin || staffPermissions.home))
+      || (activeTab === 'Accounts' && isAdmin)
+    if (!token || !needsFleet) return
     loadFleet(token).catch((err) => {
       if (err.status !== 401 && err.status !== 403) showMessage(err.message, true)
     })
-  }, [token, isAdmin, loadFleet, showMessage, staffPermissions.home, staffPermissions.log])
+  }, [token, activeTab, isAdmin, loadFleet, showMessage, staffPermissions.home, staffPermissions.log])
 
   useEffect(() => {
-    if (!token || (!isAdmin && !staffPermissions.home && !staffPermissions.log)) return
+    const needsFleet = (activeTab === 'Home' && (isAdmin || staffPermissions.home))
+      || (activeTab === 'Accounts' && isAdmin)
+    if (!token || !needsFleet) return
     const refresh = () => {
-      if (document.visibilityState === 'hidden') return
-      loadFleet(token).catch(() => {})
+      if (document.visibilityState !== 'visible' || fleetRefreshTimerRef.current) return
+      fleetRefreshTimerRef.current = window.setTimeout(() => {
+        fleetRefreshTimerRef.current = null
+        loadFleet(token).catch(() => {})
+      }, 120)
     }
-    window.addEventListener('focus', refresh)
     document.addEventListener('visibilitychange', refresh)
     return () => {
-      fleetRequestIdRef.current++
-      window.removeEventListener('focus', refresh)
+      if (fleetRefreshTimerRef.current) window.clearTimeout(fleetRefreshTimerRef.current)
+      fleetRefreshTimerRef.current = null
       document.removeEventListener('visibilitychange', refresh)
     }
-  }, [token, isAdmin, loadFleet, staffPermissions.home, staffPermissions.log])
+  }, [token, activeTab, isAdmin, loadFleet, staffPermissions.home, staffPermissions.log])
 
   useEffect(() => {
     if (!user) return
@@ -1091,6 +1135,7 @@ function App() {
   const openCrewForm = (trip) => {
     // A different administrator may have registered a bus since this session loaded.
     loadFleet(token).catch((err) => showMessage(err.message || 'Unable to refresh bus numbers.', true))
+    loadHomeCrewLookups(token).catch(() => {})
     setEditingTrip(trip)
     setTripForm({
       travel_date: trip?.travel_date || selectedDate,
@@ -1456,9 +1501,10 @@ function App() {
       const staffData = await api.adminStaff(token)
       setStaffList(staffData.staff || [])
       if (isAdmin) {
-        const [crewData, fleetData] = await Promise.all([api.adminCrew(token), api.buses(token, true)])
+        const [crewData, fleetData, contactData] = await Promise.all([api.adminCrew(token), api.buses(token, true), api.adminBusContacts(token)])
         setCrewList(crewData.crew || [])
         setBuses(fleetData.buses || [])
+        setBusContactList(contactData.contacts || [])
       }
     } catch (err) {
       setStaffPageError(err.message || 'Unable to load staff management data.')
