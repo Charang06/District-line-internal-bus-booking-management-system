@@ -48,6 +48,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
   const [busNo, setBusNo] = useState(() => draft.busNo || '')
   const [driverName, setDriverName] = useState(() => draft.driverName || '')
   const [conductorName, setConductorName] = useState(() => draft.conductorName || '')
+  const [revenueSeatCount, setRevenueSeatCount] = useState(() => draft.revenueSeatCount || '')
   const [seatRows, setSeatRows] = useState(() => createDefaultRevenueSeatRows(draft.seatRows).map((row, index) => (
     index >= REVENUE_SEAT_CATEGORIES.length && !row.rowId ? { ...row, rowId: `draft-extra-${index}` } : row
   )))
@@ -66,6 +67,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
     setBusNo('')
     setDriverName('')
     setConductorName('')
+    setRevenueSeatCount('')
     setSeatRows(createDefaultRevenueSeatRows())
     setCargoRows(DEFAULT_CARGO_ROWS.map((row) => ({ ...row })))
   }
@@ -77,11 +79,11 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
   }, [selectedTrip])
   useEffect(() => {
     try {
-      localStorage.setItem(`${REVENUE_DRAFT_PREFIX}${route.code}`, JSON.stringify({ date, busNo, driverName, conductorName, seatRows, cargoRows }))
+      localStorage.setItem(`${REVENUE_DRAFT_PREFIX}${route.code}`, JSON.stringify({ date, busNo, driverName, conductorName, revenueSeatCount, seatRows, cargoRows }))
     } catch {
       // Keep the form usable if browser storage is unavailable or full.
     }
-  }, [route.code, date, busNo, driverName, conductorName, seatRows, cargoRows])
+  }, [route.code, date, busNo, driverName, conductorName, revenueSeatCount, seatRows, cargoRows])
   const updateSeat = (index, field, value) => setSeatRows((rows) => rows.map((row, rowIndex) => rowIndex === index ? { ...row, [field]: value } : row))
   const addSeatRow = () => setSeatRows((rows) => {
     const extraRows = rows.length - REVENUE_SEAT_CATEGORIES.length
@@ -122,6 +124,7 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
       <label>Bus number<select required value={busNo} onChange={(event) => setBusNo(event.target.value)}><option value="">Select a registered bus</option>{knownBusNumbers.map((number) => <option key={number} value={number}>{number}</option>)}</select></label>
       <label>Driver<select value={driverName} onChange={(event) => setDriverName(event.target.value)}><option value="">Select a registered driver</option>{staffNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
       <label>Conductor<select value={conductorName} onChange={(event) => setConductorName(event.target.value)}><option value="">Select a registered conductor</option>{conductorNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
+      <label className="accounts-revenue-seat-count-field">No. of seats<input type="number" min="0" step="1" value={revenueSeatCount} onChange={(event) => setRevenueSeatCount(event.target.value)} /></label>
     </div>
     <div className="accounts-revenue-columns">
       <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="seats" />Revenue from Seats</h2><p>Enter passenger counts and fares. Extra fare rows are recorded under Agent / Extra.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap" role="region" aria-label="Revenue by seat category" tabIndex={0}><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => { const isExtraRow = index >= REVENUE_SEAT_CATEGORIES.length; const rowLabel = isExtraRow ? row.rowLabel || `Extra row ${index - REVENUE_SEAT_CATEGORIES.length + 1}` : row.category; return <tr key={isExtraRow ? row.rowId : row.category}><td className={`accounts-seat-count-cell${isExtraRow ? ' has-extra' : ''}`}>{isExtraRow && <span>{rowLabel}</span>}<input aria-label={`${route.label} ${rowLabel} number of seats`} type="number" min="0" max={MAX_REVENUE_SEAT_ROW_COUNT} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} />{isExtraRow && <button type="button" className="accounts-remove-row accounts-seat-remove" aria-label={`Remove ${rowLabel}`} onClick={() => removeExtraSeatRow(row.rowId)}>×</button>}</td><td><input aria-label={`${route.label} ${rowLabel} fare amount`} type="number" min="0" max="100000000" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>})}</tbody></table></div><button type="button" className="accounts-add-row accounts-seat-add-row" onClick={addSeatRow} disabled={saving || seatRows.length >= REVENUE_SEAT_CATEGORIES.length + MAX_EXTRA_REVENUE_SEAT_ROWS}>+ Add Extra Row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div>{seatError && <p className="accounts-seat-policy-note">{seatError}</p>}</section>

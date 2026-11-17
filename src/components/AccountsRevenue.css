@@ -24,9 +24,10 @@
 .accounts-revenue-page .accounts-revenue-route-heading .ghost-button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 6px 9px; border: 1px solid rgb(255 255 255 / 25%); border-radius: 6px; background: transparent; color: #fff; font-size: 11px; }
 .accounts-revenue-page .accounts-revenue-route-heading .ghost-button:hover { background: rgb(255 255 255 / 10%); }
 .accounts-revenue-page .accounts-revenue-route-heading .accounts-revenue-icon { width: 14px; height: 14px; color: #e1c27f; }
-.accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0 0 12px; border: 0; border-bottom: 1px solid #e7ecf2; border-radius: 0; background: transparent; box-shadow: none; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details { grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(110px, 120px); gap: 10px; margin: 0; padding: 0 0 12px; border: 0; border-bottom: 1px solid #e7ecf2; border-radius: 0; background: transparent; box-shadow: none; }
 .accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details label { min-width: 0; gap: 4px; color: #42536b; font-size: 11px; }
 .accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details :is(input, select) { width: 100%; min-height: 38px; padding: 7px 9px; border: 1px solid #cfd9e5; border-radius: 7px; background: #fff; color: #102b46; font-size: 12px; }
+.accounts-revenue-page .accounts-revenue-entry-card .accounts-trip-details .accounts-revenue-seat-count-field input { width: min(100%, 120px); }
 .accounts-revenue-page .accounts-revenue-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .accounts-revenue-page .accounts-revenue-entry-card .accounts-revenue-panel { min-width: 0; padding: 13px; border: 1px solid #dce4ed; border-radius: 9px; background: #fff; box-shadow: 0 2px 7px rgb(16 43 70 / 4%); }
 .accounts-revenue-page .accounts-expense-items-heading { align-items: center; gap: 8px; min-height: 38px; margin: 0 0 9px; }

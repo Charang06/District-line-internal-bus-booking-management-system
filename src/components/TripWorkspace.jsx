@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
-import { ALL_SEAT_NUMBERS } from '../data/seatLayout'
+import { ALL_SEAT_NUMBERS, boardingLocations, droppingLocations, validRouteLocations } from '../data/seatLayout'
 import SeatMap from './SeatMap'
 
 function emptySeats() {
@@ -15,6 +15,10 @@ function readTripDraft(tripId) {
   }
 }
 
+function initialBookingForm(route) {
+  return { passengerName: '', contact: '', gender: '', from: route.defaultFrom, to: route.defaultTo, fare: '2700', note: '' }
+}
+
 export default function TripWorkspace({ token, trip, formNumber = 1, date, route, permissions = { passengers: true, cargo: true, trips: true }, onEditCrew, onDeleteTrip, onAddBus, onSaved, showMessage, entryFocus }) {
   const passengerFormRef = useRef(null)
   const cargoFormRef = useRef(null)
@@ -26,9 +30,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const [bookingSaving, setBookingSaving] = useState(false)
   const [cargoSaving, setCargoSaving] = useState(false)
   const bookingLoadIdRef = useRef(0)
-  const [bookingForm, setBookingForm] = useState(() => readTripDraft(trip.id)?.bookingForm || {
-    passengerName: '', contact: '', gender: '', from: route.defaultFrom, to: route.defaultTo, fare: '2700', note: '',
-  })
+  const [bookingForm, setBookingForm] = useState(() => readTripDraft(trip.id)?.bookingForm || initialBookingForm(route))
   const [cargoForm, setCargoForm] = useState(() => {
     const saved = readTripDraft(trip.id)?.cargoForm || {}
     return {
@@ -41,15 +43,33 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
       notes: saved.notes || '',
     }
   })
-  const routeStops = route.stops || route.boarding || []
+  const fromOptions = useMemo(() => boardingLocations(route), [route])
+  const toOptions = droppingLocations(route, bookingForm.from)
+  const previousRouteCodeRef = useRef(route.code)
 
   useEffect(() => {
+    setBookingForm((current) => {
+      if (previousRouteCodeRef.current !== route.code) {
+        previousRouteCodeRef.current = route.code
+        const from = fromOptions.includes(route.defaultFrom) ? route.defaultFrom : fromOptions[0] || ''
+        const destinations = droppingLocations(route, from)
+        const to = destinations.includes(route.defaultTo) ? route.defaultTo : destinations.at(-1) || ''
+        return { ...current, from, to }
+      }
+      const from = fromOptions.includes(current.from) ? current.from : fromOptions[0] || ''
+      const destinations = droppingLocations(route, from)
+      const to = destinations.includes(current.to) ? current.to : ''
+      return { ...current, from, to }
+    })
+  }, [route.code, route.defaultFrom, route.defaultTo, route, fromOptions])
+
+  const handleFromChange = (from) => {
     setBookingForm((current) => ({
       ...current,
-      from: routeStops.includes(current.from) ? current.from : route.defaultFrom,
-      to: routeStops.includes(current.to) ? current.to : route.defaultTo,
+      from,
+      to: droppingLocations(route, from).includes(current.to) ? current.to : '',
     }))
-  }, [route.code, route.defaultFrom, route.defaultTo, routeStops])
+  }
 
   const loadBookings = useCallback(async () => {
     const requestId = ++bookingLoadIdRef.current
@@ -100,11 +120,20 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
       : [...current, seatNumber].sort((a, b) => Number(a) - Number(b)))
   }
 
+  const handleClearBookingForm = () => {
+    if (bookingSaving) return
+    setSelectedSeats([])
+    setBookingForm(initialBookingForm(route))
+    setBookingError('')
+    setRefreshError('')
+  }
+
   const handleSaveBooking = async () => {
     if (bookingSaving) return
     const passengerName = bookingForm.passengerName.trim()
     const contact = bookingForm.contact.trim()
     const phone = contact.replace(/\s+/g, '').replace(/^\+/, '')
+    if (!validRouteLocations(route, bookingForm.from, bookingForm.to)) return setBookingError('Choose a valid boarding point and a destination that comes after it.')
     if (!selectedSeats.length) return setBookingError('Select at least one available seat.')
     if (!passengerName && !contact) return setBookingError('Enter a passenger name or mobile number.')
     if (contact && !/^(0?7\d{8}|94?7\d{8})$/.test(phone)) return setBookingError('Enter a valid Sri Lankan contact number.')
@@ -133,13 +162,14 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
         savedCount += 1
       }
       setSelectedSeats([])
-      setBookingForm((prev) => ({ ...prev, passengerName: '', contact: '', gender: '', fare: '2700', note: '' }))
+      setBookingForm(initialBookingForm(route))
+      setBookingError('')
+      setRefreshError('')
+      showMessage(`Bookings saved: ${results.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
       try {
         await Promise.all([loadBookings(), onSaved(trip)])
-        showMessage(`Bookings saved: ${results.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
       } catch (refreshErr) {
         setRefreshError('Booking saved, but the table could not be refreshed. Retry the refresh below.')
-        setBookingError(refreshErr.message)
       }
     } catch (err) {
       if (savedCount) {
@@ -240,15 +270,15 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
             {bookingError ? <div className="form-validation-message" role="alert">{bookingError}</div> : null}
             <div className="reservation-grid">
               <label><span>Seat no</span><input value={selectedSeats.join(', ') || ''} readOnly /></label>
-              <button type="button" className="ghost-button" onClick={() => setSelectedSeats([])}>Clear</button>
+              <button type="button" className="ghost-button" disabled={bookingSaving} onClick={handleClearBookingForm}>Clear</button>
             </div>
             <div className="two-col grouped-fields">
               <label><span>Travelling Date</span><input type="date" value={date} readOnly /></label>
               <label><span>Trip Direction</span><input value={route.short} readOnly /></label>
             </div>
             <div className="two-col grouped-fields">
-              <label><span>From</span><select value={bookingForm.from} onChange={(event) => setBookingForm((prev) => ({ ...prev, from: event.target.value }))}>{routeStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
-              <label><span>To</span><select value={bookingForm.to} onChange={(event) => setBookingForm((prev) => ({ ...prev, to: event.target.value }))}>{routeStops.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
+              <label><span>From</span><select value={bookingForm.from} onChange={(event) => handleFromChange(event.target.value)}>{fromOptions.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
+              <label><span>To</span><select value={bookingForm.to} onChange={(event) => setBookingForm((prev) => ({ ...prev, to: event.target.value }))}><option value="">Select destination</option>{toOptions.map((stop) => <option key={stop} value={stop}>{stop}</option>)}</select></label>
             </div>
             <div className="two-col grouped-fields">
               <label><span>Passenger Name</span><input value={bookingForm.passengerName} onChange={(event) => setBookingForm((prev) => ({ ...prev, passengerName: event.target.value }))} /></label>
