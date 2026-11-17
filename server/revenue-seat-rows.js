@@ -3,7 +3,9 @@ export const DEFAULT_REVENUE_SEAT_CATEGORIES = Object.freeze(['Standard', 'Inter
 export const MAX_REVENUE_SEAT_ROW_COUNT = 49
 export const MAX_REVENUE_EXTRA_SEAT_ROWS = 30
 
-export function normalizeRevenueSeatRows(seatRows) {
+export function normalizeRevenueSeatRows(seatRows, capacity = MAX_REVENUE_SEAT_ROW_COUNT) {
+  const maxCapacity = Number(capacity)
+  if (!Number.isSafeInteger(maxCapacity) || maxCapacity < 1 || maxCapacity > 1000) return { error: 'Enter a valid bus seat capacity between 1 and 1000.' }
   if (!Array.isArray(seatRows) || seatRows.length < 4) return { error: 'Enter all four seat fare categories.' }
   if (seatRows.length > 4 + MAX_REVENUE_EXTRA_SEAT_ROWS) return { error: `You can add up to ${MAX_REVENUE_EXTRA_SEAT_ROWS} extra fare rows.` }
   const seatCategories = DEFAULT_REVENUE_SEAT_CATEGORIES
@@ -17,13 +19,13 @@ export function normalizeRevenueSeatRows(seatRows) {
     }
     const count = Number(row.count)
     const amount = Number(row.amount)
-    if (!Number.isSafeInteger(count) || count < 0 || count > 49 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
+    if (!Number.isSafeInteger(count) || count < 0 || count > 1000000000 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
       return { error: `Enter a valid seat count and whole-rupee amount for ${category}.` }
     }
     seatCount += count
     cleanSeatRows.push({ category, count, amount, total: count * amount })
   }
-  if (seatCount > 49) return { error: 'Seat counts cannot exceed the 49-seat bus capacity.' }
+  if (seatCount > maxCapacity) return { error: `Seat counts cannot exceed the ${maxCapacity}-seat capacity entered above.` }
 
   return { rows: cleanSeatRows, seatCount, subtotal: cleanSeatRows.reduce((sum, row) => sum + row.total, 0) }
 }

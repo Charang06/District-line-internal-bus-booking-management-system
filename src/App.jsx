@@ -227,6 +227,8 @@ function App() {
   const [cargoLogs, setCargoLogs] = useState([])
   const [logFilters, setLogFilters] = useState({ q: '', from: '', sms: '', status: '' })
   const [smsBusyId, setSmsBusyId] = useState(null)
+  const [confirmingBookingIds, setConfirmingBookingIds] = useState(() => new Set())
+  const confirmingBookingIdsRef = useRef(new Set())
   const [cancelTarget, setCancelTarget] = useState(null)
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -1086,20 +1088,27 @@ function App() {
 
   const handleBookingConfirmation = async (booking, checked) => {
     const bookings = booking.bookings || [booking]
-    setSmsBusyId(booking.id)
+    if (confirmingBookingIdsRef.current.has(booking.id)) return
+    confirmingBookingIdsRef.current.add(booking.id)
+    setConfirmingBookingIds((current) => new Set(current).add(booking.id))
     try {
       const confirmation_status = checked ? 'confirmed' : 'unconfirmed'
-      const updated = []
-      for (const item of bookings) {
-        const data = await api.setBookingConfirmation(token, item.id, confirmation_status)
-        updated.push(data.booking)
-      }
-      setCustomerLogs((current) => current.map((item) => updated.find((entry) => entry.id === item.id) || item))
+      const data = await api.setBookingConfirmations(token, bookings.map((item) => item.id), confirmation_status)
+      const updatedById = new Map((data.bookings || []).map((item) => [item.id, item]))
+      setCustomerLogs((current) => current.map((item) => {
+        const saved = updatedById.get(item.id)
+        return saved ? { ...item, ...saved } : item
+      }))
       showMessage(`${booking.passenger_name}'s seats ${bookings.map((item) => item.seat_number).join(', ')} marked ${confirmation_status}.`)
     } catch (err) {
       showMessage(err.message, true)
     } finally {
-      setSmsBusyId(null)
+      confirmingBookingIdsRef.current.delete(booking.id)
+      setConfirmingBookingIds((current) => {
+        const next = new Set(current)
+        next.delete(booking.id)
+        return next
+      })
     }
   }
 
@@ -1993,7 +2002,7 @@ function App() {
                     : ({ pending: 'Pending', queued: 'Sending', sent: 'Sent', delivered: 'Sent', failed: 'Failed', mixed: 'Mixed' }[log.sms_status] || log.sms_status)
                   return (
                     <tr key={log.booking_group_id || log.id} className={isCancelled ? 'row-cancelled' : ''}>
-                      <td>{log.seat_numbers.join(', ')}</td>
+                      <td><span>{log.seat_numbers.join(', ')}</span>{confirmingBookingIds.has(log.id) ? <small className="confirmation-saving" role="status"><span aria-hidden="true" />Saving…</small> : null}</td>
                       <td>{log.passenger_name}</td>
                       <td>{log.gender || '—'}</td>
                       <td>{log.contact}</td>
@@ -2013,15 +2022,15 @@ function App() {
                         <input
                           type="checkbox"
                           checked={isConfirmed}
-                          disabled={!log.any_active || smsBusyId === log.id || !staffPermissions.logPassengers}
+                          disabled={!log.any_active || smsBusyId === log.id || confirmingBookingIds.has(log.id) || !staffPermissions.logPassengers}
                           aria-label={`${isConfirmed ? 'Unconfirm' : 'Confirm'} booking for ${log.passenger_name}`}
                           onChange={(event) => handleBookingConfirmation(log, event.target.checked)}
                         />
                       </td>
                       <td className="no-print">
-                        {(staffPermissions.logPassengers || staffPermissions.customerActions) && <button type="button" className="ghost-button small" disabled={smsBusyId === log.id} onClick={() => { setEditingCustomerDetailsId(log.id); setCustomerNameDraft(log.passenger_name || ''); setCustomerContactDraft(log.contact || ''); setCustomerGenderDraft(log.gender || ''); setCustomerFromDraft(log.boarding_point || ''); setCustomerToDraft(log.destination || ''); setCustomerFareDraft(String(log.bookings[0]?.fare ?? '')); setCustomerNotesDraft(log.notes || '') }}>Edit</button>}
+                        {(staffPermissions.logPassengers || staffPermissions.customerActions) && <button type="button" className="ghost-button small" disabled={smsBusyId === log.id || confirmingBookingIds.has(log.id)} onClick={() => { setEditingCustomerDetailsId(log.id); setCustomerNameDraft(log.passenger_name || ''); setCustomerContactDraft(log.contact || ''); setCustomerGenderDraft(log.gender || ''); setCustomerFromDraft(log.boarding_point || ''); setCustomerToDraft(log.destination || ''); setCustomerFareDraft(String(log.bookings[0]?.fare ?? '')); setCustomerNotesDraft(log.notes || '') }}>Edit</button>}
                         {log.any_active && staffPermissions.logPassengers ? (
-                          <button type="button" className="ghost-button small" onClick={() => setCancelTarget(log)}>Cancel</button>
+                          <button type="button" className="ghost-button small" disabled={confirmingBookingIds.has(log.id)} onClick={() => setCancelTarget(log)}>Cancel</button>
                         ) : '—'}
                       </td>
                     </tr>

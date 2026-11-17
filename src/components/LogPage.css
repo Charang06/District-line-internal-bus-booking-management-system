@@ -473,6 +473,28 @@
 .log-page .confirmation-pill.unconfirmed { background: #fff3d8; color: #81580f; }
 .log-page .confirmation-pill.cancelled { background: #fdebea; color: #9a2e2e; }
 
+.log-page .confirmation-saving {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  color: #8a692f;
+  font-size: .68rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.log-page .confirmation-saving > span {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #c69a55;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: log-confirmation-spin .7s linear infinite;
+}
+
+@keyframes log-confirmation-spin { to { transform: rotate(360deg); } }
+
 .log-page .sms-pill {
   display: inline-flex;
   padding: 4px 8px;

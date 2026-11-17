@@ -2,10 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createDefaultRevenueSeatRows, calculateRevenueSeatRows, MAX_REVENUE_SEAT_ROW_COUNT } from './revenueSeatRows.js'
 import { normalizeRevenueSeatRows } from '../../server/revenue-seat-rows.js'
-test('four default categories, 49-seat cap and explicit draft preservation',()=>{
-  assert.equal(MAX_REVENUE_SEAT_ROW_COUNT,49)
+test('four default categories, configurable seat capacity and explicit draft preservation',()=>{
+  assert.equal(MAX_REVENUE_SEAT_ROW_COUNT,1000000000)
   const defaults=createDefaultRevenueSeatRows();assert.equal(defaults.length,4)
+  assert.equal(calculateRevenueSeatRows([{...defaults[0],count:'80'},...defaults.slice(1)],80).validationError,'')
   assert.equal(calculateRevenueSeatRows(defaults).validationError,'')
+  assert.equal(calculateRevenueSeatRows([{...defaults[0],count:'80'},...defaults.slice(1)],80).validationError,'')
   const draft=[...defaults,{category:'Candidate extra',count:'2',amount:'50'}]
   const restored=createDefaultRevenueSeatRows(draft)
   assert.equal(restored.length,5);assert.equal(restored[4].amount,'50')
@@ -19,17 +21,17 @@ test('extra fare rows submit as additional Agent / Extra lines within the four-c
   assert.equal(client.validationError,'');assert.equal(server.error,undefined)
   assert.equal(client.seatCount,2);assert.equal(server.seatCount,2)
   assert.equal(client.seatSubtotal,150);assert.equal(server.subtotal,150)
-  rows[0].count='48';assert.match(calculateRevenueSeatRows(rows).validationError,/49-seat/)
-  assert.match(normalizeRevenueSeatRows(rows).error,/49-seat/)
+  rows[0].count='48';assert.match(calculateRevenueSeatRows(rows,49).validationError,/49-seat/)
+  assert.match(normalizeRevenueSeatRows(rows,49).error,/49-seat/)
 })
 test('frontend/backend agree on production count, fare, blank coercion and totals',()=>{
   const values=[0,1,24,25,49,50,1000000,-1,1.5,'','1.0',null,undefined,NaN,Infinity]
   for(const count of values)for(const amount of [0,10,100000000,100000001,-1,1.5,'',null,undefined]){
     const rows=createDefaultRevenueSeatRows();rows[0]={...rows[0],count,amount}
-    const client=calculateRevenueSeatRows(rows),server=normalizeRevenueSeatRows(rows)
+    const client=calculateRevenueSeatRows(rows,49),server=normalizeRevenueSeatRows(rows,49)
     assert.equal(Boolean(client.validationError),Boolean(server.error),String([count,amount]))
     if(!server.error){assert.equal(client.seatCount,server.seatCount);assert.equal(client.seatSubtotal,server.subtotal)}
   }
   const combined=createDefaultRevenueSeatRows();combined[0].count=25;combined[1].count=25
-  assert.ok(calculateRevenueSeatRows(combined).validationError);assert.ok(normalizeRevenueSeatRows(combined).error)
+  assert.ok(calculateRevenueSeatRows(combined,49).validationError);assert.ok(normalizeRevenueSeatRows(combined,49).error)
 })

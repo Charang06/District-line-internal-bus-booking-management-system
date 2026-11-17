@@ -28,6 +28,9 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const [cargoError, setCargoError] = useState('')
   const [refreshError, setRefreshError] = useState('')
   const [bookingSaving, setBookingSaving] = useState(false)
+  const bookingSubmitInProgress = useRef(false)
+  const bookingGroupId = useRef('')
+  const bookingGroupFingerprint = useRef('')
   const [cargoSaving, setCargoSaving] = useState(false)
   const bookingLoadIdRef = useRef(0)
   const [bookingForm, setBookingForm] = useState(() => readTripDraft(trip.id)?.bookingForm || initialBookingForm(route))
@@ -122,6 +125,8 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
 
   const handleClearBookingForm = () => {
     if (bookingSaving) return
+    bookingGroupId.current = ''
+    bookingGroupFingerprint.current = ''
     setSelectedSeats([])
     setBookingForm(initialBookingForm(route))
     setBookingError('')
@@ -129,7 +134,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   }
 
   const handleSaveBooking = async () => {
-    if (bookingSaving) return
+    if (bookingSaving || bookingSubmitInProgress.current) return
     const passengerName = bookingForm.passengerName.trim()
     const contact = bookingForm.contact.trim()
     const phone = contact.replace(/\s+/g, '').replace(/^\+/, '')
@@ -140,48 +145,54 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
     if (bookingForm.fare === '' || !Number.isFinite(Number(bookingForm.fare)) || Number(bookingForm.fare) < 0) return setBookingError('Enter a valid fare of Rs. 0 or more.')
     setBookingError('')
     setRefreshError('')
+    bookingSubmitInProgress.current = true
     setBookingSaving(true)
-    let savedCount = 0
-    const results = []
     try {
-      const booking_group_id = globalThis.crypto?.randomUUID?.() || `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`
-      for (const seatNumber of selectedSeats) {
-        const data = await api.createBooking(token, {
-          booking_group_id,
-          trip_id: trip.id,
-          seat_number: seatNumber,
-          passenger_name: passengerName,
-          contact,
-          gender: bookingForm.gender,
-          boarding_point: bookingForm.from,
-          destination: bookingForm.to,
-          fare: Number(bookingForm.fare),
-          notes: bookingForm.note,
-        })
-        results.push(data.booking)
-        savedCount += 1
+      const submission = {
+        trip_id: trip.id,
+        seat_numbers: selectedSeats,
+        passenger_name: passengerName,
+        contact,
+        gender: bookingForm.gender,
+        boarding_point: bookingForm.from,
+        destination: bookingForm.to,
+        fare: Number(bookingForm.fare),
+        notes: bookingForm.note,
       }
-      setSelectedSeats([])
-      setBookingForm(initialBookingForm(route))
-      setBookingError('')
-      setRefreshError('')
-      showMessage(`Bookings saved: ${results.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
-      try {
-        await Promise.all([loadBookings(), onSaved(trip)])
-      } catch (refreshErr) {
-        setRefreshError('Booking saved, but the table could not be refreshed. Retry the refresh below.')
+      const fingerprint = JSON.stringify(submission)
+      if (!bookingGroupId.current || bookingGroupFingerprint.current !== fingerprint) {
+        bookingGroupId.current = globalThis.crypto?.randomUUID?.() || `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`
+        bookingGroupFingerprint.current = fingerprint
       }
-    } catch (err) {
-      if (savedCount) {
-        setSelectedSeats((current) => current.filter((seat) => !results.some((booking) => Number(booking.seat_number) === Number(seat))))
+      const data = await api.createBookings(token, { booking_group_id: bookingGroupId.current, ...submission })
+      const savedBookings = data.bookings || []
+      const savedSeatNumbers = new Set(savedBookings.map((booking) => String(booking.seat_number)))
+      const failed = data.failed || []
+      if (savedBookings.length && !failed.length) {
+        setSelectedSeats([])
+        setBookingForm(initialBookingForm(route))
+        bookingGroupId.current = ''
+        bookingGroupFingerprint.current = ''
+        setBookingError('')
+        setRefreshError('')
+        showMessage(`Bookings saved: ${savedBookings.map((booking) => booking.booking_ref).join(', ')}. SMS stays pending until confirmed in the customer log.`)
+      } else if (savedBookings.length) {
+        setSelectedSeats((current) => current.filter((seat) => !savedSeatNumbers.has(String(seat))))
+        setBookingError(`${savedBookings.length} seat booking${savedBookings.length === 1 ? '' : 's'} saved; ${failed.length} seat${failed.length === 1 ? '' : 's'} failed: ${failed.map((item) => item.message).join(' ')}`)
+      } else {
+        setBookingError(failed.map((item) => item.message).join(' ') || 'No seats were saved.')
+      }
+      if (savedBookings.length) {
         try {
           await Promise.all([loadBookings(), onSaved(trip)])
         } catch {
-          setRefreshError('Some bookings were saved, but the table could not be refreshed. Retry the refresh below.')
+          setRefreshError('Booking saved, but the table could not be refreshed. Retry the refresh below.')
         }
-        setBookingError(`${savedCount} seat booking${savedCount === 1 ? '' : 's'} saved; the remaining booking failed: ${err.message}`)
-      } else setBookingError(err.message)
+      }
+    } catch (err) {
+      setBookingError(err.data?.failed?.map((item) => item.message).join(' ') || err.message)
     } finally {
+      bookingSubmitInProgress.current = false
       setBookingSaving(false)
     }
   }
@@ -301,7 +312,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
             </div>
             <label><span>Notes</span><textarea value={bookingForm.note} onChange={(event) => setBookingForm((prev) => ({ ...prev, note: event.target.value }))} /></label>
             <div className="reservation-actions">
-              <button type="button" className="primary-button" disabled={bookingSaving} onClick={handleSaveBooking}>{bookingSaving ? 'Saving booking...' : 'Save Passenger booking'}</button>
+              <button type="button" className="primary-button" disabled={bookingSaving} onClick={handleSaveBooking}>{bookingSaving ? <><span className="booking-submit-spinner" aria-hidden="true" />Saving booking...</> : 'Save Passenger booking'}</button>
             </div>
           </div> : <div className="reservation-panel permission-notice">Passenger booking permission is disabled for your staff account.</div>}
 
