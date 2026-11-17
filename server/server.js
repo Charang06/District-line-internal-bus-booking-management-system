@@ -1684,10 +1684,12 @@ app.post('/api/admin/revenue-entries', authMiddleware, requirePageManage('accoun
   const tripId = req.body?.trip_id ? Number(req.body.trip_id) : null
   const seatRows = req.body?.seat_rows
   const cargoRows = req.body?.cargo_rows
+  const seatCapacity = req.body?.seat_capacity
 
   if (!isIsoCalendarDate(travelDate)) return res.status(400).json({ message: 'Enter a valid travel date.' })
   if (!ROUTES[routeCode]) return res.status(400).json({ message: 'Choose a valid corridor.' })
   if (!busNo || busNo.length > 40) return res.status(400).json({ message: 'Enter a bus number (up to 40 characters).' })
+  if (!Number.isSafeInteger(seatCapacity) || seatCapacity < 1 || seatCapacity > 1000) return res.status(400).json({ message: 'Enter a valid bus seat capacity between 1 and 1000.' })
   if (driverName.length > 80 || conductorName.length > 80) return res.status(400).json({ message: 'Driver and conductor names must be 80 characters or fewer.' })
   if (tripId !== null && (!Number.isSafeInteger(tripId) || tripId < 1)) return res.status(400).json({ message: 'Choose a valid trip.' })
   if (!Array.isArray(seatRows) || seatRows.length < 4) return res.status(400).json({ message: 'Enter all four seat fare categories.' })
@@ -1700,7 +1702,7 @@ app.post('/api/admin/revenue-entries', authMiddleware, requirePageManage('accoun
     }
   }
 
-  const normalizedSeatRows = normalizeRevenueSeatRows(seatRows)
+  const normalizedSeatRows = normalizeRevenueSeatRows(seatRows, seatCapacity)
   if (normalizedSeatRows.error) return res.status(400).json({ message: normalizedSeatRows.error })
   const cleanSeatRows = normalizedSeatRows.rows
   const seatCount = normalizedSeatRows.seatCount
@@ -2516,13 +2518,108 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
     trip_id, seat_number, passenger_name, contact, gender, boarding_point, destination, fare, notes, payment_status, booking_group_id,
   } = req.body || {}
   const seat = padSeat(seat_number)
-  if (!trip_id || !VALID_SEATS.has(seat)) return res.status(400).json({ message: 'Valid trip and seat number are required' })
+  const isBulkBooking = Array.isArray(req.body?.seat_numbers)
+  if (!trip_id || (!isBulkBooking && !VALID_SEATS.has(seat))) return res.status(400).json({ message: 'Valid trip and seat number are required' })
   const passengerName = String(passenger_name || '').trim()
   const contactNumber = String(contact || '').trim()
   if (!passengerName && !contactNumber) return res.status(400).json({ message: 'Enter a passenger name or mobile number.' })
   if (contactNumber && !isValidPhone(contactNumber)) return res.status(400).json({ message: 'Enter a valid customer contact number' })
   if (fare === undefined || fare === null || Number(fare) < 0 || Number.isNaN(Number(fare))) {
     return res.status(400).json({ message: 'Staff must enter a valid fare' })
+  }
+
+  // Multi-seat entry uses the existing endpoint and preserves its partial-success
+  // contract: unavailable seats are reported individually while available seats
+  // are inserted together with one transaction and one authorization pass.
+  if (isBulkBooking) {
+    const requestedSeats = req.body.seat_numbers.map(padSeat)
+    if (!requestedSeats.length || requestedSeats.length > VALID_SEATS.size || requestedSeats.some(value => !VALID_SEATS.has(value))) {
+      return res.status(400).json({ message: 'Choose between 1 and 49 valid seats.' })
+    }
+    if (new Set(requestedSeats).size !== requestedSeats.length) return res.status(400).json({ message: 'A seat can only be included once per booking.' })
+    const groupId = String(booking_group_id || '').trim()
+    if (!groupId || groupId.length > 100) return res.status(400).json({ message: 'A valid booking group is required.' })
+    const normalizedContact = normalizePhone(contactNumber)
+    const normalizedFare = Number(fare)
+    const paymentStatus = payment_status || 'unpaid'
+    const normalizedGender = String(gender || '')
+    const boardingPoint = String(boarding_point || '')
+    const destinationPoint = String(destination || '')
+    const bookingNotes = String(notes || '')
+
+    try {
+      await exec('BEGIN IMMEDIATE')
+      const trip = await get(`${tripJoinSelect()} WHERE t.id = ?`, [trip_id])
+      if (!trip || trip.status === 'cancelled') {
+        await exec('ROLLBACK')
+        return res.status(400).json({ message: 'Trip is not available for booking' })
+      }
+      const finalizedDuty = await get(`SELECT duty_code FROM bus_duties WHERE status = 'finalized' AND (first_trip_id = ? OR return_trip_id = ?) LIMIT 1`, [trip.id, trip.id])
+      if (finalizedDuty) {
+        await exec('ROLLBACK')
+        return res.status(409).json({ message: `Bookings cannot be added to finalized duty ${finalizedDuty.duty_code}.` })
+      }
+
+      const previous = await all("SELECT * FROM bookings WHERE booking_group_id = ? AND trip_id = ? AND created_by = ? AND seat_number = ANY(?) AND status = 'confirmed'", [groupId, trip.id, req.user.id, requestedSeats])
+      if (previous.some(booking => booking.passenger_name !== passengerName || booking.contact !== normalizedContact
+        || booking.gender !== normalizedGender || booking.boarding_point !== boardingPoint || booking.destination !== destinationPoint
+        || Number(booking.fare) !== normalizedFare || (booking.notes || '') !== bookingNotes)) {
+        await exec('ROLLBACK')
+        return res.status(409).json({ message: 'This booking group was already used with different passenger details.' })
+      }
+      const alreadySavedSeats = new Set(previous.map(booking => booking.seat_number))
+      const seatsToInsert = requestedSeats.filter(value => !alreadySavedSeats.has(value))
+      const params = []
+      const valueRows = seatsToInsert.map(seatValue => {
+        const bookingRef = `DL-P-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`
+        params.push(bookingRef, groupId, trip.id, seatValue, passengerName, normalizedContact, normalizedGender,
+          boardingPoint, destinationPoint, normalizedFare, paymentStatus, bookingNotes, req.user.id)
+        return `(${Array.from({ length: 12 }, () => '?').join(', ')}, 'confirmed', 'unconfirmed', 'pending', ?)`
+      })
+      let inserted = []
+      if (valueRows.length) {
+        inserted = (await all(`
+          INSERT INTO bookings (booking_ref, booking_group_id, trip_id, seat_number, passenger_name, contact, gender, boarding_point, destination, fare, payment_status, notes, status, confirmation_status, sms_status, created_by)
+          VALUES ${valueRows.join(', ')}
+          ON CONFLICT (trip_id, seat_number) WHERE status = 'confirmed' DO NOTHING
+          RETURNING id, seat_number, booking_ref
+        `, params))
+      }
+      const savedBookings = await all(
+        `SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no
+         FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id
+         WHERE bk.booking_group_id = ? AND bk.trip_id = ? AND bk.created_by = ? AND bk.seat_number = ANY(?) AND bk.status = 'confirmed'`,
+        [groupId, trip.id, req.user.id, requestedSeats],
+      )
+      if (savedBookings.some(booking => booking.passenger_name !== passengerName || booking.contact !== normalizedContact
+        || booking.gender !== normalizedGender || booking.boarding_point !== boardingPoint || booking.destination !== destinationPoint
+        || Number(booking.fare) !== normalizedFare || (booking.notes || '') !== bookingNotes)) {
+        await exec('ROLLBACK')
+        return res.status(409).json({ message: 'This booking group was already used with different passenger details.' })
+      }
+      if (inserted.length) {
+        const auditParams = []
+        const auditRows = inserted.map(booking => {
+          auditParams.push(req.user.id, 'booking.create', 'booking', String(booking.id), booking.booking_ref)
+          return '(?, ?, ?, ?, ?)'
+        })
+        await run(`INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details) VALUES ${auditRows.join(', ')}`, auditParams)
+      }
+      await exec('COMMIT')
+
+      const savedBySeat = new Map(savedBookings.map(booking => [booking.seat_number, booking]))
+      const bookings = requestedSeats.filter(value => savedBySeat.has(value)).map(value => savedBySeat.get(value))
+      const failed = requestedSeats.filter(value => !savedBySeat.has(value)).map(value => ({ seat_number: value, message: `Seat ${value} is already booked on this trip.` }))
+      return res.status(bookings.length ? 201 : 409).json({
+        bookings,
+        failed,
+        ...(bookings.length ? {} : { message: failed.map(item => item.message).join(' ') || 'No seats were saved.' }),
+      })
+    } catch (error) {
+      try { await exec('ROLLBACK') } catch { /* ignore */ }
+      console.error(error)
+      return res.status(500).json({ message: 'Failed to save booking' })
+    }
   }
 
   try {
@@ -2610,15 +2707,52 @@ app.patch('/api/bookings/:id/confirmation', authMiddleware, requirePageManage('l
   if (!['confirmed', 'unconfirmed'].includes(confirmationStatus)) {
     return res.status(400).json({ message: 'Choose confirmed or unconfirmed status.' })
   }
-  const booking = await get('SELECT * FROM bookings WHERE id = ?', [req.params.id])
-  if (!booking) return res.status(404).json({ message: 'Passenger booking not found.' })
-  if (booking.status === 'cancelled') return res.status(400).json({ message: 'Cancelled bookings cannot be confirmed.' })
-  const finalizedDuty = await get(`SELECT d.duty_code FROM bus_duties d WHERE d.status = 'finalized' AND (d.first_trip_id = ? OR d.return_trip_id = ?) LIMIT 1`, [booking.trip_id, booking.trip_id])
-  if (finalizedDuty) return res.status(409).json({ message: `Booking is part of finalized duty ${finalizedDuty.duty_code} and cannot be changed.` })
-  await run('UPDATE bookings SET confirmation_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [confirmationStatus, booking.id])
-  const updated = await get('SELECT * FROM bookings WHERE id = ?', [booking.id])
-  await audit(req.user, 'booking.confirmation.update', 'booking', booking.id, confirmationStatus)
-  res.json({ booking: updated })
+  const isGroupUpdate = Array.isArray(req.body?.booking_ids)
+  const bookingIds = isGroupUpdate ? req.body.booking_ids : [Number(req.params.id)]
+  const pathBookingId = Number(req.params.id)
+  if (!bookingIds.length || bookingIds.length > 49
+    || bookingIds.some(id => !Number.isSafeInteger(id) || id < 1)
+    || new Set(bookingIds).size !== bookingIds.length
+    || !bookingIds.includes(pathBookingId)) {
+    return res.status(400).json({ message: 'Choose valid passenger seat records.' })
+  }
+
+  try {
+    await exec('BEGIN IMMEDIATE')
+    const bookings = await all('SELECT * FROM bookings WHERE id = ANY(?) ORDER BY id FOR UPDATE', [bookingIds])
+    if (bookings.length !== bookingIds.length) {
+      await exec('ROLLBACK')
+      return res.status(404).json({ message: 'Passenger booking not found.' })
+    }
+    if (bookings.some(booking => booking.status === 'cancelled')) {
+      await exec('ROLLBACK')
+      return res.status(400).json({ message: 'Cancelled bookings cannot be confirmed.' })
+    }
+    const firstBooking = bookings[0]
+    if (isGroupUpdate && bookings.length > 1 && (!firstBooking.booking_group_id
+      || bookings.some(booking => booking.trip_id !== firstBooking.trip_id || booking.booking_group_id !== firstBooking.booking_group_id))) {
+      await exec('ROLLBACK')
+      return res.status(400).json({ message: 'Choose seats from one passenger booking group.' })
+    }
+    const finalizedDuty = await get(`SELECT d.duty_code FROM bus_duties d WHERE d.status = 'finalized' AND (d.first_trip_id = ? OR d.return_trip_id = ?) LIMIT 1`, [firstBooking.trip_id, firstBooking.trip_id])
+    if (finalizedDuty) {
+      await exec('ROLLBACK')
+      return res.status(409).json({ message: `Booking is part of finalized duty ${finalizedDuty.duty_code} and cannot be changed.` })
+    }
+    const updated = await all('UPDATE bookings SET confirmation_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ANY(?) AND status = \'confirmed\' RETURNING *', [confirmationStatus, bookingIds])
+    const auditParams = []
+    const auditRows = updated.map(booking => {
+      auditParams.push(req.user.id, 'booking.confirmation.update', 'booking', String(booking.id), confirmationStatus)
+      return '(?, ?, ?, ?, ?)'
+    })
+    await run(`INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details) VALUES ${auditRows.join(', ')}`, auditParams)
+    await exec('COMMIT')
+    return isGroupUpdate ? res.json({ bookings: updated }) : res.json({ booking: updated[0] })
+  } catch (error) {
+    try { await exec('ROLLBACK') } catch { /* ignore */ }
+    console.error(error)
+    return res.status(500).json({ message: 'Could not update booking confirmation.' })
+  }
 })
 
 app.patch('/api/bookings/:id/contact', authMiddleware, requireAnyPageManage(['log', 'customers'], 'passengers'), async (req, res) => {

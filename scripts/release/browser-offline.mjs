@@ -51,7 +51,7 @@ function fixture(mode){
   else if(p==='/api/admin/staff')data={staff:[]}
   else if(p==='/api/bookings'){
    if(m==='GET')data={bookings:window.__bookings}
-   else {const body=JSON.parse(options.body);const booking={...body,id:701,booking_ref:'BOOK-SYN',status:'confirmed',confirmation_status:'unconfirmed',sms_status:'pending',created_at:'2026-11-12T00:00:00Z',travel_date:date,route_code:'KTY_CMB',route_label:'Synthetic corridor',registration_no:'SYN-BUS'};window.__bookings.push(booking);data={booking}}
+   else {const body=JSON.parse(options.body);const seats=Array.isArray(body.seat_numbers)?body.seat_numbers:[body.seat_number];const bookings=seats.map((seat,index)=>{const booking={...body,seat_number:seat,id:701+window.__bookings.length+index,booking_ref:'BOOK-SYN-'+seat,status:'confirmed',confirmation_status:'unconfirmed',sms_status:'pending',created_at:'2026-11-12T00:00:00Z',travel_date:date,route_code:'KTY_CMB',route_label:'Synthetic corridor',registration_no:'SYN-BUS'};window.__bookings.push(booking);return booking});data=Array.isArray(body.seat_numbers)?{bookings,failed:[]}:{booking:bookings[0]}}
   }
   else if(p==='/api/cargo')data={cargo:[]}
   else if(p==='/api/admin/revenue-entries'){

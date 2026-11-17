@@ -39,6 +39,30 @@ export async function loadBookingTestApp(pool, testOptions = {}) {
     RECOVERY_EMAIL_FROM: 'security@example.test', ENABLE_ADMIN_USERNAME_RECOVERY: 'true',
     ENABLE_ADMIN_RECOVERY_EMAIL_VERIFICATION: 'true',
   })
+  let failBookingAuditOnce = Boolean(testOptions.failBookingAuditOnce)
+  const testPool = failBookingAuditOnce ? new Proxy(pool, {
+    get(target, property) {
+      if (property === 'connect') return async () => {
+        const client = await target.connect()
+        return new Proxy(client, {
+          get(clientTarget, clientProperty) {
+            if (clientProperty === 'query') return async (sql, params) => {
+              const statement = typeof sql === 'string' ? sql : sql?.text || ''
+              if (failBookingAuditOnce && /INSERT INTO audit_logs/i.test(statement) && params?.includes('booking.create')) {
+                failBookingAuditOnce = false
+                throw new Error('Synthetic booking audit failure')
+              }
+              return clientTarget.query(sql, params)
+            }
+            const value = Reflect.get(clientTarget, clientProperty, clientTarget)
+            return typeof value === 'function' ? value.bind(clientTarget) : value
+          },
+        })
+      }
+      const value = Reflect.get(target, property, target)
+      return typeof value === 'function' ? value.bind(target) : value
+    },
+  }) : pool
   for (const key of ['ADMIN_MFA_MODE', 'ADMIN_MFA_ENCRYPTION_KEY', 'ENABLE_LOGIN_RATE_LIMIT', 'LOGIN_RATE_LIMIT_KEY']) {
     if (testOptions.securityEnv?.[key] !== undefined) safeEnv[key] = testOptions.securityEnv[key]
   }
@@ -60,7 +84,7 @@ export async function loadBookingTestApp(pool, testOptions = {}) {
   }, { context })
   await module.link(async specifier => {
     if (specifier === './env.js') return synthetic({ loadEnv() {} }) // never reads repo .env
-    if (specifier === 'pg') return synthetic({ default: { Pool: class { constructor() { return pool } } } })
+    if (specifier === 'pg') return synthetic({ default: { Pool: class { constructor() { return testPool } } } })
     if (specifier === 'fs') return synthetic({ default: { ...fs, mkdirSync() {} } })
     const url = specifier.startsWith('.') ? new URL(specifier, entry).href : specifier
     const namespace = { ...await import(url) }

@@ -2,10 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeRevenueSeatRows, DEFAULT_REVENUE_SEAT_CATEGORIES } from './revenue-seat-rows.js'
 const rows = (count=0, amount=0) => DEFAULT_REVENUE_SEAT_CATEGORIES.map((category,index)=>({category,count:index===0?count:0,amount:index===0?amount:0}))
-test('production manual revenue accepts four canonical rows and the 49-seat boundary',()=>{
+test('manual revenue uses the supplied capacity and defaults to the 49-seat boundary',()=>{
   const result=normalizeRevenueSeatRows(rows(49,100000000))
   assert.equal(result.seatCount,49);assert.equal(result.subtotal,4900000000)
   assert.deepEqual(result.rows.map(r=>r.category),DEFAULT_REVENUE_SEAT_CATEGORIES)
+  assert.equal(normalizeRevenueSeatRows(rows(80,1),80).seatCount,80)
+  assert.match(normalizeRevenueSeatRows(rows(81,1),80).error,/80-seat/)
   const relabeled=rows(2,100);relabeled[0].category='custom label'
   assert.equal(normalizeRevenueSeatRows(relabeled).rows[0].category,'Standard')
 })

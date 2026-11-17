@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { ROUTES } from '../data/seatLayout'
-import { calculateRevenueSeatRows, createDefaultRevenueSeatRows, MAX_EXTRA_REVENUE_SEAT_ROWS, MAX_REVENUE_SEAT_ROW_COUNT, REVENUE_SEAT_CATEGORIES } from '../data/revenueSeatRows'
+import { calculateRevenueSeatRows, createDefaultRevenueSeatRows, MAX_EXTRA_REVENUE_SEAT_ROWS, REVENUE_SEAT_CATEGORIES } from '../data/revenueSeatRows'
 import './AccountsRevenue.css'
 import './AccountsExpense.css'
 
@@ -59,7 +59,10 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
   const staffNames = [...new Set((data.crewMembers || []).filter((member) => member.role === 'driver').map((member) => String(member.full_name || '').trim()).filter(Boolean))]
   const conductorNames = [...new Set((data.crewMembers || []).filter((member) => member.role === 'conductor').map((member) => String(member.full_name || '').trim()).filter(Boolean))]
   const selectedTrip = trips.find((trip) => String(trip.registration_no || trip.bus_no || '') === String(busNo))
-  const { seatCount, seatTotals, seatSubtotal, validationError: seatError } = calculateRevenueSeatRows(seatRows)
+  const seatCapacity = Number(revenueSeatCount)
+  const validSeatCapacity = Number.isSafeInteger(seatCapacity) && seatCapacity >= 1 && seatCapacity <= 1000
+  const { seatCount, seatTotals, seatSubtotal, validationError: seatError } = calculateRevenueSeatRows(seatRows, validSeatCapacity ? seatCapacity : 0)
+  const capacityError = validSeatCapacity ? '' : 'Enter the bus seat capacity (1–1000) before submitting.'
   const cargoSubtotal = cargoRows.reduce((sum, row) => sum + (Number(row.amount) || 0), 0)
   const totalRevenue = seatSubtotal + cargoSubtotal
   const resetRouteForm = () => {
@@ -99,13 +102,14 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
   const submit = async (event) => {
     event.preventDefault()
     if (submitInProgress.current) return
+    if (!validSeatCapacity) return showMessage(capacityError, true)
     if (seatError) return showMessage(seatError, true)
     submitInProgress.current = true
     setSaving(true)
     try {
       const result = await api.createRevenueEntry(token, {
         travel_date: date, route_code: route.code, trip_id: selectedTrip?.id || null, bus_no: busNo,
-        driver_name: driverName, conductor_name: conductorName,
+        seat_capacity: seatCapacity,
         seat_rows: seatRows.map((row) => ({ category: row.category, count: Number(row.count), amount: Number(row.amount) })),
         cargo_rows: cargoRows.map((row) => ({ description: row.description, tag: row.tag, amount: Number(row.amount) || 0 })),
       })
@@ -124,13 +128,13 @@ function RevenueRouteForm({ route, data, token, showMessage, onSaved, onPrint, k
       <label>Bus number<select required value={busNo} onChange={(event) => setBusNo(event.target.value)}><option value="">Select a registered bus</option>{knownBusNumbers.map((number) => <option key={number} value={number}>{number}</option>)}</select></label>
       <label>Driver<select value={driverName} onChange={(event) => setDriverName(event.target.value)}><option value="">Select a registered driver</option>{staffNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
       <label>Conductor<select value={conductorName} onChange={(event) => setConductorName(event.target.value)}><option value="">Select a registered conductor</option>{conductorNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
-      <label className="accounts-revenue-seat-count-field">No. of seats<input type="number" min="0" step="1" value={revenueSeatCount} onChange={(event) => setRevenueSeatCount(event.target.value)} /></label>
+      <label className="accounts-revenue-seat-count-field">No. of seats<input required type="number" min="1" max="1000" step="1" value={revenueSeatCount} onChange={(event) => setRevenueSeatCount(event.target.value)} /></label>
     </div>
     <div className="accounts-revenue-columns">
-      <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="seats" />Revenue from Seats</h2><p>Enter passenger counts and fares. Extra fare rows are recorded under Agent / Extra.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap" role="region" aria-label="Revenue by seat category" tabIndex={0}><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => { const isExtraRow = index >= REVENUE_SEAT_CATEGORIES.length; const rowLabel = isExtraRow ? row.rowLabel || `Extra row ${index - REVENUE_SEAT_CATEGORIES.length + 1}` : row.category; return <tr key={isExtraRow ? row.rowId : row.category}><td className={`accounts-seat-count-cell${isExtraRow ? ' has-extra' : ''}`}>{isExtraRow && <span>{rowLabel}</span>}<input aria-label={`${route.label} ${rowLabel} number of seats`} type="number" min="0" max={MAX_REVENUE_SEAT_ROW_COUNT} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} />{isExtraRow && <button type="button" className="accounts-remove-row accounts-seat-remove" aria-label={`Remove ${rowLabel}`} onClick={() => removeExtraSeatRow(row.rowId)}>×</button>}</td><td><input aria-label={`${route.label} ${rowLabel} fare amount`} type="number" min="0" max="100000000" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>})}</tbody></table></div><button type="button" className="accounts-add-row accounts-seat-add-row" onClick={addSeatRow} disabled={saving || seatRows.length >= REVENUE_SEAT_CATEGORIES.length + MAX_EXTRA_REVENUE_SEAT_ROWS}>+ Add Extra Row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div>{seatError && <p className="accounts-seat-policy-note">{seatError}</p>}</section>
+      <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="seats" />Revenue from Seats</h2><p>Enter passenger counts and fares. Extra fare rows are recorded under Agent / Extra.</p></div><span>PASS-MANIFEST</span></div><div className="daily-revenue-table-wrap" role="region" aria-label="Revenue by seat category" tabIndex={0}><table className="accounts-seat-table"><thead><tr><th>Number of seats</th><th>Amount (Rs.)</th><th>Total (Rs.)</th></tr></thead><tbody>{seatRows.map((row, index) => { const isExtraRow = index >= REVENUE_SEAT_CATEGORIES.length; const rowLabel = isExtraRow ? row.rowLabel || `Extra row ${index - REVENUE_SEAT_CATEGORIES.length + 1}` : row.category; return <tr key={isExtraRow ? row.rowId : row.category}><td className={`accounts-seat-count-cell${isExtraRow ? ' has-extra' : ''}`}>{isExtraRow && <span>{rowLabel}</span>}<input aria-label={`${route.label} ${rowLabel} number of seats`} type="number" min="0" max={validSeatCapacity ? seatCapacity : 1000} step="1" value={row.count} onChange={(event) => updateSeat(index, 'count', event.target.value)} />{isExtraRow && <button type="button" className="accounts-remove-row accounts-seat-remove" aria-label={`Remove ${rowLabel}`} onClick={() => removeExtraSeatRow(row.rowId)}>×</button>}</td><td><input aria-label={`${route.label} ${rowLabel} fare amount`} type="number" min="0" max="100000000" step="1" value={row.amount} onChange={(event) => updateSeat(index, 'amount', event.target.value)} /></td><td>{money(seatTotals[index])}</td></tr>})}</tbody></table></div><button type="button" className="accounts-add-row accounts-seat-add-row" onClick={addSeatRow} disabled={saving || seatRows.length >= REVENUE_SEAT_CATEGORIES.length + MAX_EXTRA_REVENUE_SEAT_ROWS}>+ Add Extra Row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(seatSubtotal)}</strong></div>{(capacityError || seatError) && <p className="accounts-seat-policy-note">{capacityError || seatError}</p>}</section>
       <section className="content-card accounts-revenue-panel accounts-expense-items-card"><div className="accounts-expense-items-heading"><div><h2><RevenueIcon name="cargo" />Revenue from Cargo</h2><p>Luggage and waybill charges for this trip.</p></div><span>LUGGAGE &amp; WAYBILLS</span></div>{cargoRows.length > 0 ? <div className="daily-revenue-table-wrap" role="region" aria-label="Revenue from cargo" tabIndex={0}><table className="accounts-cargo-table"><thead><tr><th>Description</th><th>Amount (Rs.)</th></tr></thead><tbody>{cargoRows.map((row, index) => <tr key={`cargo-${index}`}><td className="accounts-cargo-description"><input aria-label={`${route.label} cargo description`} maxLength="120" required={Number(row.amount) > 0} value={row.description} onChange={(event) => updateCargo(index, 'description', event.target.value)} />{row.tag ? <span className="accounts-cargo-tag">{row.tag}</span> : null}<button type="button" className="accounts-remove-row" aria-label={`Remove ${row.description || 'cargo'} row`} onClick={() => setCargoRows((rows) => rows.filter((_, rowIndex) => rowIndex !== index))}>×</button></td><td><input aria-label={`${route.label} cargo amount`} type="number" min="0" step="1" value={row.amount} onChange={(event) => updateCargo(index, 'amount', event.target.value)} /></td></tr>)}</tbody></table></div> : <p className="accounts-cargo-empty">No cargo entries for this trip.</p>}<button type="button" className="accounts-add-row" onClick={() => setCargoRows((rows) => rows.length < 30 ? [...rows, { description: '', tag: '', amount: '0' }] : rows)}>+ Add custom cargo row</button><div className="accounts-subtotal"><span>Subtotal</span><strong>{money(cargoSubtotal)}</strong></div></section>
     </div>
-    <section className="content-card accounts-total-card"><div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong></div><div className="accounts-total-controls"><div className="accounts-draft-status"><strong>Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div><button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || Boolean(seatError)}><RevenueIcon name="lock" />{saving ? 'Saving revenue entry...' : 'Submit & Lock Revenue Entry'}</button>{seatCount === 0 && cargoRows.length === 0 && <span className="accounts-submit-hint">No seat or cargo revenue entered. You can still submit this entry.</span>}</div></section>
+    <section className="content-card accounts-total-card"><div className="accounts-total-main"><span className="accounts-currency-badge">LKR</span><div><span>GROSS SETTLEMENT AMOUNT</span><h2>Total Revenue</h2></div><strong>{money(totalRevenue)}</strong></div><div className="accounts-total-controls"><div className="accounts-draft-status"><strong>Status: Draft / Unreconciled</strong><span>Pending Station Master verification</span></div><button type="submit" className="primary-button accounts-lock-submit" disabled={saving || !busNo.trim() || !validSeatCapacity || Boolean(seatError)}><RevenueIcon name="lock" />{saving ? 'Saving revenue entry...' : 'Submit & Lock Revenue Entry'}</button>{seatCount === 0 && cargoRows.length === 0 && <span className="accounts-submit-hint">No seat or cargo revenue entered. You can still submit this entry.</span>}</div></section>
     </section>
   </form>
 }
@@ -504,9 +508,16 @@ export default function AccountsRevenue({ data, token, showMessage, onPrint, onR
             <button type="button" className={revenuePeriod === 'month' ? 'active' : ''} onClick={() => setRevenuePeriod('month')}>Last month</button>
           </div>
         </div>
-        <div className="daily-revenue-table-wrap" role="region" aria-label="Revenue submissions" tabIndex={0}><table><thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver / Conductor</th><th>Seat Revenue</th><th>Cargo Revenue</th><th>Total Revenue</th></tr></thead><tbody>
-          {filteredRevenueEntries.map((entry) => <tr key={entry.id}><td>{entry.travel_date}</td><td>{entry.bus_no}</td><td>{entry.route_label}</td><td>{entry.driver_name || '-'} / {entry.conductor_name || '-'}</td><td>{money(entry.seat_subtotal)}</td><td>{money(entry.cargo_subtotal)}</td><td><strong>{money(entry.total_revenue)}</strong></td></tr>)}
-          {!loadingEntries && !filteredRevenueEntries.length && <tr><td colSpan="7" className="daily-revenue-empty">{entries.length ? 'No revenue submissions match these filters.' : 'No manual revenue submissions yet.'}</td></tr>}
+        <div className="daily-revenue-table-wrap" role="region" aria-label="Revenue submissions" tabIndex={0}><table><thead><tr><th>Date</th><th>Bus No</th><th>Route</th><th>Driver / Conductor</th><th>No. of Seats</th><th>Seat Revenue</th><th>Cargo Revenue</th><th>Total Revenue</th></tr></thead><tbody>
+          {filteredRevenueEntries.map((entry) => {
+            let seatRows = entry.seat_rows_json
+            if (typeof seatRows === 'string') {
+              try { seatRows = JSON.parse(seatRows) } catch { seatRows = [] }
+            }
+            const seatCount = Array.isArray(seatRows) ? seatRows.reduce((sum, row) => sum + (Number(row?.count) || 0), 0) : 0
+            return <tr key={entry.id}><td>{entry.travel_date}</td><td>{entry.bus_no}</td><td>{entry.route_label}</td><td>{entry.driver_name || '-'} / {entry.conductor_name || '-'}</td><td>{seatCount}</td><td>{money(entry.seat_subtotal)}</td><td>{money(entry.cargo_subtotal)}</td><td><strong>{money(entry.total_revenue)}</strong></td></tr>
+          })}
+          {!loadingEntries && !filteredRevenueEntries.length && <tr><td colSpan="8" className="daily-revenue-empty">{entries.length ? 'No revenue submissions match these filters.' : 'No manual revenue submissions yet.'}</td></tr>}
         </tbody></table></div>
       </section>
       </div>

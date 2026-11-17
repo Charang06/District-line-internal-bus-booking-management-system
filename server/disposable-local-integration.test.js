@@ -75,7 +75,48 @@ test('real disposable local PostgreSQL: schema, booking conflicts, finance, perm
   const conflicts=await Promise.allSettled(racers.map(r=>r.request('POST','/api/bookings',{...payload,seat_number:'02'},201)))
   assert.equal(conflicts.filter(r=>r.status==='fulfilled').length,1)
   assert.equal(conflicts.filter(r=>r.status==='rejected'&&r.reason.message.endsWith('(409)')).length,1)
+  const bulkConflicts=await Promise.allSettled(racers.map((r,index)=>r.request('POST','/api/bookings',{
+   ...payload,booking_group_id:'synthetic-race-'+index+'-'+fixture.suffix,seat_numbers:['07'],
+  },201)))
+  assert.equal(bulkConflicts.filter(r=>r.status==='fulfilled'&&r.value.bookings.length===1).length,1)
+  assert.equal(bulkConflicts.filter(r=>r.status==='rejected'&&r.reason.message.endsWith('(409)')).length,1)
  } finally {await Promise.all(racers.map(r=>r.close()))}
+ const partialGroup='synthetic-partial-'+fixture.suffix
+ await request('POST','/api/bookings',{...payload,seat_number:'03'},201)
+ const partial=(await request('POST','/api/bookings',{...payload,booking_group_id:partialGroup,seat_numbers:['03','04','05']},201))
+ assert.deepEqual(partial.failed.map(row=>row.seat_number),['03'])
+ assert.deepEqual(partial.bookings.map(row=>row.seat_number),['04','05'])
+ const retry=(await request('POST','/api/bookings',{...payload,booking_group_id:partialGroup,seat_numbers:['04','05']},201))
+ assert.deepEqual(retry.bookings.map(row=>row.id),partial.bookings.map(row=>row.id))
+ await request('POST','/api/bookings/'+retry.bookings[0].id+'/cancel',{})
+ const rebook=(await request('POST','/api/bookings',{...payload,booking_group_id:'synthetic-rebook-'+fixture.suffix,seat_numbers:[retry.bookings[0].seat_number]},201))
+ assert.equal(rebook.bookings.length,1)
+ await request('POST','/api/bookings',{...payload,booking_group_id:'synthetic-duplicate-'+fixture.suffix,seat_numbers:['06','06']},400)
+ const rollbackApp=await serveBookingTestApp(pool,{failBookingAuditOnce:true})
+ try {
+  await rollbackApp.request('POST','/api/login',{username:fixture.admin.username,password:fixture.password})
+  await rollbackApp.request('POST','/api/bookings',{...payload,booking_group_id:'synthetic-rollback-'+fixture.suffix,seat_numbers:['08','09']},500)
+  const afterRollback=await request('GET','/api/trips/'+first.id)
+  assert.ok(!afterRollback.bookings.some(booking=>['08','09'].includes(booking.seat_number)&&booking.status==='confirmed'))
+ } finally {await rollbackApp.close()}
+
+ // Compare the pre-change sequential request pattern with the optimized bulk
+ // request against separate synthetic trips and the same disposable database.
+ const beforeTrip=await createTrip('2026-02-03','KTY_CMB'),afterTrip=await createTrip('2026-02-04','KTY_CMB')
+ const timingRows=[]
+ for(const count of [1,5,10,20]) {
+  const seats=Array.from({length:count},(_,index)=>String(index+1).padStart(2,'0'))
+  const legacyStart=performance.now()
+  for(const seat_number of seats) await request('POST','/api/bookings',{...payload,trip_id:beforeTrip.id,seat_number},201)
+  const legacyMs=performance.now()-legacyStart
+  const bulkStart=performance.now()
+  const batch=await request('POST','/api/bookings',{...payload,trip_id:afterTrip.id,booking_group_id:`synthetic-benchmark-${fixture.suffix}-${count}`,seat_numbers:seats},201)
+  const bulkMs=performance.now()-bulkStart
+  assert.equal(batch.bookings.length,count)
+  assert.equal(batch.failed.length,0)
+  timingRows.push({seats:count,sequentialMs:Number(legacyMs.toFixed(1)),bulkMs:Number(bulkMs.toFixed(1))})
+ }
+ t.diagnostic('synthetic PostgreSQL booking timings '+JSON.stringify(timingRows))
  const revenue={travel_date:first.travel_date,route_code:first.route_code,bus_no:bus.registration_no,seat_rows:[{count:47,amount:10},...Array.from({length:3},()=>({count:0,amount:0})),{category:'Agent / Extra',count:2,amount:75}],cargo_rows:[{description:'Synthetic cargo',amount:25}]}
  const saved=(await request('POST','/api/admin/revenue-entries',revenue,201)).entry
  assert.equal(saved.status,'locked');assert.equal(Number(saved.total_revenue),645)

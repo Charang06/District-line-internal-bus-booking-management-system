@@ -4906,6 +4906,20 @@ label span {
   margin: 8px 10px 10px;
 }
 
+.booking-submit-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 7px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  vertical-align: -2px;
+  animation: booking-submit-spin .7s linear infinite;
+}
+
+@keyframes booking-submit-spin { to { transform: rotate(360deg); } }
+
 .primary-button {
   border-radius: 4px;
   background: #cda05f;

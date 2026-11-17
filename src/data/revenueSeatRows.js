@@ -1,7 +1,5 @@
-import { SEAT_LAYOUT } from './seatLayout.js'
-
 export const REVENUE_SEAT_CATEGORIES = Object.freeze(['Standard', 'Intermediate', 'Special', 'Agent / Extra'])
-export const MAX_REVENUE_SEAT_ROW_COUNT = SEAT_LAYOUT.totalSeats
+export const MAX_REVENUE_SEAT_ROW_COUNT = 1000000000
 export const MAX_EXTRA_REVENUE_SEAT_ROWS = 30
 
 export function createDefaultRevenueSeatRows(savedRows) {
@@ -19,7 +17,8 @@ export function createDefaultRevenueSeatRows(savedRows) {
   return REVENUE_SEAT_CATEGORIES.map(category => ({ category, count: '0', amount: '0' }))
 }
 
-export function calculateRevenueSeatRows(rows) {
+export function calculateRevenueSeatRows(rows, capacity = MAX_REVENUE_SEAT_ROW_COUNT) {
+  const maxCapacity = Number(capacity)
   const seatTotals = rows.map(row => (Number(row?.count) || 0) * (Number(row?.amount) || 0))
   const seatCount = rows.reduce((sum, row) => sum + (Number(row?.count) || 0), 0)
   const seatSubtotal = seatTotals.reduce((sum, value) => sum + value, 0)
@@ -35,12 +34,12 @@ export function calculateRevenueSeatRows(rows) {
         validationError = 'Additional fare rows must use the approved Agent / Extra category.'
         break
       }
-      if (!Number.isSafeInteger(count) || count < 0 || count > MAX_REVENUE_SEAT_ROW_COUNT || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
+      if (!Number.isSafeInteger(count) || count < 0 || count > 1000000000 || !Number.isSafeInteger(amount) || amount < 0 || amount > 100000000) {
         validationError = 'Enter a valid seat count and whole-rupee amount for ' + category + '.'
         break
       }
     }
-    if (!validationError && seatCount > MAX_REVENUE_SEAT_ROW_COUNT) validationError = 'Seat counts cannot exceed the 49-seat bus capacity.'
+    if (!validationError && seatCount > maxCapacity) validationError = `Seat counts cannot exceed the ${maxCapacity}-seat capacity entered above.`
   }
   return { seatTotals, seatCount, seatSubtotal, validationError }
 }

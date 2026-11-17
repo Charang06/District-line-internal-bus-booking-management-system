@@ -26,7 +26,7 @@ async function runRoute(source,body){
 }
 test('manual revenue API matches production validation, totals, persistence and locking with mocked storage',async()=>{
  const rows=(count=1,amount=100)=>[{count,amount},...Array.from({length:3},()=>({count:0,amount:0}))]
- const body={travel_date:'2026-11-12',route_code:'KTY_CMB',bus_no:'SYNTHETIC',seat_rows:rows(),cargo_rows:[]}
+ const body={travel_date:'2026-11-12',route_code:'KTY_CMB',bus_no:'SYNTHETIC',seat_capacity:49,seat_rows:rows(),cargo_rows:[]}
  const cases=[body,{...body,seat_rows:rows(49,100000000)},{...body,seat_rows:rows(50)},{...body,seat_rows:[{count:25,amount:1},{count:25,amount:1},{count:0,amount:0},{count:0,amount:0}]},
  {...body,seat_rows:rows(1,1.5)},{...body,seat_rows:rows(1,100000001)},{...body,seat_rows:rows(1.5)},
  {...body,seat_rows:rows('',null)},
@@ -35,7 +35,17 @@ test('manual revenue API matches production validation, totals, persistence and 
  {...body,cargo_rows:Array.from({length:31},()=>({description:'Cargo',amount:1}))},
  {...body,cargo_rows:[{description:'Decimal',amount:1.5}]},{...body,cargo_rows:[{description:'',amount:1}]},
  {...body,seat_rows:rows(0)},{...body,seat_rows:rows(1,0)},{...body,trip_id:999,seat_rows:rows(50)}]
- for(const input of cases)assert.deepEqual(await runRoute(current,input),await runRoute(baseline,input))
+ for(const input of cases) {
+  const result=await runRoute(current,input)
+  const submittedSeatCount=(input.seat_rows||[]).reduce((sum,row)=>sum+(Number(row.count)||0),0)
+  if(submittedSeatCount>Number(input.seat_capacity||49)) {
+   if(input.trip_id) assert.deepEqual(result,await runRoute(baseline,input))
+   else {assert.equal(result.code,400);assert.match(result.data.message,/seat capacity entered above/)}
+  } else assert.deepEqual(result,await runRoute(baseline,input))
+ }
+ const largerCapacity=await runRoute(current,{...body,seat_capacity:80,seat_rows:rows(80,100)})
+ assert.equal(largerCapacity.code,201)
+ assert.equal((await runRoute(current,{...body,seat_capacity:80,seat_rows:rows(81,100)})).code,400)
  const saved=await runRoute(current,body);assert.equal(saved.code,201)
  const insert=saved.calls.find(call=>call[0]==='run'&&call[1].includes('INSERT INTO revenue_entries'))
  assert.match(insert[1],/'locked'.*CURRENT_TIMESTAMP/s);assert.equal(insert[2][11],100)
@@ -70,7 +80,8 @@ test('dashboard financial formulas and Accounts route-ledger precedence remain t
  assert.equal(slice(accounts,'                    const matches =','                    return <tr'),slice(oldAccounts,'                    const matches =','                    return <tr'))
  assert.ok(!accounts.includes('const revenueForLeg ='))
  assert.ok(accounts.includes('+ Add Extra Row'))
- assert.match(accounts,/max={MAX_REVENUE_SEAT_ROW_COUNT}/)
+ assert.match(accounts,/max=\{validSeatCapacity \? seatCapacity : 1000\}/)
+ assert.match(accounts,/No\. of seats<input required type="number" min="1" max="1000"/)
  assert.ok(accounts.includes('if (seatError) return showMessage'))
  assert.ok(accounts.includes('if (validationError) return showMessage(validationError, true)'))
 })

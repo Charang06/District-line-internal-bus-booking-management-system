@@ -1,8 +1,8 @@
 {
-  "candidate": "C:\\Users\\Abbishathanan\\Desktop\\p1\\New folder\\last\\D BUS BOOKING M\\release-candidates\\districtline-2026-11-16T05-03-05-791Z",
-  "sourceHead": "157f6fdb1aadff2c10a3c698626629d6b3a77226",
+  "candidate": "C:\\Users\\Abbishathanan\\Desktop\\p1\\New folder\\last\\D BUS BOOKING M\\release-candidates\\districtline-2026-11-17T19-28-53-251Z",
+  "sourceHead": "54ac31eca9e0118910b8c29cd7e6063b15995d79",
   "sourceBranch": "ui/admin-dashboard-handover",
-  "createdAt": "2026-11-16T05:03:06.196Z",
+  "createdAt": "2026-11-17T19:28:53.469Z",
   "files": [
     {
       "path": "api/[...route].js",
@@ -166,13 +166,13 @@
     },
     {
       "path": "server/revenue-seat-rows.js",
-      "bytes": 1711,
-      "sha256": "39a2b1adc0598227da59bc0c0f5cf8c17623f0da610f3d5299ddb27f8f777971"
+      "bytes": 1983,
+      "sha256": "bb4b135dc884ce47cfbf63950173627215da4a36b5a0d4876ae0715f6f2ba06c"
     },
     {
       "path": "server/server.js",
-      "bytes": 177914,
-      "sha256": "110d2ef7d3fe095794c279737f32a27159ec8cd2c208da86537a04fa2e53f0ca"
+      "bytes": 184431,
+      "sha256": "c8f346516095ff18548215ecc9d99204d8d087c6df45c834b5f3be3f08816e6a"
     },
     {
       "path": "server/sms.js",
@@ -186,18 +186,18 @@
     },
     {
       "path": "src/App.css",
-      "bytes": 249371,
-      "sha256": "bba053918047635846b201e74fcdfd306591ef3fc7571718ee4e3c7c1be1c517"
+      "bytes": 249730,
+      "sha256": "b7d8c159b2dd5ed5d464930f8e63777b32cb7ccac6200ae4145e3b337b23e7b5"
     },
     {
       "path": "src/App.jsx",
-      "bytes": 155172,
-      "sha256": "c0d02d0bf0fc6149b9f733a729ad1aefcfeca35052be15a466820b25c38751bc"
+      "bytes": 155641,
+      "sha256": "4cc90f9f4ef48e807cbf9e7c76e0fae7c7e2c4cdcc7f596e6a150629fc99484b"
     },
     {
       "path": "src/api.js",
-      "bytes": 12880,
-      "sha256": "4151739fc3efc2db0ab3bf4ac9e7e65153f1daf8676d29a235a9a6bee5efd285"
+      "bytes": 13025,
+      "sha256": "b50f7eb86a2c3c1e6c0232b40b3ca9e5d809c05c993f39bbf22a974be0f0f108"
     },
     {
       "path": "src/components/AccountsDuties.jsx",
@@ -211,13 +211,13 @@
     },
     {
       "path": "src/components/AccountsRevenue.css",
-      "bytes": 17699,
-      "sha256": "b556b88cd8cf48c8c7bdf169241ae290c99918175bba4eea0b811fe1bbb95b14"
+      "bytes": 17865,
+      "sha256": "2465302a537a3846472ec33ed4c977c2bb0a8cab737daed416ea9b51a86b01b1"
     },
     {
       "path": "src/components/AccountsRevenue.jsx",
-      "bytes": 57068,
-      "sha256": "1b2290f0ddf5424c66e12ac1ef64e53053a017e03b7c1c78541c9c4a33e0376e"
+      "bytes": 58243,
+      "sha256": "81384cccc8f4da5eb033915189ca39a638a91e89043d20514b8e868aa3393c0c"
     },
     {
       "path": "src/components/AdminDashboard.css",
@@ -321,8 +321,8 @@
     },
     {
       "path": "src/components/TripWorkspace.jsx",
-      "bytes": 18201,
-      "sha256": "bbfe476029c4a18dbdf095605565573ee871ed51f696a48117bacb5612b48b45"
+      "bytes": 20409,
+      "sha256": "e46552050ccfd55369a0d7ed038c6e391fb183d45730751edc621b6eb9cbc6cd"
     },
     {
       "path": "src/components/UsernameRecoveryForm.jsx",
@@ -341,13 +341,13 @@
     },
     {
       "path": "src/data/revenueSeatRows.js",
-      "bytes": 2615,
-      "sha256": "8fe3ea0b3157cb6bd29a28b10fc3f2201309b9f4e83799aa9c82e7fa11f835ae"
+      "bytes": 2625,
+      "sha256": "8290156fff1bbae74205240b385fc615d89a10d5d7a8183072bcafe816ff693c"
     },
     {
       "path": "src/data/seatLayout.js",
-      "bytes": 2675,
-      "sha256": "9dfb10bd00d6e03128d825e18b1febf2a6512ee19cb5adc8bf829a78bf4edd63"
+      "bytes": 3791,
+      "sha256": "1dcf204b6b5b4620890cf727ad42d3f961dcae8e39b937e2b1035c0cf83de0f0"
     },
     {
       "path": "src/data/staffPageAccess.js",
