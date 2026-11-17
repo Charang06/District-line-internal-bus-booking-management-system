@@ -1,0 +1,362 @@
+{
+  "database": [
+    {
+      "stage": "before",
+      "seats": 1,
+      "injectedQueryLatencyMs": 0,
+      "repetitions": 3,
+      "apiTotalMs": 8.85,
+      "queriesPerSeat": 8,
+      "transactionPerSeatMs": 2.89,
+      "authPerSeatMs": 1.63,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 1.37
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 0.27
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 1.43
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 0.53
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 0.67
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 0.43
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 0.6
+        }
+      ]
+    },
+    {
+      "stage": "before",
+      "seats": 5,
+      "injectedQueryLatencyMs": 0,
+      "repetitions": 3,
+      "apiTotalMs": 41.71,
+      "queriesPerSeat": 8,
+      "transactionPerSeatMs": 3.03,
+      "authPerSeatMs": 1.55,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 1.34
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 0.33
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 1.67
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 0.53
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 0.55
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 0.45
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 0.63
+        }
+      ]
+    },
+    {
+      "stage": "before",
+      "seats": 1,
+      "injectedQueryLatencyMs": 10,
+      "repetitions": 3,
+      "apiTotalMs": 123.08,
+      "queriesPerSeat": 8,
+      "transactionPerSeatMs": 70.39,
+      "authPerSeatMs": 16.7,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 16.53
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 12.37
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 29.53
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 14.27
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 16
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 14.9
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 16.33
+        }
+      ]
+    },
+    {
+      "stage": "before",
+      "seats": 5,
+      "injectedQueryLatencyMs": 10,
+      "repetitions": 3,
+      "apiTotalMs": 632.81,
+      "queriesPerSeat": 8,
+      "transactionPerSeatMs": 77.59,
+      "authPerSeatMs": 15.31,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 15.1
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 15.45
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 29.4
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 16.47
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 13.7
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 16.47
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 16.95
+        }
+      ]
+    },
+    {
+      "stage": "after",
+      "seats": 1,
+      "injectedQueryLatencyMs": 0,
+      "repetitions": 3,
+      "apiTotalMs": 12.65,
+      "queriesPerSeat": 7,
+      "transactionPerSeatMs": 6.13,
+      "authPerSeatMs": 2.03,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 1.7
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 0.4
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 1.57
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 1.07
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 1.4
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 0.77
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 0.77
+        }
+      ]
+    },
+    {
+      "stage": "after",
+      "seats": 5,
+      "injectedQueryLatencyMs": 0,
+      "repetitions": 3,
+      "apiTotalMs": 73.8,
+      "queriesPerSeat": 7,
+      "transactionPerSeatMs": 14.51,
+      "authPerSeatMs": 18.55,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 5.94
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 1.35
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 5.93
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 2.59
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 1.61
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 1.47
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 1.45
+        }
+      ]
+    },
+    {
+      "stage": "after",
+      "seats": 1,
+      "injectedQueryLatencyMs": 10,
+      "repetitions": 3,
+      "apiTotalMs": 120.46,
+      "queriesPerSeat": 7,
+      "transactionPerSeatMs": 97.88,
+      "authPerSeatMs": 20.37,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 20.23
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 23
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 12.5
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 16.7
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 13.17
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 18.97
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 13.37
+        }
+      ]
+    },
+    {
+      "stage": "after",
+      "seats": 5,
+      "injectedQueryLatencyMs": 10,
+      "repetitions": 3,
+      "apiTotalMs": 217.93,
+      "queriesPerSeat": 7,
+      "transactionPerSeatMs": 91.74,
+      "authPerSeatMs": 14.99,
+      "stages": [
+        {
+          "statement": "WITH auth_sessions",
+          "totalPerSeatMs": 14.87
+        },
+        {
+          "statement": "BEGIN statement",
+          "totalPerSeatMs": 15.01
+        },
+        {
+          "statement": "SELECT bookings",
+          "totalPerSeatMs": 15.19
+        },
+        {
+          "statement": "SELECT bus_duties",
+          "totalPerSeatMs": 13.29
+        },
+        {
+          "statement": "UPDATE bookings",
+          "totalPerSeatMs": 15.52
+        },
+        {
+          "statement": "INSERT audit_logs",
+          "totalPerSeatMs": 19.27
+        },
+        {
+          "statement": "COMMIT statement",
+          "totalPerSeatMs": 13.39
+        }
+      ]
+    }
+  ],
+  "browser": [
+    {
+      "stage": "before",
+      "seats": 1,
+      "dialogMs": 11.2,
+      "busyMs": null,
+      "rowUpdateMs": 167,
+      "requestCount": 6,
+      "requestDelayMs": 75
+    },
+    {
+      "stage": "before",
+      "seats": 5,
+      "dialogMs": 3.8,
+      "busyMs": null,
+      "rowUpdateMs": 465,
+      "requestCount": 10,
+      "requestDelayMs": 75
+    },
+    {
+      "stage": "after",
+      "seats": 1,
+      "dialogMs": 10.4,
+      "busyMs": 4.4,
+      "rowUpdateMs": 83.1,
+      "requestCount": 1,
+      "requestDelayMs": 75
+    },
+    {
+      "stage": "after",
+      "seats": 5,
+      "dialogMs": 3.9,
+      "busyMs": 3.3,
+      "rowUpdateMs": 160.2,
+      "requestCount": 5,
+      "requestDelayMs": 75
+    }
+  ]
+}

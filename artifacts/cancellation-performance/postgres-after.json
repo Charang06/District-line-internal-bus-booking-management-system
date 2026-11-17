@@ -1,0 +1,3149 @@
+{
+  "results": [
+    {
+      "name": "one confirmed booking, seat freed only after persistence and rebooking",
+      "pass": true
+    },
+    {
+      "name": "different trips remain isolated; already-cancelled request preserves audit",
+      "pass": true
+    },
+    {
+      "name": "concurrent cancellation has one committed transition and one audit",
+      "pass": true
+    },
+    {
+      "name": "cancellation audit database failure rolls back status and preserves occupied seat",
+      "pass": true
+    },
+    {
+      "name": "timeout reconciliation observes persisted result without duplicate audit",
+      "pass": true
+    },
+    {
+      "name": "concurrent rebooking and cancellation preserve active-seat uniqueness",
+      "pass": true
+    },
+    {
+      "name": "unauthorized staff cannot cancel; Log refresh reflects persisted status",
+      "pass": true
+    },
+    {
+      "name": "finalized duty remains immutable and no cancellation audit is added",
+      "pass": true
+    }
+  ],
+  "timings": [
+    {
+      "size": 1,
+      "repeat": 0,
+      "queryLatencyMs": 0,
+      "apiMs": 12.280300000000352,
+      "queryCount": 7,
+      "transactionMs": [
+        5.231000000000677
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "fcdcd708-ff67-4d30-b8c5-e92c4975590e",
+          "method": "POST",
+          "path": "/api/bookings/1/cancel",
+          "status": 200,
+          "total_ms": 9.4,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 6.8,
+          "auth_ms": 2.1,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 1.8
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.5
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.9
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 0.7
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.5
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.5
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 1,
+          "pool_idle": 1
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 1.7224999999998545
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.4363000000003012
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.8786000000000058
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.6568999999999505
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.0334000000002561
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.4657000000006519
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.4486000000006243
+        }
+      ]
+    },
+    {
+      "size": 1,
+      "repeat": 1,
+      "queryLatencyMs": 0,
+      "apiMs": 13.027100000000246,
+      "queryCount": 7,
+      "transactionMs": [
+        6.0715000000000146
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "e2f03f5c-b2f3-446f-bd23-d50cc8f6bf91",
+          "method": "POST",
+          "path": "/api/bookings/2/cancel",
+          "status": 200,
+          "total_ms": 9.3,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 7.2,
+          "auth_ms": 1.6,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 1
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 1,
+          "pool_idle": 1
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 1.3115999999999985
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.33029999999962456
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.2490999999999985
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.9241000000001804
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.4893999999994776
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.7502000000004045
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.9825999999993655
+        }
+      ]
+    },
+    {
+      "size": 1,
+      "repeat": 2,
+      "queryLatencyMs": 0,
+      "apiMs": 12.651600000000144,
+      "queryCount": 7,
+      "transactionMs": [
+        7.082800000000134
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "6c3557b0-6d65-45d0-abdb-b80092e39027",
+          "method": "POST",
+          "path": "/api/bookings/3/cancel",
+          "status": 200,
+          "total_ms": 10.8,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 8.9,
+          "auth_ms": 2.4,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 2
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.4
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.7
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 1
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 1,
+          "pool_idle": 1
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 1.9205000000001746
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.4072999999998501
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.4807000000000698
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.4736000000002605
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.621700000000601
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.972700000000259
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.8175000000001091
+        }
+      ]
+    },
+    {
+      "size": 5,
+      "repeat": 0,
+      "queryLatencyMs": 0,
+      "apiMs": 151.60670000000027,
+      "queryCount": 35,
+      "transactionMs": [
+        14.783699999999953,
+        39.75709999999981,
+        37.46630000000005,
+        33.848299999999654,
+        4.835300000000643
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "1b2fe936-799a-47f4-9ea2-9417ab08d952",
+          "method": "POST",
+          "path": "/api/bookings/4/cancel",
+          "status": 200,
+          "total_ms": 21.7,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 19.5,
+          "auth_ms": 5.2,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 4.9
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 7.6
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 2.8
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.6
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.7
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 1
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "39f31504-1d79-4bc4-bf8b-ce63c2c2816e",
+          "method": "POST",
+          "path": "/api/bookings/5/cancel",
+          "status": 200,
+          "total_ms": 110.9,
+          "db_queries": 7,
+          "db_acquire_ms": 52.6,
+          "db_query_ms": 56.1,
+          "auth_ms": 69.3,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 16.7
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.5
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 22.2
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 9.4
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 3
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 2.4
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 2
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "2676f6c9-f5e8-424b-9e80-fde83e4d267a",
+          "method": "POST",
+          "path": "/api/bookings/6/cancel",
+          "status": 200,
+          "total_ms": 119.1,
+          "db_queries": 7,
+          "db_acquire_ms": 61.6,
+          "db_query_ms": 55.6,
+          "auth_ms": 79.9,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 18.3
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.7
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 20.9
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 8.8
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 2.2
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 2.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 3
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "d57c473d-3229-4da3-9e75-0bcee87f5f95",
+          "method": "POST",
+          "path": "/api/bookings/7/cancel",
+          "status": 200,
+          "total_ms": 124.4,
+          "db_queries": 7,
+          "db_acquire_ms": 72,
+          "db_query_ms": 50.3,
+          "auth_ms": 88.6,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 16.6
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.5
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 20.3
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 7.1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 2.4
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "1b298e01-bad2-4672-950a-234374e80fe6",
+          "method": "POST",
+          "path": "/api/bookings/8/cancel",
+          "status": 200,
+          "total_ms": 8.7,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 6.9,
+          "auth_ms": 2.5,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 2.2
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.4
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.1
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 0.6
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.2
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.6
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 4.865099999999984
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 7.551499999999578
+        },
+        {
+          "operation": "SELECT",
+          "ms": 2.7998999999999796
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.052599999999984
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.5943999999999505
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.7327999999997701
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.677599999999984
+        },
+        {
+          "operation": "WITH",
+          "ms": 16.632800000000316
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.4699000000000524
+        },
+        {
+          "operation": "WITH",
+          "ms": 18.287199999999757
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.6082000000005792
+        },
+        {
+          "operation": "SELECT",
+          "ms": 22.134799999999814
+        },
+        {
+          "operation": "WITH",
+          "ms": 16.538900000000467
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.47229999999944994
+        },
+        {
+          "operation": "SELECT",
+          "ms": 9.323499999999513
+        },
+        {
+          "operation": "SELECT",
+          "ms": 20.903599999999642
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 2.9484999999995125
+        },
+        {
+          "operation": "INSERT",
+          "ms": 2.336199999999735
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.9881999999997788
+        },
+        {
+          "operation": "SELECT",
+          "ms": 8.730799999999363
+        },
+        {
+          "operation": "SELECT",
+          "ms": 20.21889999999985
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 2.2000000000007276
+        },
+        {
+          "operation": "INSERT",
+          "ms": 2.7228000000004613
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.9336000000002969
+        },
+        {
+          "operation": "SELECT",
+          "ms": 7.0634000000000015
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.46349999999984
+        },
+        {
+          "operation": "INSERT",
+          "ms": 2.3314000000000306
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.9583000000002357
+        },
+        {
+          "operation": "WITH",
+          "ms": 2.1644999999998618
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.36380000000008295
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.1181000000005952
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.5345999999999549
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.203599999999824
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.6853000000000975
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.6066000000000713
+        }
+      ]
+    },
+    {
+      "size": 5,
+      "repeat": 1,
+      "queryLatencyMs": 0,
+      "apiMs": 32.688999999999396,
+      "queryCount": 35,
+      "transactionMs": [
+        6.960000000000036,
+        9.134799999999814,
+        9.068999999999505,
+        9.837199999999939,
+        6.699799999999414
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "3028cb26-3abf-420f-aba3-ed5f6681357b",
+          "method": "POST",
+          "path": "/api/bookings/10/cancel",
+          "status": 200,
+          "total_ms": 11.5,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 10.1,
+          "auth_ms": 3.4,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 3.2
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 2.6
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.2
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.1
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 1
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "cf4ae0ba-866d-426e-8d9d-499525a7d575",
+          "method": "POST",
+          "path": "/api/bookings/9/cancel",
+          "status": 200,
+          "total_ms": 14.2,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 12.5,
+          "auth_ms": 3.7,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 3.5
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 2.1
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 2.1
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 0.8
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.2
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 1.2
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 1.7
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 2
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "d985cfaf-65d2-4dbd-b038-709cadbf737d",
+          "method": "POST",
+          "path": "/api/bookings/11/cancel",
+          "status": 200,
+          "total_ms": 13.8,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 12.3,
+          "auth_ms": 3.6,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 3.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 1.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 1.9
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 3
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "57764dcb-7849-42a8-b6a2-c42c440d011b",
+          "method": "POST",
+          "path": "/api/bookings/12/cancel",
+          "status": 200,
+          "total_ms": 14.6,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 13.2,
+          "auth_ms": 3.7,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 3.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 1.1
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.2
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 2
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 2.1
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "8b727c89-5398-4e0e-b988-dbaa61147876",
+          "method": "POST",
+          "path": "/api/bookings/13/cancel",
+          "status": 200,
+          "total_ms": 10.3,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 8.6,
+          "auth_ms": 2.3,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 2.1
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.5
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 2.4
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.6
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 3.4148999999997613
+        },
+        {
+          "operation": "WITH",
+          "ms": 3.210599999999431
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.32930000000033033
+        },
+        {
+          "operation": "WITH",
+          "ms": 3.334799999999632
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 2.1055999999998676
+        },
+        {
+          "operation": "WITH",
+          "ms": 3.424199999999473
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 1.2335000000002765
+        },
+        {
+          "operation": "SELECT",
+          "ms": 2.5478000000002794
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 1.051900000000387
+        },
+        {
+          "operation": "SELECT",
+          "ms": 2.0780000000004293
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.480199999999968
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.203799999999319
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.7674999999999272
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.439300000000003
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.9692999999997483
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.0489999999999782
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.163300000000163
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.1607999999996537
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.8185000000003129
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.509499999999207
+        },
+        {
+          "operation": "INSERT",
+          "ms": 1.1543000000001484
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.8379000000004453
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.9683999999997468
+        },
+        {
+          "operation": "INSERT",
+          "ms": 1.7485999999998967
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.6902000000000044
+        },
+        {
+          "operation": "INSERT",
+          "ms": 2.048899999999776
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.9363000000003012
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.946100000000115
+        },
+        {
+          "operation": "WITH",
+          "ms": 2.0311000000001513
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.4547999999995227
+        },
+        {
+          "operation": "SELECT",
+          "ms": 2.3827999999994063
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.9614999999994325
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.2712000000001353
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.734599999999773
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.5712000000003172
+        }
+      ]
+    },
+    {
+      "size": 5,
+      "repeat": 2,
+      "queryLatencyMs": 0,
+      "apiMs": 37.10540000000037,
+      "queryCount": 35,
+      "transactionMs": [
+        7.9538000000002285,
+        10.393000000000029,
+        9.862099999999373,
+        11.248899999999594,
+        5.806999999999789
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "be939ae5-4cd7-4e19-b1bb-cdc9fb0fb034",
+          "method": "POST",
+          "path": "/api/bookings/14/cancel",
+          "status": 200,
+          "total_ms": 13.8,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 12.1,
+          "auth_ms": 4.6,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 4.3
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 1.2
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.9
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.4
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.7
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.7
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 1
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "ab246fcb-0f75-472b-9347-ef749607a6e9",
+          "method": "POST",
+          "path": "/api/bookings/15/cancel",
+          "status": 200,
+          "total_ms": 15.5,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 13.9,
+          "auth_ms": 3.9,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 3.6
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 2
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.9
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 1.5
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 2
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "9ff8880b-6cdd-42e4-8392-db509d479557",
+          "method": "POST",
+          "path": "/api/bookings/17/cancel",
+          "status": 200,
+          "total_ms": 13.6,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 12.2,
+          "auth_ms": 2.7,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 2.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.9
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 2.6
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.1
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 1.4
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 2.5
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 3
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "83131ab6-29f9-4977-8839-50cef9bb5de1",
+          "method": "POST",
+          "path": "/api/bookings/16/cancel",
+          "status": 200,
+          "total_ms": 15.3,
+          "db_queries": 7,
+          "db_acquire_ms": 0.3,
+          "db_query_ms": 14,
+          "auth_ms": 3.1,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 2.9
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 1.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 3.5
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1.1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.8
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 1.9
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 1.6
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "75019d2d-df67-412e-b5e5-83d452fbf28e",
+          "method": "POST",
+          "path": "/api/bookings/18/cancel",
+          "status": 200,
+          "total_ms": 9.2,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 7.3,
+          "auth_ms": 1.8,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 1.6
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 0.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 1.6
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 1
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 1.6
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 0.6
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 0.6
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 4.284900000000562
+        },
+        {
+          "operation": "WITH",
+          "ms": 3.6228000000000975
+        },
+        {
+          "operation": "WITH",
+          "ms": 2.8333000000002357
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 1.1921000000002095
+        },
+        {
+          "operation": "WITH",
+          "ms": 2.3887000000004264
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 1.4942000000000917
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 1.28899999999976
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.8416999999999462
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.8895999999995183
+        },
+        {
+          "operation": "SELECT",
+          "ms": 2.010099999999511
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.346400000000358
+        },
+        {
+          "operation": "SELECT",
+          "ms": 2.5887000000002445
+        },
+        {
+          "operation": "SELECT",
+          "ms": 3.4674999999997453
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.9039000000002488
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.672099999999773
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.2762999999995372
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.0533000000004904
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.7282999999997628
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.335200000000441
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.119499999999789
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.8108000000001994
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.7726000000002387
+        },
+        {
+          "operation": "INSERT",
+          "ms": 1.4468999999999141
+        },
+        {
+          "operation": "INSERT",
+          "ms": 1.3513000000002648
+        },
+        {
+          "operation": "INSERT",
+          "ms": 1.9026000000003478
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 2.002400000000307
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 2.4909000000006927
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 1.5703000000003158
+        },
+        {
+          "operation": "WITH",
+          "ms": 1.5973000000003594
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 0.3050999999995838
+        },
+        {
+          "operation": "SELECT",
+          "ms": 1.555000000000291
+        },
+        {
+          "operation": "SELECT",
+          "ms": 0.9825000000000728
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 1.5354999999999563
+        },
+        {
+          "operation": "INSERT",
+          "ms": 0.5535999999992782
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 0.607199999999466
+        }
+      ]
+    },
+    {
+      "size": 1,
+      "repeat": 0,
+      "queryLatencyMs": 10,
+      "apiMs": 121.40090000000055,
+      "queryCount": 7,
+      "transactionMs": [
+        99.52409999999963
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "7fe7670e-f6bf-49b8-b756-ff343a9e26a0",
+          "method": "POST",
+          "path": "/api/bookings/19/cancel",
+          "status": 200,
+          "total_ms": 119.7,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 118.3,
+          "auth_ms": 19.1,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 18.9
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 25.9
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 11.7
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 13.7
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 14
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 20.5
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 13.6
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 18.830399999999827
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 25.90399999999954
+        },
+        {
+          "operation": "SELECT",
+          "ms": 11.680199999999786
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.650699999999233
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 13.947500000000218
+        },
+        {
+          "operation": "INSERT",
+          "ms": 20.43919999999889
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 13.618400000001202
+        }
+      ]
+    },
+    {
+      "size": 1,
+      "repeat": 1,
+      "queryLatencyMs": 10,
+      "apiMs": 119.28570000000036,
+      "queryCount": 7,
+      "transactionMs": [
+        96.54869999999937
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "7d20da2a-fb7a-4b01-a890-c304a668ea57",
+          "method": "POST",
+          "path": "/api/bookings/20/cancel",
+          "status": 200,
+          "total_ms": 118.2,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 117.1,
+          "auth_ms": 20.8,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 20.7
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 21.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 13.1
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 14.2
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 13.3
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 22.5
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 12
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 20.665899999999965
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 21.28570000000036
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.089899999999034
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.186600000000908
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 13.290399999999863
+        },
+        {
+          "operation": "INSERT",
+          "ms": 22.509900000000926
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 11.949999999998909
+        }
+      ]
+    },
+    {
+      "size": 1,
+      "repeat": 2,
+      "queryLatencyMs": 10,
+      "apiMs": 120.69859999999971,
+      "queryCount": 7,
+      "transactionMs": [
+        97.5577000000012
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "109eb0ea-1d61-4335-926c-c2dc78df15fa",
+          "method": "POST",
+          "path": "/api/bookings/21/cancel",
+          "status": 200,
+          "total_ms": 119.5,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 118.5,
+          "auth_ms": 21.2,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 21.1
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 21.8
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 12.7
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 22.2
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 12.2
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 13.9
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 14.5
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 21.06209999999919
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 21.79870000000119
+        },
+        {
+          "operation": "SELECT",
+          "ms": 12.70850000000064
+        },
+        {
+          "operation": "SELECT",
+          "ms": 22.20429999999942
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 12.213299999999435
+        },
+        {
+          "operation": "INSERT",
+          "ms": 13.91820000000007
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 14.467000000000553
+        }
+      ]
+    },
+    {
+      "size": 5,
+      "repeat": 0,
+      "queryLatencyMs": 10,
+      "apiMs": 219.15539999999964,
+      "queryCount": 35,
+      "transactionMs": [
+        82.66370000000097,
+        83.0637999999999,
+        83.59039999999914,
+        85.2440000000006,
+        94.38060000000041
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "82670c6d-c784-4a73-a904-13fa789649ab",
+          "method": "POST",
+          "path": "/api/bookings/22/cancel",
+          "status": 200,
+          "total_ms": 101.1,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 99.9,
+          "auth_ms": 17.5,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 17.3
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 12.9
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 15.3
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 12.7
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 15.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 12.2
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 14
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 1
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "8048916d-5e55-4296-8771-4cdd5c859408",
+          "method": "POST",
+          "path": "/api/bookings/25/cancel",
+          "status": 200,
+          "total_ms": 100.6,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 100,
+          "auth_ms": 17.1,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 17
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 12.7
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 15.4
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 12.6
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 15.4
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 12.3
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 14.5
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 2
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "c048750b-7d3e-42b8-918e-1e81ffed2a0f",
+          "method": "POST",
+          "path": "/api/bookings/23/cancel",
+          "status": 200,
+          "total_ms": 101.5,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 100.9,
+          "auth_ms": 17.5,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 17.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 12.8
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 15.4
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 12.7
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 15.6
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 12.3
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 14.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 3
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "8cbafcd0-d092-4359-9ff4-5848085f82d8",
+          "method": "POST",
+          "path": "/api/bookings/24/cancel",
+          "status": 200,
+          "total_ms": 103.3,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 102.6,
+          "auth_ms": 17.5,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 17.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 12.6
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 15.5
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 12.6
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 19
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 15
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 10.5
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "243da141-8cc0-4674-80c2-79a0d69f1939",
+          "method": "POST",
+          "path": "/api/bookings/26/cancel",
+          "status": 200,
+          "total_ms": 111.8,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 110.5,
+          "auth_ms": 16.4,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 16.2
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 14.5
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 12.9
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 21.9
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 12.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 22.1
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 10.2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 17.323599999999715
+        },
+        {
+          "operation": "WITH",
+          "ms": 17.382900000000518
+        },
+        {
+          "operation": "WITH",
+          "ms": 16.954099999999016
+        },
+        {
+          "operation": "WITH",
+          "ms": 17.393600000001243
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 12.9304000000011
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 12.845499999999447
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 12.745899999999892
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 12.645500000000538
+        },
+        {
+          "operation": "SELECT",
+          "ms": 15.255799999998999
+        },
+        {
+          "operation": "SELECT",
+          "ms": 15.384000000000015
+        },
+        {
+          "operation": "SELECT",
+          "ms": 15.441399999999703
+        },
+        {
+          "operation": "SELECT",
+          "ms": 15.50590000000011
+        },
+        {
+          "operation": "SELECT",
+          "ms": 12.652599999999438
+        },
+        {
+          "operation": "SELECT",
+          "ms": 12.664200000001074
+        },
+        {
+          "operation": "SELECT",
+          "ms": 12.63550000000032
+        },
+        {
+          "operation": "SELECT",
+          "ms": 12.595000000001164
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 15.443999999999505
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 15.40190000000075
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 15.567600000000311
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 18.947299999999814
+        },
+        {
+          "operation": "INSERT",
+          "ms": 12.149799999999232
+        },
+        {
+          "operation": "INSERT",
+          "ms": 12.256600000000617
+        },
+        {
+          "operation": "INSERT",
+          "ms": 12.277399999999034
+        },
+        {
+          "operation": "INSERT",
+          "ms": 14.982900000000882
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 13.942000000000917
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 14.496399999999994
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 14.761099999999715
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 10.44629999999961
+        },
+        {
+          "operation": "WITH",
+          "ms": 16.224500000000262
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 14.497300000000905
+        },
+        {
+          "operation": "SELECT",
+          "ms": 12.887299999998504
+        },
+        {
+          "operation": "SELECT",
+          "ms": 21.891899999998714
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 12.517099999999118
+        },
+        {
+          "operation": "INSERT",
+          "ms": 22.090500000000247
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 10.210599999998522
+        }
+      ]
+    },
+    {
+      "size": 5,
+      "repeat": 1,
+      "queryLatencyMs": 10,
+      "apiMs": 217.89780000000064,
+      "queryCount": 35,
+      "transactionMs": [
+        96.07279999999992,
+        96.3768,
+        97.20130000000063,
+        97.05149999999958,
+        80.48060000000078
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "a089600e-d4c7-4b9b-8b2c-a2af8df0d29e",
+          "method": "POST",
+          "path": "/api/bookings/28/cancel",
+          "status": 200,
+          "total_ms": 111,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 110.1,
+          "auth_ms": 14.2,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 14.1
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 19.9
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 14.4
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 11
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 16.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 22.3
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 12
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 1
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "e9c9727e-743b-44b1-8286-7841f10891dd",
+          "method": "POST",
+          "path": "/api/bookings/30/cancel",
+          "status": 200,
+          "total_ms": 110.6,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 109.9,
+          "auth_ms": 13.8,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 13.6
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 19.6
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 14.1
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 10.6
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 17
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 22.6
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 12.4
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 2
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "52b26d73-ed10-4f8e-af5a-08f7d3078ca6",
+          "method": "POST",
+          "path": "/api/bookings/29/cancel",
+          "status": 200,
+          "total_ms": 111.2,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 110.5,
+          "auth_ms": 13.5,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 13.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 19.9
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 14.6
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 11
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 16.5
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 22.4
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 12.7
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 3
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "013da6e3-d145-477f-bcf5-3dc350ef84fd",
+          "method": "POST",
+          "path": "/api/bookings/27/cancel",
+          "status": 200,
+          "total_ms": 112.5,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 111.8,
+          "auth_ms": 14.9,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 14.8
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 19.7
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 14.4
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 11
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 16.7
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 22.4
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 12.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "5c7bfe17-d6af-481c-bfe0-3d7a5011222e",
+          "method": "POST",
+          "path": "/api/bookings/31/cancel",
+          "status": 200,
+          "total_ms": 101.8,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 100.7,
+          "auth_ms": 20.5,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 20.4
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 10.7
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 15
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 13.8
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 13.3
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 13.7
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 13.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 13.34230000000025
+        },
+        {
+          "operation": "WITH",
+          "ms": 14.074399999999514
+        },
+        {
+          "operation": "WITH",
+          "ms": 14.741800000001604
+        },
+        {
+          "operation": "WITH",
+          "ms": 13.556300000000192
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 19.919799999999668
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 19.674399999999878
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 19.884000000000015
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 19.61540000000059
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.09230000000025
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.356299999999464
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.395899999999529
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.612499999999272
+        },
+        {
+          "operation": "SELECT",
+          "ms": 10.57680000000073
+        },
+        {
+          "operation": "SELECT",
+          "ms": 11.035900000000765
+        },
+        {
+          "operation": "SELECT",
+          "ms": 11.035799999999654
+        },
+        {
+          "operation": "SELECT",
+          "ms": 11.027400000000853
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 16.95010000000002
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 16.445799999999508
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 16.467900000001464
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 16.681099999999788
+        },
+        {
+          "operation": "INSERT",
+          "ms": 22.25720000000001
+        },
+        {
+          "operation": "INSERT",
+          "ms": 22.541199999999662
+        },
+        {
+          "operation": "INSERT",
+          "ms": 22.40429999999833
+        },
+        {
+          "operation": "INSERT",
+          "ms": 22.39559999999983
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 11.941100000000006
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 12.434300000000803
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 12.667699999999968
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 12.82090000000062
+        },
+        {
+          "operation": "WITH",
+          "ms": 20.329400000000533
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 10.698600000001534
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.960500000001048
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.80619999999908
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 13.32510000000002
+        },
+        {
+          "operation": "INSERT",
+          "ms": 13.644000000000233
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 13.789600000000064
+        }
+      ]
+    },
+    {
+      "size": 5,
+      "repeat": 2,
+      "queryLatencyMs": 10,
+      "apiMs": 216.7415000000001,
+      "queryCount": 35,
+      "transactionMs": [
+        87.14650000000074,
+        102.6268,
+        103.58449999999903,
+        104.0619000000006,
+        82.60070000000087
+      ],
+      "apiPerf": [
+        {
+          "kind": "api_perf",
+          "request_id": "d692ea97-7081-4a3b-89f0-413e9a2700e2",
+          "method": "POST",
+          "path": "/api/bookings/32/cancel",
+          "status": 200,
+          "total_ms": 101,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 100,
+          "auth_ms": 13.1,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 13
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 14.2
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 16.2
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 14.3
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 15.1
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 17.4
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 9.9
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 1
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "03dec6b1-65e1-488a-9445-8d9f8c0f58ad",
+          "method": "POST",
+          "path": "/api/bookings/34/cancel",
+          "status": 200,
+          "total_ms": 115.8,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 115.1,
+          "auth_ms": 12.6,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 12.5
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 14
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 16.6
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 13.9
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 15.6
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 26.3
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 16.2
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 2
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "78a1cad5-dcc0-49fe-9115-856d7dd7f205",
+          "method": "POST",
+          "path": "/api/bookings/35/cancel",
+          "status": 200,
+          "total_ms": 115.9,
+          "db_queries": 7,
+          "db_acquire_ms": 0.1,
+          "db_query_ms": 115.4,
+          "auth_ms": 11.9,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 11.8
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 14.3
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 16.5
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 14
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 15.4
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 26.8
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 16.5
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 3
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "bc2ed31e-13cd-4bde-a461-05d987f2fa1b",
+          "method": "POST",
+          "path": "/api/bookings/33/cancel",
+          "status": 200,
+          "total_ms": 116.7,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 115.9,
+          "auth_ms": 12.1,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 12
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 14.4
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 16.8
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 13.7
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 14.9
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 27.5
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 16.7
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        },
+        {
+          "kind": "api_perf",
+          "request_id": "3ef4b2a0-bafe-4180-9d0d-eb2c5d1cbab1",
+          "method": "POST",
+          "path": "/api/bookings/36/cancel",
+          "status": 200,
+          "total_ms": 95.7,
+          "db_queries": 7,
+          "db_acquire_ms": 0.2,
+          "db_query_ms": 94.6,
+          "auth_ms": 12.3,
+          "dashboard_ms": 0,
+          "db_query_breakdown": [
+            {
+              "statement": "WITH auth_sessions",
+              "count": 1,
+              "total_ms": 12.1
+            },
+            {
+              "statement": "BEGIN statement",
+              "count": 1,
+              "total_ms": 12.9
+            },
+            {
+              "statement": "SELECT bookings",
+              "count": 1,
+              "total_ms": 14.8
+            },
+            {
+              "statement": "SELECT bus_duties",
+              "count": 1,
+              "total_ms": 13.5
+            },
+            {
+              "statement": "UPDATE bookings",
+              "count": 1,
+              "total_ms": 13.8
+            },
+            {
+              "statement": "INSERT audit_logs",
+              "count": 1,
+              "total_ms": 13.7
+            },
+            {
+              "statement": "COMMIT statement",
+              "count": 1,
+              "total_ms": 13.8
+            }
+          ],
+          "pool_waiting": 0,
+          "pool_total": 4,
+          "pool_idle": 4
+        }
+      ],
+      "queryStages": [
+        {
+          "operation": "WITH",
+          "ms": 11.973299999999654
+        },
+        {
+          "operation": "WITH",
+          "ms": 11.832300000000032
+        },
+        {
+          "operation": "WITH",
+          "ms": 12.980999999999767
+        },
+        {
+          "operation": "WITH",
+          "ms": 12.482299999999668
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 14.420099999999366
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 14.340399999999136
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 14.228100000000268
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 14.038300000000163
+        },
+        {
+          "operation": "SELECT",
+          "ms": 16.16860000000088
+        },
+        {
+          "operation": "SELECT",
+          "ms": 16.46389999999883
+        },
+        {
+          "operation": "SELECT",
+          "ms": 16.733400000000984
+        },
+        {
+          "operation": "SELECT",
+          "ms": 16.636199999999008
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.681099999999788
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.99749999999949
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.277799999999843
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.852600000000166
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 14.870200000001205
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 15.076199999999517
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 15.367700000000696
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 15.547600000001694
+        },
+        {
+          "operation": "INSERT",
+          "ms": 17.352600000000166
+        },
+        {
+          "operation": "INSERT",
+          "ms": 26.24749999999949
+        },
+        {
+          "operation": "INSERT",
+          "ms": 26.809800000000905
+        },
+        {
+          "operation": "INSERT",
+          "ms": 27.45100000000093
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 9.835300000000643
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 16.170399999999063
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 16.49200000000019
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 16.681800000000294
+        },
+        {
+          "operation": "WITH",
+          "ms": 12.116099999999278
+        },
+        {
+          "operation": "BEGIN",
+          "ms": 12.867599999999584
+        },
+        {
+          "operation": "SELECT",
+          "ms": 14.7520999999997
+        },
+        {
+          "operation": "SELECT",
+          "ms": 13.489800000001196
+        },
+        {
+          "operation": "UPDATE",
+          "ms": 13.746300000000701
+        },
+        {
+          "operation": "INSERT",
+          "ms": 13.696200000000317
+        },
+        {
+          "operation": "COMMIT",
+          "ms": 13.787400000001071
+        }
+      ]
+    }
+  ],
+  "passed": 8,
+  "failed": 0,
+  "clusterStopped": true
+}

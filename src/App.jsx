@@ -230,6 +230,12 @@ function App() {
   const [confirmingBookingIds, setConfirmingBookingIds] = useState(() => new Set())
   const confirmingBookingIdsRef = useRef(new Set())
   const [cancelTarget, setCancelTarget] = useState(null)
+  const [cancellingBookingIds, setCancellingBookingIds] = useState(() => new Set())
+  const cancellingBookingIdsRef = useRef(new Set())
+  const uncertainCancellationsRef = useRef(new Set())
+  const appliedCancellationsRef = useRef(new Map())
+  const cancellationTripUpdatesRef = useRef(new WeakSet())
+  const logsSelectionRef = useRef(null)
   const [confirmDialog, setConfirmDialog] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [logoutBusy, setLogoutBusy] = useState(false)
@@ -762,7 +768,11 @@ function App() {
         api.bookings(authToken, bookingQuery),
         api.cargo(authToken, cargoQuery),
       ])
-      const returnedBookings = bookingData.bookings || []
+      // A search started before cancellation must not restore its stale status.
+      const returnedBookings = (bookingData.bookings || []).map(booking => {
+        const cancelled = appliedCancellationsRef.current.get(booking.id)
+        return cancelled ? { ...booking, status: 'cancelled', cancelled_at: cancelled.cancelled_at, cancelled_by: cancelled.cancelled_by } : booking
+      })
       const visibleBookings = logFilters.from
         ? returnedBookings.filter((booking) => (
           String(booking.boarding_point || '').trim().toLocaleLowerCase() === logFilters.from.trim().toLocaleLowerCase()
@@ -962,6 +972,13 @@ function App() {
   }, [mobileNavOpen])
 
   useEffect(() => {
+    const previousSelection = logsSelectionRef.current
+    logsSelectionRef.current = { activeTripId, token, loadLogs }
+    // A local cancellation count update does not invalidate passenger/cargo data.
+    if (cancellationTripUpdatesRef.current.has(trips)) {
+      cancellationTripUpdatesRef.current.delete(trips)
+      if (previousSelection?.activeTripId === activeTripId && previousSelection?.token === token && previousSelection?.loadLogs === loadLogs) return
+    }
     if (token && activeTripId) {
       loadLogs(token, trips.find((trip) => trip.id === activeTripId)).catch((err) => {
         if (err.status !== 401 && err.status !== 403) showMessage(err.message, true)
@@ -1059,17 +1076,72 @@ function App() {
   }
 
   const confirmCancel = async () => {
-    if (!cancelTarget) return
-    try {
-      for (const booking of cancelTarget.bookings || [cancelTarget]) {
-        if (booking.status !== 'cancelled') await api.cancelBooking(token, booking.id)
+    if (!cancelTarget || cancellingBookingIdsRef.current.has(cancelTarget.id)) return
+    const target = cancelTarget
+    const pending = (target.bookings || [target]).filter(booking => booking.status !== 'cancelled')
+    cancellingBookingIdsRef.current.add(target.id)
+    setCancellingBookingIds(current => new Set(current).add(target.id))
+    setCancelTarget(null)
+    const failures = [], saved = []
+    const reconcile = async booking => {
+      const data = await api.trip(token, booking.trip_id)
+      const row = data.bookings?.find(item => Number(item.id) === Number(booking.id) && Number(item.trip_id) === Number(booking.trip_id))
+      if (!row) throw new Error('Unable to confirm cancellation. Check the booking log before retrying.')
+      return row
+    }
+    const apply = booking => {
+      if (appliedCancellationsRef.current.has(booking.id)) return
+      appliedCancellationsRef.current.set(booking.id, booking)
+      setCustomerLogs(current => current.map(item => item.id === booking.id ? { ...item, ...booking } : item)
+        .filter(item => !(logFilters.from || logFilters.status === 'confirmed') || item.status !== 'cancelled'))
+      setTrips(current => {
+        const next = current.map(trip => Number(trip.id) === Number(booking.trip_id)
+          ? { ...trip, booked_count: Math.max(0, Number(trip.booked_count || 0) - 1) } : trip)
+        cancellationTripUpdatesRef.current.add(next)
+        return next
+      })
+    }
+    let index = 0
+    const worker = async () => {
+      while (index < pending.length) {
+        const booking = pending[index++]
+        try {
+          let result
+          if (uncertainCancellationsRef.current.has(booking.id)) {
+            result = await reconcile(booking) // Successful read required before a retry.
+            if (result.status !== 'cancelled') result = null
+          }
+          if (!result) {
+            uncertainCancellationsRef.current.add(booking.id)
+            try {
+              const data = await api.cancelBooking(token, booking.id)
+              if (Number(data.booking?.id) !== Number(booking.id) || Number(data.booking?.trip_id) !== Number(booking.trip_id) || data.booking?.status !== 'cancelled') throw new Error('Uncertain cancellation response')
+              result = data.booking
+            } catch (error) {
+              if (error.status && error.status < 500 && ![400,408,429].includes(error.status)) {
+                uncertainCancellationsRef.current.delete(booking.id)
+                throw error
+              }
+              result = await reconcile(booking)
+              if (result.status !== 'cancelled') throw new Error('Cancellation was not confirmed. The booking remains active; check its status before retrying.')
+            }
+          }
+          uncertainCancellationsRef.current.delete(booking.id)
+          apply(result)
+          saved.push(booking.seat_number)
+        } catch (error) {
+          failures.push(`Seat ${booking.seat_number}: ${uncertainCancellationsRef.current.has(booking.id)
+            ? 'Unable to confirm cancellation. Check the booking log before retrying.' : error.message}`)
+        }
       }
-      showMessage(`Cancelled ${cancelTarget.passenger_name}'s booking for seat${cancelTarget.seat_numbers?.length === 1 ? '' : 's'} ${(cancelTarget.seat_numbers || [cancelTarget.seat_number]).join(', ')}.`)
-      setCancelTarget(null)
-      await loadLogs(token, activeTrip)
-      await loadTrips(token)
-    } catch (err) {
-      showMessage(err.message, true)
+    }
+    try {
+      await Promise.all(Array.from({ length: Math.min(4, pending.length) }, worker))
+      if (failures.length) showMessage(`${saved.length ? `Cancelled seats ${saved.join(', ')}. ` : ''}${failures.join(' ')}`, true)
+      else showMessage(`Cancelled ${target.passenger_name}'s booking for seats ${saved.join(', ')}.`)
+    } finally {
+      cancellingBookingIdsRef.current.delete(target.id)
+      setCancellingBookingIds(current => { const next = new Set(current); next.delete(target.id); return next })
     }
   }
 
@@ -2051,7 +2123,7 @@ function App() {
                       <td className="no-print">
                         {(staffPermissions.logPassengers || staffPermissions.customerActions) && <button type="button" className="ghost-button small" disabled={smsBusyId === log.id || confirmingBookingIds.has(log.id)} onClick={() => { setEditingCustomerDetailsId(log.id); setCustomerNameDraft(log.passenger_name || ''); setCustomerContactDraft(log.contact || ''); setCustomerGenderDraft(log.gender || ''); setCustomerFromDraft(log.boarding_point || ''); setCustomerToDraft(log.destination || ''); setCustomerFareDraft(String(log.bookings[0]?.fare ?? '')); setCustomerNotesDraft(log.notes || '') }}>Edit</button>}
                         {log.any_active && staffPermissions.logPassengers ? (
-                          <button type="button" className="ghost-button small" disabled={confirmingBookingIds.has(log.id)} onClick={() => setCancelTarget(log)}>Cancel</button>
+                          <button type="button" className="ghost-button small" disabled={confirmingBookingIds.has(log.id) || cancellingBookingIds.has(log.id)} aria-busy={cancellingBookingIds.has(log.id)} onClick={() => setCancelTarget(log)}>{cancellingBookingIds.has(log.id) ? 'Cancelling…' : 'Cancel'}</button>
                         ) : '—'}
                       </td>
                     </tr>
