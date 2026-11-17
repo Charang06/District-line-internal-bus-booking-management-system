@@ -1,0 +1,23 @@
+[
+  {
+    "width": 1280,
+    "height": 2611,
+    "dimensionMatch": true,
+    "differentPixels": 0,
+    "totalPixels": 3342080
+  },
+  {
+    "width": 1440,
+    "height": 2623,
+    "dimensionMatch": true,
+    "differentPixels": 0,
+    "totalPixels": 3777120
+  },
+  {
+    "width": 1920,
+    "height": 2633,
+    "dimensionMatch": true,
+    "differentPixels": 0,
+    "totalPixels": 5055360
+  }
+]

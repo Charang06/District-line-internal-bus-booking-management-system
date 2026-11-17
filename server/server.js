@@ -2541,14 +2541,17 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
     if (!groupId || groupId.length > 100) return res.status(400).json({ message: 'A valid booking group is required.' })
     const normalizedContact = normalizePhone(contactNumber)
     const normalizedFare = Number(fare)
+    if (!Number.isSafeInteger(normalizedFare) || normalizedFare < 0) return res.status(400).json({ message: 'Enter a valid whole-number fare of Rs. 0 or more.' })
     const paymentStatus = payment_status || 'unpaid'
     const normalizedGender = String(gender || '')
     const boardingPoint = String(boarding_point || '')
     const destinationPoint = String(destination || '')
     const bookingNotes = String(notes || '')
 
+    let bookingOperation = 'begin'
     try {
       await exec('BEGIN IMMEDIATE')
+      bookingOperation = 'validate_trip'
       const trip = await get(`${tripJoinSelect()} WHERE t.id = ?`, [trip_id])
       if (!trip || trip.status === 'cancelled') {
         await exec('ROLLBACK')
@@ -2568,16 +2571,18 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
         return res.status(409).json({ message: 'This booking group was already used with different passenger details.' })
       }
       const alreadySavedSeats = new Set(previous.map(booking => booking.seat_number))
-      const seatsToInsert = requestedSeats.filter(value => !alreadySavedSeats.has(value))
+      // Acquire unique-seat locks in a consistent order for concurrent batches.
+      const seatsToInsert = requestedSeats.filter(value => !alreadySavedSeats.has(value)).sort()
       const params = []
       const valueRows = seatsToInsert.map(seatValue => {
-        const bookingRef = `DL-P-${Date.now().toString(36).toUpperCase()}${Math.floor(Math.random() * 90 + 10)}`
+        const bookingRef = `DL-P-${randomUUID().toUpperCase()}`
         params.push(bookingRef, groupId, trip.id, seatValue, passengerName, normalizedContact, normalizedGender,
           boardingPoint, destinationPoint, normalizedFare, paymentStatus, bookingNotes, req.user.id)
         return `(${Array.from({ length: 12 }, () => '?').join(', ')}, 'confirmed', 'unconfirmed', 'pending', ?)`
       })
       let inserted = []
       if (valueRows.length) {
+        bookingOperation = 'insert_bookings'
         inserted = (await all(`
           INSERT INTO bookings (booking_ref, booking_group_id, trip_id, seat_number, passenger_name, contact, gender, boarding_point, destination, fare, payment_status, notes, status, confirmation_status, sms_status, created_by)
           VALUES ${valueRows.join(', ')}
@@ -2585,6 +2590,7 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
           RETURNING id, seat_number, booking_ref
         `, params))
       }
+      bookingOperation = 'read_saved_bookings'
       const savedBookings = await all(
         `SELECT bk.*, t.travel_date, t.route_code, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no
          FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id
@@ -2598,6 +2604,7 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
         return res.status(409).json({ message: 'This booking group was already used with different passenger details.' })
       }
       if (inserted.length) {
+        bookingOperation = 'insert_booking_audit'
         const auditParams = []
         const auditRows = inserted.map(booking => {
           auditParams.push(req.user.id, 'booking.create', 'booking', String(booking.id), booking.booking_ref)
@@ -2605,6 +2612,7 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
         })
         await run(`INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details) VALUES ${auditRows.join(', ')}`, auditParams)
       }
+      bookingOperation = 'commit'
       await exec('COMMIT')
 
       const savedBySeat = new Map(savedBookings.map(booking => [booking.seat_number, booking]))
@@ -2617,8 +2625,9 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
       })
     } catch (error) {
       try { await exec('ROLLBACK') } catch { /* ignore */ }
-      console.error(error)
-      return res.status(500).json({ message: 'Failed to save booking' })
+      console.error(JSON.stringify({ kind: 'bulk_booking_error', request_id: transactionContext.getStore()?.requestId,
+        operation: bookingOperation, code: /^[A-Z0-9]{5}$/.test(error.code || '') ? error.code : 'DATABASE_ERROR' }))
+      return res.status(500).json({ message: 'Unable to confirm whether the booking was saved. Please check the booking log before retrying.' })
     }
   }
 

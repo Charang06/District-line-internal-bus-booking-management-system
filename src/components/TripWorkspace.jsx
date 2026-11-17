@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import { ALL_SEAT_NUMBERS, boardingLocations, droppingLocations, validRouteLocations } from '../data/seatLayout'
 import SeatMap from './SeatMap'
+import { submitSeatBooking, uncertainBookingMessage } from '../data/bookingSubmission'
 
 function emptySeats() {
   return Object.fromEntries(ALL_SEAT_NUMBERS.map((number) => [number, { number, status: 'available', gender: null }]))
@@ -31,6 +32,11 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
   const bookingSubmitInProgress = useRef(false)
   const bookingGroupId = useRef('')
   const bookingGroupFingerprint = useRef('')
+  const pendingBookingKey = `district-line-pending-booking-${trip.id}`
+  const [initialPendingBooking] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(pendingBookingKey) || 'null') } catch { return null }
+  })
+  const pendingBooking = useRef(initialPendingBooking)
   const [cargoSaving, setCargoSaving] = useState(false)
   const bookingLoadIdRef = useRef(0)
   const [bookingForm, setBookingForm] = useState(() => readTripDraft(trip.id)?.bookingForm || initialBookingForm(route))
@@ -125,6 +131,7 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
 
   const handleClearBookingForm = () => {
     if (bookingSaving) return
+    if (pendingBooking.current) return setBookingError(uncertainBookingMessage)
     bookingGroupId.current = ''
     bookingGroupFingerprint.current = ''
     setSelectedSeats([])
@@ -164,7 +171,18 @@ export default function TripWorkspace({ token, trip, formNumber = 1, date, route
         bookingGroupId.current = globalThis.crypto?.randomUUID?.() || `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`
         bookingGroupFingerprint.current = fingerprint
       }
-      const data = await api.createBookings(token, { booking_group_id: bookingGroupId.current, ...submission })
+      const data = await submitSeatBooking({
+        submission: { booking_group_id: pendingBooking.current?.booking_group_id || bookingGroupId.current, ...submission },
+        pending: pendingBooking.current,
+        remember: attempt => {
+          // If storage is unavailable, fail before sending a new write.
+          if (attempt) sessionStorage.setItem(pendingBookingKey, JSON.stringify(attempt))
+          else sessionStorage.removeItem(pendingBookingKey)
+          pendingBooking.current = attempt
+        },
+        send: body => api.createBookings(token, body),
+        read: id => api.trip(token, id),
+      })
       const savedBookings = data.bookings || []
       const savedSeatNumbers = new Set(savedBookings.map((booking) => String(booking.seat_number)))
       const failed = data.failed || []

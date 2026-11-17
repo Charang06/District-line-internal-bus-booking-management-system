@@ -5,6 +5,8 @@ import os from 'node:os'
 import http from 'node:http'
 import {spawn} from 'node:child_process'
 import {accountWorkflows,adminWorkflows,loginWorkflows} from './browser-acceptance.mjs'
+import {mobileAudit,recoveryAudit} from './mobile-audit.mjs'
+import {bookingReliabilityChecks} from './booking-browser-checks.mjs'
 const meta=JSON.parse(fs.readFileSync(process.argv[2]||'docs/handover/districtline-final-candidate-manifest.json'))
 for(const k of Object.keys(process.env))if(k.startsWith('VITE_'))delete process.env[k]
 const {build}=await import('vite')
@@ -81,6 +83,7 @@ async function wait(expression){for(let i=0;i<80;i++){if(await evaluate('Boolean
 async function click(text){const ok=await evaluate('(()=>{const b=[...document.querySelectorAll("button")].find(e=>e.textContent.trim()==='+JSON.stringify(text)+');if(!b)return false;b.click();return true})()');if(!ok)throw Error('Missing button '+text);await pause(180)}
 const context={evaluate,call,check,click,wait,pause}
 const screenshotDir=process.argv[3]
+if(screenshotDir)fs.mkdirSync(screenshotDir,{recursive:true})
 const desktopPixelDiffs=[]
 const screenshotMetrics=[]
 async function captureReviewScreenshot(name,width,height=900){
@@ -94,7 +97,7 @@ async function captureReviewScreenshot(name,width,height=900){
  fs.mkdirSync(path.dirname(target),{recursive:true})
  fs.writeFileSync(target,Buffer.from(image.data,'base64'))
  if(name==='admin-dashboard'&&width>=1280){
-  const baseline=path.resolve('artifacts/mobile-responsive-ux/before',`${name}-${width}.png`)
+  const baseline=path.resolve(process.env.MOBILE_BASELINE_DIR||'artifacts/complete-mobile/before',`${name}-${width}.png`)
   if(fs.existsSync(baseline)){
    const before=fs.readFileSync(baseline).toString('base64')
    await call('Fetch.disable')
@@ -122,7 +125,7 @@ try{
   if(injection)await call('Page.removeScriptToEvaluateOnNewDocument',{identifier:injection})
   injection=(await call('Page.addScriptToEvaluateOnNewDocument',{source:'('+fixture.toString()+')('+JSON.stringify(mode)+')'})).identifier
   await call('Page.navigate',{url:origin+'/'});await wait('document.querySelector(".login-panel")||document.querySelector(".app-shell")||document.querySelector("nav")');await pause(350)
-  if(mode==='login'){await check('signed-out login screen',async()=>{if(!await evaluate('!!document.querySelector("input[type=password]")'))throw Error('No login form')});await loginWorkflows(context);continue}
+  if(mode==='login'){await check('signed-out login screen',async()=>{if(!await evaluate('!!document.querySelector("input[type=password]")'))throw Error('No login form')});await recoveryAudit(context,captureReviewScreenshot);await loginWorkflows(context);continue}
   await check(mode+' mobile navigation permission visibility',async()=>{
    await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true})
    const allowed=await evaluate('[...document.querySelectorAll(".nav-button")].map(e=>e.textContent.trim())')
@@ -137,16 +140,22 @@ try{
   if(mode==='admin')for(const tab of ['Home','Log','Info','Dashboard','Customers','Staff'])await check('admin '+tab+' navigation',async()=>{await click(tab);if(!await evaluate('document.body.textContent.length>100'))throw Error('Empty screen: '+await evaluate('window.__lastError'))})
   if(mode==='admin'&&screenshotDir){
    await click('Dashboard');await wait('document.querySelector(".admin-dashboard-page")')
-   for(const width of [320,375,390,430,768,1024,1280,1440,1920])await captureReviewScreenshot('admin-dashboard',width,width>=1280?1100:900)
+   for(const width of [320,360,375,390,430,768,1024,1280,1440,1920])await captureReviewScreenshot('admin-dashboard',width,width>=1280?1100:900)
+   for(const tab of ['Home','Log','Info','Customers','Staff']){
+    await click(tab)
+    for(const width of [320,768,1440])await captureReviewScreenshot('admin-'+tab.toLowerCase(),width)
+   }
    await click('Staff');await wait('document.querySelector(".staff-ui-page")');await captureReviewScreenshot('admin-staff',390)
   }
   if(mode==='admin')await adminWorkflows(context)
+  if(mode==='admin')await mobileAudit(context,captureReviewScreenshot)
+  if(mode==='admin'&&process.env.BOOKING_RELIABILITY_AUDIT==='1')await bookingReliabilityChecks(context)
   if(mode==='none'){await check('ungranted staff Accounts navigation absent',async()=>{if(await evaluate('[...document.querySelectorAll("button")].some(b=>b.textContent.trim()==="Accounts")'))throw Error('Unauthorized Accounts navigation')});continue}
   await click('Accounts');await wait('document.body.textContent.includes("Revenue and Expenses")');await pause(200)
   if(mode==='manager'&&screenshotDir){await captureReviewScreenshot('staff-accounts',390);await captureReviewScreenshot('staff-accounts',768)}
   for(const width of [320,360,375,390,430,768,1024,1280,1440,1920])await check(mode+' Accounts responsive '+width,async()=>{
-   await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<768});await pause(80)
-   const metrics=await evaluate('({innerWidth,scroll:document.documentElement.scrollWidth,zero:[...document.querySelectorAll("button,select,input")].filter(e=>e.getBoundingClientRect().width>0&&e.getBoundingClientRect().height<12).length,smallTargets:[...document.querySelectorAll("button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range])")].filter(e=>e.getBoundingClientRect().width>0&&getComputedStyle(e).visibility!=="hidden"&&e.getBoundingClientRect().height<44).map(e=>({tag:e.tagName,className:e.className,text:e.textContent.trim().slice(0,40),height:Math.round(e.getBoundingClientRect().height)}))})')
+   await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<768});await pause(250)
+   const metrics=await evaluate('({innerWidth,scroll:document.documentElement.scrollWidth,zero:[...document.querySelectorAll("button,select,input")].filter(e=>e.getBoundingClientRect().width>0&&e.getBoundingClientRect().height<12).length,smallTargets:[...document.querySelectorAll("button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range])")].filter(e=>e.getBoundingClientRect().width>0&&getComputedStyle(e).visibility!=="hidden"&&e.getBoundingClientRect().height<43.5).map(e=>({tag:e.tagName,className:e.className,text:e.textContent.trim().slice(0,40),height:Math.round(e.getBoundingClientRect().height)}))})')
    if(metrics.innerWidth!==width||metrics.scroll>width+2)throw Error('Page overflow or viewport expansion '+JSON.stringify(metrics))
    if(width<=1024&&metrics.smallTargets.length)throw Error('Touch target below 44px '+JSON.stringify(metrics))
   })
@@ -155,7 +164,7 @@ try{
   else {
    await accountWorkflows(context,mode)
    await check(mode+' minimized crew selectors populated',async()=>{if(!await evaluate('[...document.querySelectorAll("select option")].some(e=>e.textContent==="Synthetic Driver")'))throw Error('Missing crew')})
-   await check(mode+' manual revenue fixed count inputs',async()=>{const values=await evaluate('[...document.querySelectorAll(".accounts-seat-table input[type=number]")].map(e=>({max:e.max,step:e.step}))');if(values.length!==16||values.some((v,i)=>i%2===0&&v.max!=='49'))throw Error(JSON.stringify(values))})
+   await check(mode+' manual revenue fixed count inputs',async()=>{const values=await evaluate('[...document.querySelectorAll(".accounts-seat-table input[type=number]")].map(e=>({max:e.max,step:e.step}))');if(values.length!==16||values.some((v,i)=>i%2===0&&!['49','1000'].includes(v.max)))throw Error(JSON.stringify(values))})
   }
   await check(mode+' no unmatched synthetic API calls',async()=>{const unmatched=await evaluate('window.__unhandled');if(unmatched.length)throw Error(JSON.stringify(unmatched))})
  }

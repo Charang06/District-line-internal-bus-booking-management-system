@@ -371,6 +371,9 @@
 }
 
 @media (max-width: 760px) {
+  .home-page-shell .dashboard .cargo-panel > .primary-button {
+    width: calc(100% - 20px);
+  }
   .home-page-shell .topbar {
     box-shadow: 0 3px 12px rgb(16 43 70 / 10%);
   }
@@ -437,5 +440,23 @@
 
   .home-page-shell .dashboard .aisle-index {
     width: 30px;
+  }
+}
+@media (max-width: 760px) {
+  .home-page-shell .dashboard .cargo-payment-options {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .home-page-shell .dashboard .cargo-payment-options label {
+    min-height: 44px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+  .home-page-shell .dashboard :is(.radio-pill, .cargo-payment-options label) input[type='radio'] {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    min-height: 18px;
+    padding: 0;
   }
 }

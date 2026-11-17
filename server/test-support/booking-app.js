@@ -30,7 +30,7 @@ export function cookieSessionRequest(baseUrl, fetchLocal = fetch) {
 export async function loadBookingTestApp(pool, testOptions = {}) {
   if (!vm.SourceTextModule) throw Error('Use --experimental-vm-modules for the isolated booking harness; no database startup performed')
   const entry = new URL('../server.js', import.meta.url)
-  const source = bookingRouteSource(fs.readFileSync(entry, 'utf8'))
+  const source = bookingRouteSource(testOptions.sourceOverride || fs.readFileSync(entry, 'utf8'))
     + (testOptions.exerciseStartup ? '\nexport { initializeDatabaseWithRetry as startupProbe }\n' : '')
   const safeEnv = { NODE_ENV: 'test', DATABASE_URL: 'postgresql://test.invalid/synthetic', SESSION_COOKIE_SAME_SITE: 'lax',
     ENABLE_ADMIN_USERNAME_RECOVERY: 'false', ENABLE_ADMIN_RECOVERY_EMAIL_VERIFICATION: 'false' }
@@ -40,7 +40,7 @@ export async function loadBookingTestApp(pool, testOptions = {}) {
     ENABLE_ADMIN_RECOVERY_EMAIL_VERIFICATION: 'true',
   })
   let failBookingAuditOnce = Boolean(testOptions.failBookingAuditOnce)
-  const testPool = failBookingAuditOnce ? new Proxy(pool, {
+  const testPool = (failBookingAuditOnce || testOptions.delayBookingInsertMs) ? new Proxy(pool, {
     get(target, property) {
       if (property === 'connect') return async () => {
         const client = await target.connect()
@@ -48,6 +48,9 @@ export async function loadBookingTestApp(pool, testOptions = {}) {
           get(clientTarget, clientProperty) {
             if (clientProperty === 'query') return async (sql, params) => {
               const statement = typeof sql === 'string' ? sql : sql?.text || ''
+              if (testOptions.delayBookingInsertMs && /INSERT INTO bookings/i.test(statement)) {
+                await new Promise(resolve => setTimeout(resolve, testOptions.delayBookingInsertMs))
+              }
               if (failBookingAuditOnce && /INSERT INTO audit_logs/i.test(statement) && params?.includes('booking.create')) {
                 failBookingAuditOnce = false
                 throw new Error('Synthetic booking audit failure')
@@ -74,10 +77,16 @@ export async function loadBookingTestApp(pool, testOptions = {}) {
   }
   const context = vm.createContext({ process: { env: safeEnv, hrtime: process.hrtime.bind(process) }, Buffer,
     URL, AbortSignal, setTimeout, clearTimeout,
-    console: { info() {}, log() {}, warn() {}, error() {} },
+    console: { info() {}, log() {}, warn() {}, error(...args) { testOptions.recordError?.(...args) } },
     fetch: recordingFetch })
   // hrtime.bigint is used by production metrics.
   context.process.hrtime.bigint = process.hrtime.bigint
+  if (testOptions.freezeBookingEntropy) {
+    const frozenNow = Date.now()
+    context.Date = class extends Date { static now() { return frozenNow } }
+    context.Math = Object.create(Math)
+    context.Math.random = () => 0.5
+  }
   const module = new vm.SourceTextModule(source, { context, identifier: entry.href, initializeImportMeta(meta) { meta.url = entry.href } })
   const synthetic = object => new vm.SyntheticModule(Object.keys(object), function () {
     for (const [key, value] of Object.entries(object)) this.setExport(key, value)
