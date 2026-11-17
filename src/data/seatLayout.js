@@ -36,9 +36,9 @@ export const ROUTES = [
     via: 'Via Kalmunai • Batticaloa • Polonnaruwa • Kurunegala Express',
     defaultFrom: 'Kattankudy',
     defaultTo: 'Colombo',
-    stops: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Colombo'],
-    boarding: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Colombo'],
-    alighting: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Colombo'],
+    stops: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Kurunegala', 'Mirigama', 'Minuwangoda', 'Airport', 'Colombo', 'Pettah', 'Maradana', 'Kollupitiya', 'Bambalapitiya', 'Wellawatta', 'Dehiwala'],
+    boarding: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Kurunegala', 'Mirigama', 'Minuwangoda', 'Airport', 'Colombo', 'Pettah', 'Maradana', 'Kollupitiya', 'Bambalapitiya', 'Wellawatta'],
+    alighting: ['Kattankudy', 'Batticaloa', 'Eravur', 'Valaichenai', 'Oddamavadi', 'Gallela', 'Polonnaruwa', 'Dambulla', 'Kurunegala', 'Mirigama', 'Minuwangoda', 'Airport', 'Colombo', 'Pettah', 'Maradana', 'Kollupitiya', 'Bambalapitiya', 'Wellawatta', 'Dehiwala'],
   },
   {
     code: 'CMB_KTY',
@@ -47,12 +47,30 @@ export const ROUTES = [
     via: 'Via Maradana Terminal • Fort • Dambulla • Batticaloa',
     defaultFrom: 'Colombo',
     defaultTo: 'Kattankudy',
-    stops: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Kattankudy'],
-    boarding: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Kattankudy'],
-    alighting: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Kattankudy'],
+    stops: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Polonnaruwa', 'Gallela', 'Oddamavadi', 'Valaichenai', 'Eravur', 'Batticaloa', 'Kattankudy'],
+    boarding: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Polonnaruwa', 'Gallela', 'Oddamavadi', 'Valaichenai', 'Eravur', 'Batticaloa'],
+    alighting: ['Dehiwala', 'Wellawatta', 'Bambalapitiya', 'Kollupitiya', 'Maradana', 'Pettah', 'Colombo', 'Airport', 'Minuwangoda', 'Mirigama', 'Kurunegala', 'Dambulla', 'Polonnaruwa', 'Gallela', 'Oddamavadi', 'Valaichenai', 'Eravur', 'Batticaloa', 'Kattankudy'],
   },
 ]
 
 export function routeByCode(code) {
   return ROUTES.find((route) => route.code === code) || ROUTES[0]
+}
+
+export function routeStops(route) {
+  return route?.stops || route?.boarding || []
+}
+
+export function boardingLocations(route) {
+  return routeStops(route).slice(0, -1)
+}
+
+export function droppingLocations(route, from) {
+  const stops = routeStops(route)
+  const fromIndex = stops.indexOf(from)
+  return fromIndex < 0 ? [] : stops.slice(fromIndex + 1)
+}
+
+export function validRouteLocations(route, from, to) {
+  return boardingLocations(route).includes(from) && droppingLocations(route, from).includes(to)
 }

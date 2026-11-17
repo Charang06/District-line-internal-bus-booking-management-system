@@ -35,7 +35,7 @@ function TripVisualIcon({ name }) {
 }
 import './components/AdminDashboard.css'
 import UsernameRecoveryForm from './components/UsernameRecoveryForm'
-import { ROUTES, SEAT_LAYOUT, routeByCode } from './data/seatLayout'
+import { ROUTES, SEAT_LAYOUT, boardingLocations, droppingLocations, routeByCode, validRouteLocations } from './data/seatLayout'
 import { buildTripOverview, filterTripOverviewTrips } from './data/tripOverview'
 import { busRegistrations } from './data/busRegistrations'
 
@@ -630,6 +630,9 @@ function App() {
     }).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')) || Number(a.id) - Number(b.id))
   }, [customerLogs])
   const editingCustomerLog = customerLogRows.find((log) => log.id === editingCustomerDetailsId) || null
+  const editingCustomerRoute = editingCustomerLog ? routeByCode(editingCustomerLog.route_code) : null
+  const editingCustomerFromOptions = editingCustomerRoute ? boardingLocations(editingCustomerRoute) : []
+  const editingCustomerToOptions = editingCustomerRoute ? droppingLocations(editingCustomerRoute, customerFromDraft) : []
 
   const showMessage = useCallback((text, isError = false) => {
     setNotice(isError ? '' : text)
@@ -1105,6 +1108,7 @@ function App() {
     const contact = customerContactDraft.trim()
     const fare = Number(customerFareDraft)
     const notes = customerNotesDraft.trim()
+    if (!validRouteLocations(routeByCode(log.route_code), customerFromDraft, customerToDraft)) return showMessage('Choose a valid boarding point and a destination that comes after it.', true)
     if (!passengerName && !contact) return showMessage('Enter a customer name or mobile number.', true)
     if (passengerName.length > 120) return showMessage('Customer names must be 120 characters or fewer.', true)
     if (contact.length > 30) return showMessage('Customer mobile numbers must be 30 characters or fewer.', true)
@@ -2332,8 +2336,8 @@ function App() {
                 <label>Customer name<input autoFocus maxLength={120} value={customerNameDraft} onChange={(event) => setCustomerNameDraft(event.target.value)} /></label>
                 <label>Contact number<input type="tel" maxLength={30} value={customerContactDraft} onChange={(event) => setCustomerContactDraft(event.target.value)} /></label>
                 <label>Gender<select value={customerGenderDraft} onChange={(event) => setCustomerGenderDraft(event.target.value)}><option value="">Not specified</option><option value="Male">Male</option><option value="Female">Female</option>{customerGenderDraft && !['Male', 'Female'].includes(customerGenderDraft) && <option value={customerGenderDraft}>{customerGenderDraft}</option>}</select></label>
-                <label>From<select value={customerFromDraft} onChange={(event) => setCustomerFromDraft(event.target.value)}><option value="">Select boarding point</option>{routeByCode(editingCustomerLog.route_code).boarding.map((point) => <option key={point} value={point}>{point}</option>)}{customerFromDraft && !routeByCode(editingCustomerLog.route_code).boarding.includes(customerFromDraft) && <option value={customerFromDraft}>{customerFromDraft}</option>}</select></label>
-                <label>To<select value={customerToDraft} onChange={(event) => setCustomerToDraft(event.target.value)}><option value="">Select destination</option>{routeByCode(editingCustomerLog.route_code).alighting.map((point) => <option key={point} value={point}>{point}</option>)}{customerToDraft && !routeByCode(editingCustomerLog.route_code).alighting.includes(customerToDraft) && <option value={customerToDraft}>{customerToDraft}</option>}</select></label>
+                <label>From<select value={customerFromDraft} onChange={(event) => { const from = event.target.value; setCustomerFromDraft(from); if (!droppingLocations(editingCustomerRoute, from).includes(customerToDraft)) setCustomerToDraft('') }}><option value="">Select boarding point</option>{editingCustomerFromOptions.map((point) => <option key={point} value={point}>{point}</option>)}{customerFromDraft && !editingCustomerFromOptions.includes(customerFromDraft) && <option value={customerFromDraft}>{customerFromDraft}</option>}</select></label>
+                <label>To<select value={customerToDraft} onChange={(event) => setCustomerToDraft(event.target.value)}><option value="">Select destination</option>{editingCustomerToOptions.map((point) => <option key={point} value={point}>{point}</option>)}</select></label>
                 <label>Fare per seat (Rs.)<input type="number" min="0" max="1000000000" step="1" value={customerFareDraft} onChange={(event) => setCustomerFareDraft(event.target.value)} /></label>
                 <label className="customer-details-notes-field">Remark / Note<textarea maxLength={1000} value={customerNotesDraft} onChange={(event) => setCustomerNotesDraft(event.target.value)} /></label>
               </div>
