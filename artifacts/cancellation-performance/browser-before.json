@@ -1,0 +1,182 @@
+[
+  {
+    "size": 1,
+    "dialogMs": 11.199999988079071,
+    "updateMs": 167,
+    "busy": false,
+    "busyMs": null,
+    "requests": [
+      {
+        "path": "/api/bookings/901/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings",
+        "method": "GET"
+      },
+      {
+        "path": "/api/cargo",
+        "method": "GET"
+      },
+      {
+        "path": "/api/trips",
+        "method": "GET"
+      },
+      {
+        "path": "/api/bookings",
+        "method": "GET"
+      },
+      {
+        "path": "/api/cargo",
+        "method": "GET"
+      }
+    ],
+    "requestCount": 6,
+    "api": [
+      {
+        "path": "/api/bookings",
+        "ms": 75.5
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 75.5
+      },
+      {
+        "path": "/api/bookings/901/cancel",
+        "ms": 87
+      },
+      {
+        "path": "/api/bookings",
+        "ms": 76.30000001192093
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 76.5
+      },
+      {
+        "path": "/api/trips",
+        "ms": 75.89999997615814
+      },
+      {
+        "path": "/api/bookings",
+        "ms": 75.30000001192093
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 75.5
+      }
+    ]
+  },
+  {
+    "size": 5,
+    "dialogMs": 3.800000011920929,
+    "updateMs": 465,
+    "busy": false,
+    "busyMs": null,
+    "requests": [
+      {
+        "path": "/api/bookings/1301/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1302/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1303/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1304/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1305/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings",
+        "method": "GET"
+      },
+      {
+        "path": "/api/cargo",
+        "method": "GET"
+      },
+      {
+        "path": "/api/trips",
+        "method": "GET"
+      },
+      {
+        "path": "/api/bookings",
+        "method": "GET"
+      },
+      {
+        "path": "/api/cargo",
+        "method": "GET"
+      }
+    ],
+    "requestCount": 10,
+    "api": [
+      {
+        "path": "/api/trips/11",
+        "ms": 81.39999997615814
+      },
+      {
+        "path": "/api/trips/12",
+        "ms": 81.5
+      },
+      {
+        "path": "/api/buses",
+        "ms": 81.5
+      },
+      {
+        "path": "/api/bookings",
+        "ms": 91.39999997615814
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 91.59999996423721
+      },
+      {
+        "path": "/api/bookings/1301/cancel",
+        "ms": 80.69999998807907
+      },
+      {
+        "path": "/api/bookings/1302/cancel",
+        "ms": 77
+      },
+      {
+        "path": "/api/bookings/1303/cancel",
+        "ms": 76.09999996423721
+      },
+      {
+        "path": "/api/bookings/1304/cancel",
+        "ms": 75.69999998807907
+      },
+      {
+        "path": "/api/bookings/1305/cancel",
+        "ms": 76.29999995231628
+      },
+      {
+        "path": "/api/bookings",
+        "ms": 77
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 77
+      },
+      {
+        "path": "/api/trips",
+        "ms": 75.30000001192093
+      },
+      {
+        "path": "/api/bookings",
+        "ms": 82.69999998807907
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 82.89999997615814
+      }
+    ]
+  }
+]

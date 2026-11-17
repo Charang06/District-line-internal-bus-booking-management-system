@@ -7,6 +7,7 @@ import {spawn} from 'node:child_process'
 import {accountWorkflows,adminWorkflows,loginWorkflows} from './browser-acceptance.mjs'
 import {mobileAudit,recoveryAudit} from './mobile-audit.mjs'
 import {bookingReliabilityChecks} from './booking-browser-checks.mjs'
+import {cancellationChecks} from './cancellation-browser-checks.mjs'
 const meta=JSON.parse(fs.readFileSync(process.argv[2]||'docs/handover/districtline-final-candidate-manifest.json'))
 for(const k of Object.keys(process.env))if(k.startsWith('VITE_'))delete process.env[k]
 const {build}=await import('vite')
@@ -137,6 +138,7 @@ try{
    await call('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',code:'Escape',windowsVirtualKeyCode:27});await call('Input.dispatchKeyEvent',{type:'keyUp',key:'Escape',code:'Escape',windowsVirtualKeyCode:27})
    if(!await evaluate('!document.querySelector(".nav-tabs").classList.contains("is-open")&&document.body.style.overflow===""&&document.activeElement.classList.contains("mobile-nav-toggle")'))throw Error('Escape did not close drawer and restore focus/scroll')
   })
+  if(mode==='admin'&&process.env.CANCELLATION_AUDIT){await cancellationChecks(context);break}
   if(mode==='admin')for(const tab of ['Home','Log','Info','Dashboard','Customers','Staff'])await check('admin '+tab+' navigation',async()=>{await click(tab);if(!await evaluate('document.body.textContent.length>100'))throw Error('Empty screen: '+await evaluate('window.__lastError'))})
   if(mode==='admin'&&screenshotDir){
    await click('Dashboard');await wait('document.querySelector(".admin-dashboard-page")')

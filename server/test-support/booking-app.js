@@ -77,7 +77,7 @@ export async function loadBookingTestApp(pool, testOptions = {}) {
   }
   const context = vm.createContext({ process: { env: safeEnv, hrtime: process.hrtime.bind(process) }, Buffer,
     URL, AbortSignal, setTimeout, clearTimeout,
-    console: { info() {}, log() {}, warn() {}, error(...args) { testOptions.recordError?.(...args) } },
+    console: { info(...args) { testOptions.recordInfo?.(...args) }, log() {}, warn() {}, error(...args) { testOptions.recordError?.(...args) } },
     fetch: recordingFetch })
   // hrtime.bigint is used by production metrics.
   context.process.hrtime.bigint = process.hrtime.bigint

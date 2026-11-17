@@ -2680,7 +2680,7 @@ app.post('/api/bookings/:id/cancel', authMiddleware, requirePageManage('log', 'p
     await exec('BEGIN IMMEDIATE')
     const booking = await get(
       `SELECT bk.*, t.travel_date, t.route_label, t.trip_code, COALESCE(t.bus_no, b.registration_no) as registration_no
-       FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id WHERE bk.id = ?`,
+       FROM bookings bk JOIN trips t ON t.id = bk.trip_id LEFT JOIN buses b ON b.id = t.bus_id WHERE bk.id = ? FOR UPDATE OF bk`,
       [req.params.id],
     )
     if (!booking) {
@@ -2696,18 +2696,18 @@ app.post('/api/bookings/:id/cancel', authMiddleware, requirePageManage('log', 'p
       await exec('ROLLBACK')
       return res.status(409).json({ message: `Booking is part of finalized duty ${finalizedDuty.duty_code} and cannot be changed.` })
     }
-    await run(
-      `UPDATE bookings SET status = 'cancelled', cancelled_at = CURRENT_TIMESTAMP, cancelled_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+    const next = await get(
+      `UPDATE bookings SET status = 'cancelled', cancelled_at = CURRENT_TIMESTAMP, cancelled_by = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? RETURNING *`,
       [req.user.id, booking.id],
     )
-    await exec('COMMIT')
-    const next = await get('SELECT * FROM bookings WHERE id = ?', [booking.id])
     await audit(req.user, 'booking.cancel', 'booking', booking.id, booking.booking_ref)
+    await exec('COMMIT')
     res.json({ booking: { ...booking, ...next } })
   } catch (error) {
     try { await exec('ROLLBACK') } catch { /* ignore */ }
-    console.error(error)
-    res.status(500).json({ message: 'Failed to cancel booking' })
+    console.error(JSON.stringify({ kind: 'booking_cancel_error', request_id: transactionContext.getStore()?.requestId,
+      code: /^[A-Z0-9]{5}$/.test(error.code || '') ? error.code : 'DATABASE_ERROR' }))
+    res.status(500).json({ message: 'Unable to confirm cancellation. Please check the booking status before retrying.' })
   }
 })
 

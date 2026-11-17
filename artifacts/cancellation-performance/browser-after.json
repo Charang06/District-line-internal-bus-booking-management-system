@@ -1,0 +1,102 @@
+[
+  {
+    "size": 1,
+    "dialogMs": 10.399999976158142,
+    "updateMs": 83.10000002384186,
+    "busy": true,
+    "busyMs": 4.400000035762787,
+    "requests": [
+      {
+        "path": "/api/bookings/901/cancel",
+        "method": "POST"
+      }
+    ],
+    "requestCount": 1,
+    "api": [
+      {
+        "path": "/api/bookings",
+        "ms": 76.60000002384186
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 76.69999998807907
+      },
+      {
+        "path": "/api/bookings/901/cancel",
+        "ms": 80.5
+      }
+    ]
+  },
+  {
+    "size": 5,
+    "dialogMs": 3.900000035762787,
+    "updateMs": 160.19999998807907,
+    "busy": true,
+    "busyMs": 3.299999952316284,
+    "requests": [
+      {
+        "path": "/api/bookings/1301/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1302/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1303/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1304/cancel",
+        "method": "POST"
+      },
+      {
+        "path": "/api/bookings/1305/cancel",
+        "method": "POST"
+      }
+    ],
+    "requestCount": 5,
+    "api": [
+      {
+        "path": "/api/trips/11",
+        "ms": 80.40000003576279
+      },
+      {
+        "path": "/api/trips/12",
+        "ms": 80.5
+      },
+      {
+        "path": "/api/buses",
+        "ms": 80.60000002384186
+      },
+      {
+        "path": "/api/bookings",
+        "ms": 81
+      },
+      {
+        "path": "/api/cargo",
+        "ms": 81.10000002384186
+      },
+      {
+        "path": "/api/bookings/1301/cancel",
+        "ms": 81.10000002384186
+      },
+      {
+        "path": "/api/bookings/1302/cancel",
+        "ms": 81.30000001192093
+      },
+      {
+        "path": "/api/bookings/1303/cancel",
+        "ms": 81.19999998807907
+      },
+      {
+        "path": "/api/bookings/1304/cancel",
+        "ms": 81.30000001192093
+      },
+      {
+        "path": "/api/bookings/1305/cancel",
+        "ms": 76.39999997615814
+      }
+    ]
+  }
+]
