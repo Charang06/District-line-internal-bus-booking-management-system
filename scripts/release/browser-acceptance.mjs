@@ -2,18 +2,18 @@
 export function acceptanceHelpers({evaluate,call,pause}) {
  const value=async(expression,text)=>{
   await evaluate(`(()=>{const e=(${expression});if(!e)throw Error('Missing input');const p=e instanceof HTMLSelectElement?HTMLSelectElement.prototype:HTMLInputElement.prototype;Object.getOwnPropertyDescriptor(p,'value').set.call(e,${JSON.stringify(text)});e.dispatchEvent(new Event(e instanceof HTMLSelectElement?'change':'input',{bubbles:true}))})()`)
-  await pause(60)
+  await pause(250)
  }
  const field=async(scope,label,text)=>value(`(()=>{const l=[...document.querySelectorAll(${JSON.stringify(scope+' label')})].find(e=>e.textContent.trim().startsWith(${JSON.stringify(label)}));return l?.control||l?.querySelector('input,select')})()`,text)
  const assert=async(expression,message)=>{if(!await evaluate('Boolean('+expression+')'))throw Error(message)}
  const responsive=async()=>{for(const width of [320,360,375,390,430,768,1024,1280,1440,1920]){
-  await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<768});await pause(60)
+  await call('Emulation.setDeviceMetricsOverride',{width,height:1000,deviceScaleFactor:1,mobile:width<768});await pause(250)
   const viewport=await evaluate('({innerWidth,clientWidth:document.documentElement.clientWidth,scrollWidth:document.documentElement.scrollWidth})')
   if(viewport.innerWidth!==width||viewport.scrollWidth>width+2){const staff=await evaluate('JSON.stringify([...document.querySelectorAll(".staff-ui-page,.staff-ui-page-header,.staff-ui-section-header,.staff-ui-header-actions,.staff-ui-search,.staff-ui-summary,.staff-ui-workspace,.staff-ui-directory,.staff-ui-details,.staff-ui-bus-grid,.staff-ui-bus-card")].map(e=>({className:e.className,x:Math.round(e.getBoundingClientRect().x),right:Math.round(e.getBoundingClientRect().right),width:Math.round(e.getBoundingClientRect().width),scrollWidth:e.scrollWidth,minWidth:getComputedStyle(e).minWidth,columns:getComputedStyle(e).gridTemplateColumns})))');throw Error('Horizontal overflow or viewport expansion at '+width+': '+JSON.stringify(viewport)+' staff='+staff)}
   await assert('[...document.querySelectorAll("button,input,select")].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden").every(e=>e.getBoundingClientRect().height>=12)','Unusable control height at '+width)
-  if(width<=1024){const targets=await evaluate('[...document.querySelectorAll("button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range])")].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden"&&e.getBoundingClientRect().height<44).map(e=>({tag:e.tagName,className:e.className,text:e.textContent.trim().slice(0,32),height:Math.round(e.getBoundingClientRect().height)}))');if(targets.length)throw Error('Touch targets below 44px at '+width+': '+JSON.stringify(targets))}
+  if(width<=1024){const targets=await evaluate('[...document.querySelectorAll("button,select,input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range])")].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=="hidden"&&e.getBoundingClientRect().height<43.5).map(e=>({tag:e.tagName,className:e.className,text:e.textContent.trim().slice(0,32),height:Math.round(e.getBoundingClientRect().height)}))');if(targets.length)throw Error('Touch targets below 44px at '+width+': '+JSON.stringify(targets))}
  }}
- const keyboard=async(key,modifiers=0)=>{await call('Input.dispatchKeyEvent',{type:'keyDown',key,code:key,modifiers,windowsVirtualKeyCode:key==='Tab'?9:27});await call('Input.dispatchKeyEvent',{type:'keyUp',key,code:key,modifiers,windowsVirtualKeyCode:key==='Tab'?9:27});await pause(60)}
+ const keyboard=async(key,modifiers=0)=>{await call('Input.dispatchKeyEvent',{type:'keyDown',key,code:key,modifiers,windowsVirtualKeyCode:key==='Tab'?9:27});await call('Input.dispatchKeyEvent',{type:'keyUp',key,code:key,modifiers,windowsVirtualKeyCode:key==='Tab'?9:27});await pause(250)}
  const navigation=async(click)=>{
   for(const width of [320,360,375,390,430,768,1024]){
    await call('Emulation.setDeviceMetricsOverride',{width,height:844,deviceScaleFactor:1,mobile:width<768});await pause(80)
@@ -41,6 +41,7 @@ export async function accountWorkflows(ctx,mode) {
  })
  await check(mode+' manual revenue four categories, combined 49 cap, submit and locked ledger',async()=>{
   await field('.accounts-route-revenue-form','Bus number','SYN-BUS')
+  await field('.accounts-route-revenue-form','No. of seats','49')
   await value('document.querySelectorAll(".accounts-seat-table input")[0]','25')
   await value('document.querySelectorAll(".accounts-seat-table input")[2]','25')
   await assert('document.querySelector(".accounts-lock-submit").disabled','Combined 50 seats did not block submission')

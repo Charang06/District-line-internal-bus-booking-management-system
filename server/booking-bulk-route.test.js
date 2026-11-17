@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import vm from 'node:vm'
+import { randomUUID } from 'node:crypto'
 
 const source = fs.readFileSync(new URL('./server.js', import.meta.url), 'utf8')
 const start = source.indexOf("app.post('/api/bookings'")
@@ -19,6 +20,8 @@ async function invoke(body) {
     json(data) { this.data = data; return this },
   }
   vm.runInNewContext(route, {
+    randomUUID,
+    transactionContext: { getStore: () => ({ requestId: 'synthetic' }) },
     app: { post(...args) { handler = args.at(-1) } },
     authMiddleware() {},
     requireAnyPageManage() {},

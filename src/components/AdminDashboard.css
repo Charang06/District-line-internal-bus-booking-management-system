@@ -335,3 +335,13 @@
   .admin-dashboard-page .trip-overview-revenue > div { display: flex; justify-content: space-between; gap: 8px; padding: 0 0 6px; border-right: 0; border-bottom: 1px solid #edf0f5; }
   .admin-dashboard-page .trip-overview-revenue > div:last-child { padding-bottom: 0; border-bottom: 0; }
 }
+
+/* Keep the three statistics legible inside the narrow nested trip card.
+   Older dashboard rules create three columns even beside the doughnut. */
+@media (max-width: 600px) {
+  .admin-dashboard-page .trip-overview-route-pie-card { grid-template-columns: minmax(0, 1fr); }
+  .admin-dashboard-page .trip-overview-route-seat-counts { grid-template-columns: minmax(0, 1fr); }
+  .admin-dashboard-page .trip-overview-route-seat-counts > div { grid-template-columns: minmax(0, 1fr) auto; }
+  .admin-dashboard-page .trip-overview-route-seat-counts > div > span { flex-wrap: wrap; }
+  .admin-dashboard-page .trip-overview-route-seat-counts strong { grid-column: 2; grid-row: 1 / span 2; }
+}

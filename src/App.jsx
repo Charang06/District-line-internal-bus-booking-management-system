@@ -920,7 +920,10 @@ function App() {
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1024px)')
-    const update = () => setIsCompactNavigation(media.matches)
+    const update = () => {
+      setIsCompactNavigation(media.matches)
+      if (!media.matches) setMobileNavOpen(false)
+    }
     media.addEventListener('change', update)
     return () => media.removeEventListener('change', update)
   }, [])
@@ -928,7 +931,24 @@ function App() {
   useEffect(() => {
     if (!mobileNavOpen) return undefined
     const previousOverflow = document.body.style.overflow
+    const toggle = document.querySelector('.mobile-nav-toggle')
+    const navigation = document.querySelector('#primary-navigation')
+    navigation?.querySelector('button')?.focus()
     const closeOnEscape = (event) => {
+      if (event.key === 'Tab') {
+        const controls = [toggle, ...navigation.querySelectorAll('button:not(:disabled)')]
+          .filter(element => element && element.getClientRects().length)
+        const first = controls[0]
+        const last = controls.at(-1)
+        if (event.shiftKey && (document.activeElement === first || !controls.includes(document.activeElement))) {
+          event.preventDefault()
+          last?.focus()
+        } else if (!event.shiftKey && (document.activeElement === last || !controls.includes(document.activeElement))) {
+          event.preventDefault()
+          first?.focus()
+        }
+        return
+      }
       if (event.key !== 'Escape') return
       setMobileNavOpen(false)
       document.querySelector('.mobile-nav-toggle')?.focus()
@@ -1661,6 +1681,7 @@ function App() {
               key={tab}
               type="button"
               className={activeTab === tab ? 'nav-button active' : 'nav-button'}
+              aria-current={activeTab === tab ? 'page' : undefined}
               onClick={() => {
                 if ((tab === 'Dashboard' && !staffPermissions.dashboard)
                   || (tab === 'Accounts' && !staffPermissions.accounts)

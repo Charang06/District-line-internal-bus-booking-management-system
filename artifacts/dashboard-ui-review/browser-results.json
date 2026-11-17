@@ -37,7 +37,8 @@
   },
   {
     "name": "fixed authorized edit uses the selected bus ID",
-    "passed": true
+    "passed": false,
+    "error": "TypeError: Cannot read properties of undefined (reading 'body')\n    at <anonymous>:1:73"
   },
   {
     "name": "restricted staff cannot see trip actions",
@@ -45,15 +46,18 @@
   },
   {
     "name": "administrator can create and edit a synthetic staff account",
-    "passed": true
+    "passed": false,
+    "error": "Timed out: !document.querySelector('.staff-form-modal')&&document.body.textContent.includes('synthetic_dispatcher') {\"body\":\"OPERATIONAL DATE: 2026-11-18\\nSY\\nSynthetic User\\nAdministrator · Dispatcher HQ\\nStaff Management\\n\\nManage staff accounts, permissions, and access to District Line.\\n\\n+\\nAdd Staff\\nTotal s\",\"location\":\"/\"}"
   },
   {
     "name": "administrator logout returns to sign-in",
-    "passed": true
+    "passed": false,
+    "error": "Timed out: !!document.querySelector('#login-username') {\"body\":\"OPERATIONAL DATE: 2026-11-18\\nSY\\nSynthetic User\\nAdministrator · Dispatcher HQ\\nStaff Management\\n\\nManage staff accounts, permissions, and access to District Line.\\n\\n+\\nAdd Staff\\nTotal s\",\"location\":\"/\"}"
   },
   {
     "name": "booking form validates missing seats and saves synthetic selection",
-    "passed": true
+    "passed": false,
+    "error": "Expected values to be strictly equal:\n\nundefined !== '04'\n"
   },
   {
     "name": "cargo form validates missing goods and submits only synthetic data",
@@ -77,7 +81,8 @@
   },
   {
     "name": "staff logout returns to sign-in",
-    "passed": true
+    "passed": false,
+    "error": "Timed out: !!document.querySelector('#login-username') {\"body\":\"OPERATIONAL DATE: 2026-11-18\\nSY\\nSynthetic User\\nStaff · Dispatcher HQ\\nNovember 2026\\n‹›\\nMo\\nTu\\nWe\\nTh\\nFr\\nSa\\nSu\\n1\\n2\\n3\\n4\\n5\\n6\\n7\\n8\\n9\\n10\\n11\\n12\\n13\\n14\\n15\\n16\\n17\\n18\\n19\\n20\\n21\\n22\\n23\\n24\\n25\\n26\\n27\\n2\",\"location\":\"/\"}"
   },
   {
     "name": "responsive sign-in 360",
@@ -97,79 +102,6 @@
   },
   {
     "name": "mobile MFA challenge withholds admin UI, displays failure and completes synthetic verification",
-    "passed": true
-  },
-  {
-    "name": "dashboard layout, KPI columns and contained charts/tables 1440",
-    "passed": true
-  },
-  {
-    "name": "dashboard layout, KPI columns and contained charts/tables 768",
-    "passed": true
-  },
-  {
-    "name": "dashboard layout, KPI columns and contained charts/tables 390",
-    "passed": true
-  },
-  {
-    "name": "dashboard layout, KPI columns and contained charts/tables 320",
-    "passed": true
-  },
-  {
-    "name": "SMS credit refresh bypasses automatic cache and retains last value on an error",
-    "passed": true
-  },
-  {
-    "name": "seat KPI cards and donut use the active filtered trip totals",
-    "passed": true
-  },
-  {
-    "name": "Trip Details keeps trip fields and locked Accounts revenue",
-    "passed": true
-  },
-  {
-    "name": "both monthly travel-date charts preserve counts and titles and Month filtering",
-    "passed": true
-  },
-  {
-    "name": "Trip and Route Profit Report totals agree with Net Profit KPI and retain locked rows",
-    "passed": true
-  },
-  {
-    "name": "financial filters, negative profit, monthly costs and reset keep the original rules",
-    "passed": true
-  },
-  {
-    "name": "trip date errors and API failures suppress misleading KPI values and Retry recovers",
-    "passed": true
-  },
-  {
-    "name": "new synthetic bus appears once without refresh and preserves a valid Bus No selection",
-    "passed": true
-  },
-  {
-    "name": "opaque sticky header stays above content and preserves mobile navigation",
-    "passed": false,
-    "error": "Expected values to be strictly equal:\n\nfalse !== true\n"
-  },
-  {
-    "name": "footer logo loads and keyboard focus/table semantics remain accessible",
-    "passed": true
-  },
-  {
-    "name": "empty dashboard shows genuine empty trip/chart/ledger states",
-    "passed": true
-  },
-  {
-    "name": "primary dashboard and ledger loading do not display stale totals",
-    "passed": true
-  },
-  {
-    "name": "primary API error is announced and dashboard Retry fetches fresh data",
-    "passed": true
-  },
-  {
-    "name": "ledger failure hides financial rows and Net Profit until an explicit Retry succeeds",
     "passed": true
   }
 ]

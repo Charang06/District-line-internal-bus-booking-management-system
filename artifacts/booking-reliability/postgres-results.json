@@ -1,0 +1,308 @@
+{
+  "results": [
+    {
+      "name": "confirmed baseline reference collision: HTTP 500 / SQLSTATE 23505 / insert_bookings",
+      "pass": true,
+      "httpStatus": 500,
+      "code": "23505",
+      "constraint": "bookings_booking_ref_key",
+      "operation": "insert_bookings",
+      "persisted": 0
+    },
+    {
+      "name": "original random reference generator: 20 repeated 20-seat attempts",
+      "pass": true,
+      "runs": 20,
+      "failures": 19,
+      "successes": 1
+    },
+    {
+      "name": "repeated 1-seat batches, 20 runs with frozen timestamp/random",
+      "pass": true,
+      "runs": 20,
+      "verifiedSeats": 20
+    },
+    {
+      "name": "repeated 2-seat batches, 20 runs with frozen timestamp/random",
+      "pass": true,
+      "runs": 20,
+      "verifiedSeats": 40
+    },
+    {
+      "name": "repeated 5-seat batches, 20 runs with frozen timestamp/random",
+      "pass": true,
+      "runs": 20,
+      "verifiedSeats": 100
+    },
+    {
+      "name": "repeated 10-seat batches, 20 runs with frozen timestamp/random",
+      "pass": true,
+      "runs": 20,
+      "verifiedSeats": 200
+    },
+    {
+      "name": "repeated 20-seat batches, 20 runs with frozen timestamp/random",
+      "pass": true,
+      "runs": 20,
+      "verifiedSeats": 400
+    },
+    {
+      "name": "legacy single-seat endpoint remains unchanged",
+      "pass": true
+    },
+    {
+      "name": "duplicate/invalid seats reject without persistence; partial conflicts retain available seats",
+      "pass": true
+    },
+    {
+      "name": "concurrent submissions and same-group double submit do not duplicate seats",
+      "pass": true
+    },
+    {
+      "name": "audit failure rolls back all seats; exact same-group retry succeeds",
+      "pass": true
+    },
+    {
+      "name": "lost successful response reconciles real persisted records without retry",
+      "pass": true
+    },
+    {
+      "name": "request timeout before commit retains attempt; retry reconciles original transaction",
+      "pass": true
+    }
+  ],
+  "passed": 13,
+  "failed": 0,
+  "dbErrors": [
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    },
+    {
+      "code": "23505",
+      "operation": "insert_bookings",
+      "constraint": "bookings_booking_ref_key"
+    }
+  ],
+  "backendErrors": [
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"5683d999-53fb-4a09-8037-602e24514636\",\"label\":\"INSERT bookings\",\"duration_ms\":2,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"5683d999-53fb-4a09-8037-602e24514636\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"dd9d370d-900b-4b35-8946-aee4196030ea\",\"label\":\"INSERT bookings\",\"duration_ms\":1.5,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"dd9d370d-900b-4b35-8946-aee4196030ea\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"228de5fc-a94a-4c3f-b369-1c46c7154be4\",\"label\":\"INSERT bookings\",\"duration_ms\":1.9,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"228de5fc-a94a-4c3f-b369-1c46c7154be4\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"475a80dd-cf55-43e7-9ae2-ae6883fe202b\",\"label\":\"INSERT bookings\",\"duration_ms\":1.2,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"475a80dd-cf55-43e7-9ae2-ae6883fe202b\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"20a7c158-fa9d-4cb6-87fe-9c8894ff87e9\",\"label\":\"INSERT bookings\",\"duration_ms\":1.5,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"20a7c158-fa9d-4cb6-87fe-9c8894ff87e9\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"3ee1a2a6-47aa-4903-8e3f-8163ad3f9d50\",\"label\":\"INSERT bookings\",\"duration_ms\":1.1,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"3ee1a2a6-47aa-4903-8e3f-8163ad3f9d50\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"6de908f6-163c-4bc9-bd7b-bf5451d0a1e4\",\"label\":\"INSERT bookings\",\"duration_ms\":1.2,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"6de908f6-163c-4bc9-bd7b-bf5451d0a1e4\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"01d255ee-7b1d-443d-bf7e-db8ae15e66f9\",\"label\":\"INSERT bookings\",\"duration_ms\":1.3,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"01d255ee-7b1d-443d-bf7e-db8ae15e66f9\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"002bfab5-12b6-46d0-9be2-256d437b788f\",\"label\":\"INSERT bookings\",\"duration_ms\":1.5,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"002bfab5-12b6-46d0-9be2-256d437b788f\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"ffb52ae1-888a-44e9-bd7c-72a911aa2431\",\"label\":\"INSERT bookings\",\"duration_ms\":1.1,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"ffb52ae1-888a-44e9-bd7c-72a911aa2431\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"6e87f591-9087-4fea-b4c4-07ae0a6dc6dd\",\"label\":\"INSERT bookings\",\"duration_ms\":1.4,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"6e87f591-9087-4fea-b4c4-07ae0a6dc6dd\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"e04be437-b2fc-43fb-aec6-05f948b59b4e\",\"label\":\"INSERT bookings\",\"duration_ms\":1.2,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"e04be437-b2fc-43fb-aec6-05f948b59b4e\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"59bc8e6d-0c51-4b0e-840e-9a325ac8225a\",\"label\":\"INSERT bookings\",\"duration_ms\":1.5,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"59bc8e6d-0c51-4b0e-840e-9a325ac8225a\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"87dff3cc-1bef-463b-82f0-2c99b0d76260\",\"label\":\"INSERT bookings\",\"duration_ms\":0.8,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"87dff3cc-1bef-463b-82f0-2c99b0d76260\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"09feb341-4d61-4b1d-bfc4-0bda509f71a0\",\"label\":\"INSERT bookings\",\"duration_ms\":0.9,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"09feb341-4d61-4b1d-bfc4-0bda509f71a0\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"d8c3b11c-dd9e-4f99-b5d8-dc314c60282b\",\"label\":\"INSERT bookings\",\"duration_ms\":0.7,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"d8c3b11c-dd9e-4f99-b5d8-dc314c60282b\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"52829060-16fe-4eaf-ad32-3036997fed36\",\"label\":\"INSERT bookings\",\"duration_ms\":0.8,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"52829060-16fe-4eaf-ad32-3036997fed36\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"504cf86c-5c3e-419f-a26b-d5dd60a87fca\",\"label\":\"INSERT bookings\",\"duration_ms\":1.4,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"504cf86c-5c3e-419f-a26b-d5dd60a87fca\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"c9e4eae7-e9cf-442d-8f0e-785303b2a90e\",\"label\":\"INSERT bookings\",\"duration_ms\":0.8,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"c9e4eae7-e9cf-442d-8f0e-785303b2a90e\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"133b81b9-4059-4582-8c92-ac01e07a621a\",\"label\":\"INSERT bookings\",\"duration_ms\":0.8,\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"133b81b9-4059-4582-8c92-ac01e07a621a\",\"operation\":\"insert_bookings\",\"code\":\"23505\"}"
+    ],
+    [
+      "{\"kind\":\"db_query_error\",\"request_id\":\"5c52b600-f55d-4c97-8bf9-c05cd5a2f617\",\"label\":\"INSERT audit_logs\",\"duration_ms\":0.1,\"code\":\"Error\"}"
+    ],
+    [
+      "{\"kind\":\"bulk_booking_error\",\"request_id\":\"5c52b600-f55d-4c97-8bf9-c05cd5a2f617\",\"operation\":\"insert_booking_audit\",\"code\":\"DATABASE_ERROR\"}"
+    ]
+  ],
+  "clusterStopped": true,
+  "syntheticOnly": true
+}

@@ -10667,6 +10667,7 @@ button,
 
 /* Touch-friendly controls and scrollable data regions on compact layouts only. */
 @media (max-width: 1024px) {
+  .auth-redesign .recovery-back { min-height: 44px; }
   .app-shell :is(button, [role='button'], input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']), select, textarea) {
     min-height: 48px !important;
   }

@@ -8,6 +8,8 @@ const report=fs.readFileSync('docs/handover/phase-14-technical-release-fixes.md'
 const section=report.slice(report.indexOf('**75 runtime paths'))
 const names=section.split('~~~text\n')[1].split('\n~~~')[0].trim().split('\n').map(p=>p.trim())
 if(names.length!==75||new Set(names).size!==75)throw Error('Unexpected reviewed manifest')
+// Booking reliability adds one reviewed frontend-only runtime helper.
+names.push('src/data/bookingSubmission.js')
 const deny=/(^|\/)(?:\.git|\.env[^/]*|node_modules|artifacts|uploads|ops|backups|chrome-profile|dist|dist-ssr|test-support)(\/|$)|\.(?:db|sqlite|zip|7z|bak|test\.js)$/i
 for(const p of names){
  if(deny.test(p)||p.split('/').includes('..')||path.isAbsolute(p))throw Error('Forbidden release path')
