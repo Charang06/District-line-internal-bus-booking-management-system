@@ -1,0 +1,94 @@
+[
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentHeight": 844,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 11.6875,
+      "y": 130.4156036376953,
+      "width": 366.625,
+      "height": 535.75,
+      "top": 130.4156036376953,
+      "right": 378.3125,
+      "bottom": 666.1656036376953,
+      "left": 11.6875
+    },
+    "footer": {
+      "x": 0,
+      "y": 796,
+      "width": 390,
+      "height": 48,
+      "top": 796,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 32.6875,
+        "y": 529.1655883789062,
+        "width": 324.625,
+        "height": 44,
+        "top": 529.1655883789062,
+        "right": 357.3125,
+        "bottom": 573.1655883789062,
+        "left": 32.6875
+      }
+    ],
+    "linkGap": null,
+    "backgroundPosition": "100% 50%",
+    "passed": true,
+    "interactions": true
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 768
+    },
+    "documentHeight": 768,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 976.8125,
+      "y": 82.625,
+      "width": 420,
+      "height": 554.734375,
+      "top": 82.625,
+      "right": 1396.8125,
+      "bottom": 637.359375,
+      "left": 976.8125
+    },
+    "footer": {
+      "x": 0,
+      "y": 720,
+      "width": 1440,
+      "height": 48,
+      "top": 720,
+      "right": 1440,
+      "bottom": 768,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 1009.484375,
+        "y": 492.6875,
+        "width": 354.65625,
+        "height": 44,
+        "top": 492.6875,
+        "right": 1364.140625,
+        "bottom": 536.6875,
+        "left": 1009.484375
+      }
+    ],
+    "linkGap": null,
+    "backgroundPosition": "50% 50%",
+    "passed": true,
+    "interactions": true
+  }
+]

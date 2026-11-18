@@ -22,6 +22,14 @@
 @media (max-width: 760px) { .info-guide-page { --ig-panel-pad: 16px; } .ig-center { min-height: 0; } .ig-article { animation: none; } }
 
 
+.ig-system-details { margin: 0; font-size: 12px; line-height: 1.7; }
+.ig-system-details > div { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 8px 16px; padding: 10px 0; border-bottom: 1px solid #edf0f3; }
+.ig-system-details dt { color: #5e6d7e; font-weight: var(--font-medium); }
+.ig-system-details dd { min-width: 0; margin: 0; color: #233b53; overflow-wrap: anywhere; }
+@media (max-width: 479px) {
+  .ig-system-details > div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+
 /* Final guide layout scale: shared across every topic and scoped to Info only. */
 .info-guide-page {
   --ig-panel-pad: 32px;

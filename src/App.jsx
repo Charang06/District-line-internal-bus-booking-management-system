@@ -35,6 +35,7 @@ function TripVisualIcon({ name }) {
 }
 import './components/AdminDashboard.css'
 import UsernameRecoveryForm from './components/UsernameRecoveryForm'
+import LoginBackground from './components/LoginBackground'
 import { ROUTES, SEAT_LAYOUT, boardingLocations, droppingLocations, routeByCode, validRouteLocations } from './data/seatLayout'
 import { buildTripOverview, filterTripOverviewTrips } from './data/tripOverview'
 import { busRegistrations } from './data/busRegistrations'
@@ -173,14 +174,16 @@ function App() {
   const [authStatus, setAuthStatus] = useState('checking')
   useLayoutEffect(() => {
     if (authStatus !== 'unauthenticated') return undefined
+    // Reuse the hint across StrictMode effect replays and login/recovery renders.
+    if (document.querySelector('[data-login-background-preload]')) return undefined
     const preload = document.createElement('link')
     preload.rel = 'preload'
     preload.as = 'image'
-    preload.href = '/login-tropical-sunset-v2.jpg'
-    preload.fetchPriority = 'high'
+    preload.href = '/login-tropical-sunset-v2.webp'
+    preload.type = 'image/webp'
+    preload.fetchPriority = 'low'
     preload.dataset.loginBackgroundPreload = 'true'
     document.head.appendChild(preload)
-    return () => preload.remove()
   }, [authStatus])
   const [authError, setAuthError] = useState('')
   const [activeTab, setActiveTab] = useState('Home')
@@ -1655,7 +1658,8 @@ function App() {
   if (showUsernameRecovery || showRecovery || authStatus !== 'authenticated' || !token) {
     return (
       <main className={`auth-page auth-redesign login-page${showRecovery ? ' auth-recovery-mode' : ''}`}>
-        <div className="auth-layout login-stage">
+        <div className={`auth-layout login-stage${!showRecovery && !showUsernameRecovery ? ' login-background-enabled' : ''}`}>
+          {!showRecovery && !showUsernameRecovery && <LoginBackground />}
           <section className="auth-branding" aria-label="District Line">
             <img className="brand-logo" src="/logo-transparent.png" alt="District Line by CityLink, 077 90 40 300" />
             <span className="auth-brand-eyebrow">DISTRICT LINE · INTERNAL SYSTEM</span>
@@ -1715,14 +1719,13 @@ function App() {
               <div className="auth-support"><strong>Need help?</strong><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13v-1a8 8 0 0 1 16 0v1M4 12h3v6H5a2 2 0 0 1-2-2v-2a2 2 0 0 1 1-2Zm16 0h-3v6h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-1-2Zm-2 7a6 6 0 0 1-6 2" /></svg>Contact IT Support</span></div>
               <p className="login-hint">Staff password resets are managed by your administrator.</p>
             </form>}
-            <footer className="login-developer-credit">
-              <span>Developed by <strong>Cintex</strong></span>
-              <a href="mailto:cintextechpersonal@gmail.com" aria-label="Email Cintex technical support">cintextechpersonal@gmail.com</a>
-            </footer>
             </div>
             <footer className="auth-login-footer">District Line <span /> Internal Booking System</footer>
           </section>
         </div>
+        <footer className="login-developer-credit">
+          <span>Developed by <strong>Cintax Technologies (Pvt) Ltd.</strong></span>
+        </footer>
       </main>
     )
   }
@@ -2659,6 +2662,7 @@ function App() {
           <div className="footer-bottom">
             <span>© {COPYRIGHT_YEAR} District Line Express</span>
             <span>Travel connected. Operations in control.</span>
+            <span className="footer-developer-credit">Developed by <strong>Cintax Technologies (Pvt) Ltd.</strong></span>
           </div>
         </div>
       </footer>

@@ -10532,6 +10532,7 @@ button,
 
 .auth-page.auth-redesign.login-page {
   display: grid;
+  grid-template-rows: minmax(min-content, 1fr) auto;
   place-items: center;
   min-height: 100dvh;
   padding: 0;
@@ -10610,6 +10611,7 @@ button,
 .auth-redesign.login-page .login-password-toggle svg { width: 20px; height: 20px; }
 .auth-redesign.login-page .login-panel .login-submit { width: 100%; min-height: 52px; margin-top: 4px; border-radius: 12px; font-size: 18px; }
 .auth-redesign.login-page .recovery-link { min-height: 44px; margin: 10px 0 0; font-size: 14px; }
+.auth-redesign.login-page .login-background-enabled .recovery-link + .recovery-link { margin-top: 2px; }
 .auth-redesign.login-page .auth-support { display: flex; flex-direction: column; align-items: center; margin-top: 16px; padding: 0; }
 .auth-redesign.login-page .auth-support strong { display: block; }
 .auth-redesign.login-page .auth-support strong,
@@ -10623,8 +10625,12 @@ button,
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  margin-top: 20px;
-  padding-top: 14px;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  justify-content: center;
+  margin: 0;
+  padding: 10px 16px;
   border-top: 1px solid rgba(232, 184, 74, .18);
   color: #a7b4c5;
   font-size: 12px;
@@ -10632,9 +10638,18 @@ button,
   text-align: center;
 }
 .login-page .login-developer-credit strong { color: #d4b478; font-weight: var(--font-semibold); }
-.login-page .login-developer-credit a { color: inherit; overflow-wrap: anywhere; max-width: 100%; text-underline-offset: 3px; }
-.login-page .login-developer-credit a:hover { color: #d4b478; }
-.login-page .login-developer-credit a:focus-visible { outline: 2px solid #d4b478; outline-offset: 3px; border-radius: 2px; }
+.login-page .login-developer-credit { background: #06182d; overflow-wrap: anywhere; }
+/* Let the footer's actual height determine the remaining space, including wrapped text. */
+.auth-redesign.login-page .login-stage { min-height: 0; align-self: stretch; }
+.site-footer .footer-developer-credit {
+  flex-basis: 100%;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.site-footer .footer-bottom { flex-wrap: wrap; }
+.site-footer .footer-developer-credit strong { font-weight: var(--font-medium); }
 .auth-redesign.login-page .login-hint { margin: 12px 0 0; font-size: 12px; line-height: 1.5; text-align: center; }
 @media (min-width: 768px) and (max-width: 1199px) {
   .auth-redesign.login-page .login-stage {
@@ -10654,7 +10669,7 @@ button,
 @media (max-width: 767px) {
   .auth-redesign.login-page .login-stage {
     grid-template-columns: minmax(0, 1fr);
-    min-height: 100dvh;
+    min-height: 0;
     padding: 24px max(3vw, env(safe-area-inset-left)) 24px max(3vw, env(safe-area-inset-right));
     background-image: linear-gradient(rgba(5, 17, 37, .38), rgba(5, 17, 37, .55)), url('/login-tropical-sunset-v2.jpg');
     background-position: right center;
@@ -10663,6 +10678,52 @@ button,
 }
 @media (max-width: 479px) {
   .auth-redesign.login-page .login-card { padding: 24px 20px; border-radius: 20px; }
+}
+
+/* Keep short desktop/tablet viewports comfortable without shrinking inputs or tap targets. */
+@media (min-width: 768px) and (max-height: 760px) {
+  .auth-redesign.login-page .login-stage.login-background-enabled { padding-block: 16px; }
+  .auth-redesign.login-page .login-background-enabled .login-card { padding-block: 24px; }
+  .auth-redesign.login-page .login-background-enabled .auth-login-icon { width: 48px; height: 48px; }
+  .auth-redesign.login-page .login-background-enabled .auth-login-rule { margin-block: 14px 18px; }
+  .auth-redesign.login-page .login-background-enabled .auth-support { margin-top: 12px; }
+}
+
+/* The login image never participates in layout or blocks the form. Recovery keeps its existing background. */
+.auth-redesign.login-page .login-stage.login-background-enabled {
+  background: #06182d;
+  isolation: isolate;
+}
+.login-background {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+.login-background.is-ready { opacity: 1; }
+.login-background img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .login-background img { object-position: 42% center; }
+}
+@media (max-width: 767px) {
+  .login-background img { object-position: right center; }
+  .login-background::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(rgba(5, 17, 37, .38), rgba(5, 17, 37, .55));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .login-background { transition: none; }
 }
 
 /* Touch-friendly controls and scrollable data regions on compact layouts only. */

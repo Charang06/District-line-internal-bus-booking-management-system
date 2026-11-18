@@ -1,0 +1,618 @@
+[
+  {
+    "viewport": {
+      "width": 320,
+      "height": 640
+    },
+    "documentHeight": 694,
+    "scroll": true,
+    "overflow": false,
+    "card": {
+      "x": 9.59375,
+      "y": 24,
+      "width": 300.8125,
+      "height": 589.75,
+      "top": 24,
+      "right": 310.40625,
+      "bottom": 613.75,
+      "left": 9.59375
+    },
+    "footer": {
+      "x": 0,
+      "y": 637.75,
+      "width": 320,
+      "height": 56,
+      "top": 637.75,
+      "right": 320,
+      "bottom": 693.75,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 30.59375,
+        "y": 422.75,
+        "width": 258.8125,
+        "height": 44,
+        "top": 422.75,
+        "right": 289.40625,
+        "bottom": 466.75,
+        "left": 30.59375
+      },
+      {
+        "x": 30.59375,
+        "y": 476.75,
+        "width": 258.8125,
+        "height": 44,
+        "top": 476.75,
+        "right": 289.40625,
+        "bottom": 520.75,
+        "left": 30.59375
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "100% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 360,
+      "height": 740
+    },
+    "documentHeight": 740,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 10.796875,
+      "y": 47.125,
+      "width": 338.40625,
+      "height": 589.75,
+      "top": 47.125,
+      "right": 349.203125,
+      "bottom": 636.875,
+      "left": 10.796875
+    },
+    "footer": {
+      "x": 0,
+      "y": 684,
+      "width": 360,
+      "height": 56,
+      "top": 684,
+      "right": 360,
+      "bottom": 740,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 31.796875,
+        "y": 445.875,
+        "width": 296.40625,
+        "height": 44,
+        "top": 445.875,
+        "right": 328.203125,
+        "bottom": 489.875,
+        "left": 31.796875
+      },
+      {
+        "x": 31.796875,
+        "y": 499.875,
+        "width": 296.40625,
+        "height": 44,
+        "top": 499.875,
+        "right": 328.203125,
+        "bottom": 543.875,
+        "left": 31.796875
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "100% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 375,
+      "height": 667
+    },
+    "documentHeight": 694,
+    "scroll": true,
+    "overflow": false,
+    "card": {
+      "x": 11.25,
+      "y": 24,
+      "width": 352.5,
+      "height": 589.75,
+      "top": 24,
+      "right": 363.75,
+      "bottom": 613.75,
+      "left": 11.25
+    },
+    "footer": {
+      "x": 0,
+      "y": 637.75,
+      "width": 375,
+      "height": 56,
+      "top": 637.75,
+      "right": 375,
+      "bottom": 693.75,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 32.25,
+        "y": 422.75,
+        "width": 310.5,
+        "height": 44,
+        "top": 422.75,
+        "right": 342.75,
+        "bottom": 466.75,
+        "left": 32.25
+      },
+      {
+        "x": 32.25,
+        "y": 476.75,
+        "width": 310.5,
+        "height": 44,
+        "top": 476.75,
+        "right": 342.75,
+        "bottom": 520.75,
+        "left": 32.25
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "100% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "documentHeight": 844,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 11.6875,
+      "y": 99.125,
+      "width": 366.625,
+      "height": 589.75,
+      "top": 99.125,
+      "right": 378.3125,
+      "bottom": 688.875,
+      "left": 11.6875
+    },
+    "footer": {
+      "x": 0,
+      "y": 788,
+      "width": 390,
+      "height": 56,
+      "top": 788,
+      "right": 390,
+      "bottom": 844,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 32.6875,
+        "y": 497.875,
+        "width": 324.625,
+        "height": 44,
+        "top": 497.875,
+        "right": 357.3125,
+        "bottom": 541.875,
+        "left": 32.6875
+      },
+      {
+        "x": 32.6875,
+        "y": 551.875,
+        "width": 324.625,
+        "height": 44,
+        "top": 551.875,
+        "right": 357.3125,
+        "bottom": 595.875,
+        "left": 32.6875
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "100% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 430,
+      "height": 932
+    },
+    "documentHeight": 932,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 12.890625,
+      "y": 143.125,
+      "width": 404.21875,
+      "height": 589.75,
+      "top": 143.125,
+      "right": 417.109375,
+      "bottom": 732.875,
+      "left": 12.890625
+    },
+    "footer": {
+      "x": 0,
+      "y": 876,
+      "width": 430,
+      "height": 56,
+      "top": 876,
+      "right": 430,
+      "bottom": 932,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 33.890625,
+        "y": 541.875,
+        "width": 362.21875,
+        "height": 44,
+        "top": 541.875,
+        "right": 396.109375,
+        "bottom": 585.875,
+        "left": 33.890625
+      },
+      {
+        "x": 33.890625,
+        "y": 595.875,
+        "width": 362.21875,
+        "height": 44,
+        "top": 595.875,
+        "right": 396.109375,
+        "bottom": 639.875,
+        "left": 33.890625
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "100% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "documentHeight": 1024,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 384,
+      "y": 189.125,
+      "width": 360,
+      "height": 589.75,
+      "top": 189.125,
+      "right": 744,
+      "bottom": 778.875,
+      "left": 384
+    },
+    "footer": {
+      "x": 0,
+      "y": 968,
+      "width": 768,
+      "height": 56,
+      "top": 968,
+      "right": 768,
+      "bottom": 1024,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 409,
+        "y": 587.875,
+        "width": 310,
+        "height": 44,
+        "top": 587.875,
+        "right": 719,
+        "bottom": 631.875,
+        "left": 409
+      },
+      {
+        "x": 409,
+        "y": 641.875,
+        "width": 310,
+        "height": 44,
+        "top": 641.875,
+        "right": 719,
+        "bottom": 685.875,
+        "left": 409
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "42% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 1024,
+      "height": 768
+    },
+    "documentHeight": 768,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 556,
+      "y": 61.125,
+      "width": 400,
+      "height": 589.75,
+      "top": 61.125,
+      "right": 956,
+      "bottom": 650.875,
+      "left": 556
+    },
+    "footer": {
+      "x": 0,
+      "y": 712,
+      "width": 1024,
+      "height": 56,
+      "top": 712,
+      "right": 1024,
+      "bottom": 768,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 581,
+        "y": 459.875,
+        "width": 350,
+        "height": 44,
+        "top": 459.875,
+        "right": 931,
+        "bottom": 503.875,
+        "left": 581
+      },
+      {
+        "x": 581,
+        "y": 513.875,
+        "width": 350,
+        "height": 44,
+        "top": 513.875,
+        "right": 931,
+        "bottom": 557.875,
+        "left": 581
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "42% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "documentHeight": 900,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 976.8125,
+      "y": 117.625,
+      "width": 420,
+      "height": 608.734375,
+      "top": 117.625,
+      "right": 1396.8125,
+      "bottom": 726.359375,
+      "left": 976.8125
+    },
+    "footer": {
+      "x": 0,
+      "y": 844,
+      "width": 1440,
+      "height": 56,
+      "top": 844,
+      "right": 1440,
+      "bottom": 900,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 1009.484375,
+        "y": 527.6875,
+        "width": 354.65625,
+        "height": 44,
+        "top": 527.6875,
+        "right": 1364.140625,
+        "bottom": 571.6875,
+        "left": 1009.484375
+      },
+      {
+        "x": 1009.484375,
+        "y": 581.6875,
+        "width": 354.65625,
+        "height": 44,
+        "top": 581.6875,
+        "right": 1364.140625,
+        "bottom": 625.6875,
+        "left": 1009.484375
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "50% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 768
+    },
+    "documentHeight": 768,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 976.8125,
+      "y": 51.625,
+      "width": 420,
+      "height": 608.734375,
+      "top": 51.625,
+      "right": 1396.8125,
+      "bottom": 660.359375,
+      "left": 976.8125
+    },
+    "footer": {
+      "x": 0,
+      "y": 712,
+      "width": 1440,
+      "height": 56,
+      "top": 712,
+      "right": 1440,
+      "bottom": 768,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 1009.484375,
+        "y": 461.6875,
+        "width": 354.65625,
+        "height": 44,
+        "top": 461.6875,
+        "right": 1364.140625,
+        "bottom": 505.6875,
+        "left": 1009.484375
+      },
+      {
+        "x": 1009.484375,
+        "y": 515.6875,
+        "width": 354.65625,
+        "height": 44,
+        "top": 515.6875,
+        "right": 1364.140625,
+        "bottom": 559.6875,
+        "left": 1009.484375
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "50% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 1366,
+      "height": 768
+    },
+    "documentHeight": 768,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 905.03125,
+      "y": 54.078125,
+      "width": 420,
+      "height": 603.828125,
+      "top": 54.078125,
+      "right": 1325.03125,
+      "bottom": 657.90625,
+      "left": 905.03125
+    },
+    "footer": {
+      "x": 0,
+      "y": 712,
+      "width": 1366,
+      "height": 56,
+      "top": 712,
+      "right": 1366,
+      "bottom": 768,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 936.078125,
+        "y": 460.859375,
+        "width": 357.90625,
+        "height": 44,
+        "top": 460.859375,
+        "right": 1293.984375,
+        "bottom": 504.859375,
+        "left": 936.078125
+      },
+      {
+        "x": 936.078125,
+        "y": 514.859375,
+        "width": 357.90625,
+        "height": 44,
+        "top": 514.859375,
+        "right": 1293.984375,
+        "bottom": 558.859375,
+        "left": 936.078125
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "50% 50%",
+    "passed": true,
+    "interactions": false
+  },
+  {
+    "viewport": {
+      "width": 1280,
+      "height": 720
+    },
+    "documentHeight": 720,
+    "scroll": false,
+    "overflow": false,
+    "card": {
+      "x": 821.609375,
+      "y": 32.9375,
+      "width": 420,
+      "height": 598.109375,
+      "top": 32.9375,
+      "right": 1241.609375,
+      "bottom": 631.046875,
+      "left": 821.609375
+    },
+    "footer": {
+      "x": 0,
+      "y": 664,
+      "width": 1280,
+      "height": 56,
+      "top": 664,
+      "right": 1280,
+      "bottom": 720,
+      "left": 0
+    },
+    "footerText": "Developed by Cintax Technologies (Pvt) Ltd.",
+    "linkRects": [
+      {
+        "x": 850.765625,
+        "y": 435.890625,
+        "width": 361.6875,
+        "height": 44,
+        "top": 435.890625,
+        "right": 1212.453125,
+        "bottom": 479.890625,
+        "left": 850.765625
+      },
+      {
+        "x": 850.765625,
+        "y": 489.890625,
+        "width": 361.6875,
+        "height": 44,
+        "top": 489.890625,
+        "right": 1212.453125,
+        "bottom": 533.890625,
+        "left": 850.765625
+      }
+    ],
+    "linkGap": 10,
+    "backgroundPosition": "50% 50%",
+    "passed": true,
+    "interactions": false
+  }
+]

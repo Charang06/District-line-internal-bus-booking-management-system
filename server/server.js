@@ -2675,7 +2675,72 @@ app.post('/api/bookings', authMiddleware, requireAnyPageManage(['home', 'log'], 
   }
 })
 
+// One HTTP request, independent seat transactions: retain partial group success.
+async function cancelBookingBatch(req, res) {
+  const ids = req.body.booking_ids
+  const anchor = Number(req.params.id)
+  if (!ids.length || ids.length > VALID_SEATS.size || ids.some(id => !Number.isSafeInteger(id) || id < 1)
+    || new Set(ids).size !== ids.length || !ids.includes(anchor)) return res.status(400).json({ message: 'Choose valid passenger seat records.' })
+  try {
+    const selected = await all('SELECT id, trip_id, booking_group_id, seat_number FROM bookings WHERE id = ANY(?) ORDER BY id', [ids])
+    if (selected.length !== ids.length) return res.status(404).json({ message: 'Passenger booking not found.' })
+    const first = selected[0]
+    if (selected.length > 1 && (!first.booking_group_id || selected.some(row => row.trip_id !== first.trip_id || row.booking_group_id !== first.booking_group_id))) {
+      return res.status(400).json({ message: 'Choose seats from the same booking and trip.' })
+    }
+    const bookings = [], failed = []
+    let next = 0
+    const worker = async () => {
+      while (next < selected.length) {
+        const seat = selected[next++]
+        let client, discard = false
+        try {
+          client = await pool.connect()
+          await queryDatabase(client, 'BEGIN')
+          // A data-modifying CTE keeps lock/validation/update/audit in one database
+          // round trip. Each worker owns its client and transaction; no writes
+          // are dispatched concurrently on the same connection.
+          const result = await queryDatabase(client, `
+            WITH selected AS MATERIALIZED (
+              SELECT bk.*, t.travel_date, t.route_label, t.trip_code, COALESCE(t.bus_no,b.registration_no) AS registration_no
+              FROM bookings bk JOIN trips t ON t.id=bk.trip_id LEFT JOIN buses b ON b.id=t.bus_id
+              WHERE bk.id=$1 AND bk.trip_id=$3 AND bk.booking_group_id IS NOT DISTINCT FROM $4 FOR UPDATE OF bk
+            ), duty AS MATERIALIZED (
+              SELECT EXISTS(SELECT 1 FROM bus_duties WHERE status='finalized' AND (first_trip_id=$3 OR return_trip_id=$3)) AS locked
+            ), changed AS (
+              UPDATE bookings bk SET status='cancelled',cancelled_at=CURRENT_TIMESTAMP,cancelled_by=$2,updated_at=CURRENT_TIMESTAMP
+              FROM selected s,duty d WHERE bk.id=s.id AND s.status<>'cancelled' AND NOT d.locked RETURNING bk.*
+            ), logged AS (
+              INSERT INTO audit_logs(user_id,action,entity_type,entity_id,details)
+              SELECT $2,'booking.cancel','booking',id::text,booking_ref FROM changed RETURNING entity_id
+            )
+            SELECT COALESCE((SELECT to_jsonb(c) FROM changed c),to_jsonb(s)) AS booking,
+                   s.status AS previous_status,d.locked,(SELECT count(*) FROM logged) AS audit_count
+            FROM selected s CROSS JOIN duty d`, [seat.id, req.user.id, first.trip_id, first.booking_group_id])
+          const outcome = result.rows[0]
+          await queryDatabase(client, 'COMMIT')
+          if (!outcome) failed.push({ id: seat.id, seat_number: seat.seat_number, message: 'Booking not found.' })
+          else if (outcome.booking.status === 'cancelled') bookings.push(outcome.booking)
+          else failed.push({ id: seat.id, seat_number: seat.seat_number, message: 'Booking is part of a finalized duty and cannot be changed.' })
+        } catch (error) {
+          discard = true
+          if (client) { try { await queryDatabase(client, 'ROLLBACK') } catch { /* reconciliation handles an uncertain connection */ } }
+          console.error(JSON.stringify({ kind: 'booking_batch_cancel_error', request_id: transactionContext.getStore()?.requestId,
+            code: /^[A-Z0-9]{5}$/.test(error.code || '') ? error.code : 'DATABASE_ERROR' }))
+          failed.push({ id: seat.id, seat_number: seat.seat_number, uncertain: true, message: 'Unable to confirm cancellation. Check the booking status before retrying.' })
+        } finally { client?.release(discard) }
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(4, selected.length) }, worker))
+    const order = new Map(ids.map((id,index) => [id,index]))
+    res.json({ bookings: bookings.sort((a,b) => order.get(a.id)-order.get(b.id)), failed: failed.sort((a,b) => order.get(a.id)-order.get(b.id)) })
+  } catch {
+    res.status(500).json({ message: 'Unable to confirm cancellation. Check the booking status before retrying.' })
+  }
+}
+
 app.post('/api/bookings/:id/cancel', authMiddleware, requirePageManage('log', 'passengers'), async (req, res) => {
+  if (Array.isArray(req.body?.booking_ids)) return cancelBookingBatch(req, res)
   try {
     await exec('BEGIN IMMEDIATE')
     const booking = await get(

@@ -118,6 +118,7 @@ export const api = {
   createBooking: (token, body) => request(`${API_BASE}/bookings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body) }),
   createBookings: (token, body) => request(`${API_BASE}/bookings`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(body), signal: AbortSignal.timeout(20000) }),
   cancelBooking: (token, id) => apiFetch(`${API_BASE}/bookings/${id}/cancel`, { method: 'POST', headers: authHeaders(token), body: '{}', signal: AbortSignal.timeout(20000) }).then(parse),
+  cancelBookings: (token, ids) => apiFetch(`${API_BASE}/bookings/${ids[0]}/cancel`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ booking_ids: ids }), signal: AbortSignal.timeout(20000) }).then(parse),
   setBookingConfirmation: (token, id, confirmation_status) => apiFetch(`${API_BASE}/bookings/${id}/confirmation`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ confirmation_status }) }).then(parse),
   setBookingConfirmations: (token, ids, confirmation_status) => apiFetch(`${API_BASE}/bookings/${ids[0]}/confirmation`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ booking_ids: ids, confirmation_status }) }).then(parse),
   updateBookingContact: (token, id, contact) => request(`${API_BASE}/bookings/${id}/contact`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ contact }) }),

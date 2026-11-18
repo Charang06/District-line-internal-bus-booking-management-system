@@ -1,0 +1,81 @@
+const before = process.argv.includes('--before')
+const flagOff = process.argv.includes('--flag-off')
+const label = (before ? 'before' : 'after') + (process.argv.includes('--short') ? '-short' : '') + (flagOff ? '-flag-off' : '')
+async function metrics(p) {
+  return p.evaluate(`(()=>{const rect=e=>e.getBoundingClientRect().toJSON();const links=[...document.querySelectorAll('.auth-form .recovery-link')];const footer=document.querySelector('.login-developer-credit');return {viewport:{width:innerWidth,height:innerHeight},documentHeight:document.documentElement.scrollHeight,scroll:document.documentElement.scrollHeight>innerHeight+1,overflow:document.documentElement.scrollWidth>innerWidth,card:rect(document.querySelector('.login-card')),footer:rect(footer),footerText:footer.textContent.trim(),linkRects:links.map(rect),linkGap:links.length>1?rect(links[1]).top-rect(links[0]).bottom:null,backgroundPosition:getComputedStyle(document.querySelector('.login-background img')).objectPosition}})()`)
+}
+const click = (p, text) => p.evaluate(`(()=>{const b=[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===${JSON.stringify(text)});if(!b)throw Error('Missing button');b.click()})()`)
+const set = (p, selector, value) => p.evaluate(`(()=>{const e=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(e,${JSON.stringify(value)});e.dispatchEvent(new Event('input',{bubbles:true}))})()`)
+try {
+  for(let i=0;i<80;i++){try{await fetch('http://127.0.0.1:9360/json/version',{signal:AbortSignal.timeout(500)});break}catch{await pause(100)}}
+  const cases = flagOff ? [[390,844],[1440,768]] : process.argv.includes('--short') ? [[1440,720],[1366,650],[1280,600]] : [[320,640],[360,740],[375,667],[390,844],[430,932],[768,1024],[1024,768],[1440,900],[1440,768],[1366,768],[1280,720]]
+  for(const [width,height] of cases) {
+    const p=await page(width,height)
+    try {
+      await p.wait(`!!document.querySelector('#login-username')&&!!document.querySelector('.login-background.is-ready')`);await pause(650)
+      const result=await metrics(p)
+      assert.equal(result.overflow,false)
+      assert.equal(result.footerText,'Developed by Cintax Technologies (Pvt) Ltd.')
+      assert.ok(result.footer.top>=result.card.bottom)
+      assert.equal(result.linkRects.length,flagOff?1:2)
+      for(const r of result.linkRects)assert.ok(r.height>=44)
+      if(!before&&width>=1024&&height>=650)assert.equal(result.scroll,false,JSON.stringify(result))
+      await p.screenshot(`${label}-${width}x${height}`)
+      if(!before) {
+        await set(p,'#login-username','synthetic_user');await set(p,'#login-password','synthetic-password')
+        await click(p,'Forgot Password?');await p.wait(`!!document.querySelector('#recovery-email')`)
+        await set(p,'#recovery-email','synthetic@example.test');await click(p,'Send reset link');await p.wait(`document.body.textContent.includes('Synthetic recovery request accepted')`)
+        await click(p,'Back to sign in');await p.wait(`!!document.querySelector('#login-username')`)
+        if(!flagOff){
+        await click(p,'Forgot Username?');await p.wait(`!!document.querySelector('#username-recovery-email')`)
+        await set(p,'#username-recovery-email','synthetic@example.test');await click(p,'Send recovery link');await p.wait(`document.body.textContent.includes('Synthetic recovery request accepted')`)
+        await click(p,'Back to sign in');await p.wait(`!!document.querySelector('#login-username')`)
+        }
+        await set(p,'#login-username','synthetic_user');await set(p,'#login-password','synthetic-password')
+        await p.evaluate(`document.querySelector('.login-password-toggle').click()`);assert.equal(await p.evaluate(`document.querySelector('#login-password').type`),'text')
+        await p.evaluate(`document.querySelector('.login-password-toggle').click()`);assert.equal(await p.evaluate(`document.querySelector('#login-password').type`),'password')
+        await click(p,'Sign In');await p.wait(`document.body.textContent.includes('Synthetic invalid credentials')`)
+        if(width<768){
+          // A resized viewport approximates the usable space above an on-screen keyboard.
+          await p.call('Emulation.setDeviceMetricsOverride',{width,height:360,deviceScaleFactor:1,mobile:true})
+          await p.evaluate(`document.querySelector('#login-password').focus();document.querySelector('.login-submit').scrollIntoView({block:'center'})`)
+          const visible=await p.evaluate(`(()=>{const r=document.querySelector('.login-submit').getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&document.documentElement.scrollWidth<=innerWidth})()`)
+          assert.equal(visible,true)
+          await p.evaluate(`document.querySelector('.login-developer-credit').scrollIntoView({block:'end'})`)
+          assert.ok(await p.evaluate(`document.querySelector('.login-developer-credit').getBoundingClientRect().bottom<=innerHeight+1`))
+        }
+      }
+      assert.deepEqual(p.errors,[])
+      results.push({...result,passed:true,interactions:!before})
+      fs.writeFileSync(path.join(output,`${label}-results.json`),JSON.stringify(results,null,2))
+      console.log(`${label} ${width}x${height}: card ${result.card.height.toFixed(1)}px, scroll ${result.scroll}, recovery gap ${result.linkGap}`)
+    } finally {await p.close()}
+  }
+  if(!before&&!process.argv.includes('--short')&&!flagOff){
+    for(const scenario of ['slow-decode','reduced-motion','failure']){
+      imageMode=scenario==='failure'?'failure':'normal'
+      const p=await page(1440,768,async call=>{
+        await call('Network.enable');await call('Network.setCacheDisabled',{cacheDisabled:true});await call('Network.clearBrowserCache')
+        if(scenario==='reduced-motion')await call('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'reduce'}]})
+        if(scenario==='slow-decode'){
+          await call('Network.emulateNetworkConditions',{offline:false,latency:150,downloadThroughput:180000,uploadThroughput:90000})
+          await call('Page.addScriptToEvaluateOnNewDocument',{source:`const original=HTMLImageElement.prototype.decode;HTMLImageElement.prototype.decode=async function(){await original.call(this);if(this.src.endsWith('.webp'))await new Promise(r=>window.__releaseDecode=r)}`})
+        }
+      })
+      try{
+        await p.wait(`!!document.querySelector('#login-username')`)
+        if(scenario==='slow-decode'){
+          assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('.login-background')).opacity`),'0')
+          await set(p,'#login-username','usable-before-image')
+          await p.wait('!!window.__releaseDecode');await p.screenshot('after-background-pending');await p.evaluate('window.__releaseDecode()')
+        }
+        if(scenario==='failure'){await pause(700);assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('.login-background')).opacity`),'0')}
+        else{await p.wait(`!!document.querySelector('.login-background.is-ready')`);await pause(350);assert.equal(await p.evaluate(`getComputedStyle(document.querySelector('.login-background')).opacity`),'1')}
+        if(scenario==='reduced-motion')assert.ok(await p.evaluate(`parseFloat(getComputedStyle(document.querySelector('.login-background')).transitionDuration)<=.00001`))
+        assert.deepEqual(p.errors,[])
+        console.log('PASS background '+scenario)
+      }finally{await p.close()}
+    }
+  }
+  console.log(`PASS ${label}: ${results.length} viewport checks`)
+}finally{chrome.kill();server.close()}

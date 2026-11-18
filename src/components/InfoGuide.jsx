@@ -72,6 +72,14 @@ function GuideBody({ topic }) {
     <div className="ig-section-label"><span />{item.label}</div>
     <h2>{item.title}</h2><p className="ig-intro">{item.intro}</p>
     {topic === 'overview' ? <>
+      <section className="ig-block" aria-labelledby="ig-about-system-title">
+        <h3 id="ig-about-system-title">About System</h3>
+        <dl className="ig-system-details">
+          <div><dt>System Name</dt><dd>District Line Internal Bus Booking Management System</dd></div>
+          <div><dt>Client</dt><dd>District Line</dd></div>
+          <div><dt>Developed By</dt><dd>Cintax Technologies (Pvt) Ltd.</dd></div>
+        </dl>
+      </section>
       <section className="ig-block"><h3>Daily operational workflow</h3><p className="ig-muted">A general overview to help staff navigate the system; this is not an enforced sequence.</p>
         <div className="ig-workflow">{['Set trip details', 'Create passenger bookings', 'Register cargo', 'Review logs and print manifests', 'Record revenue and expenses (authorized users)'].map((text, index) => <div className="ig-workflow-step" key={text}><span>{String(index + 1).padStart(2, '0')}</span><strong>{text}</strong></div>)}</div>
       </section>
