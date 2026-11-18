@@ -1,0 +1,195 @@
+[
+  {
+    "image": {
+      "width": 1672,
+      "height": 941,
+      "beforeBytes": 412388,
+      "afterBytes": 255204
+    }
+  },
+  {
+    "baselineFormReadyMs": 7167.199999988079
+  },
+  {
+    "scenario": "desktop-slow",
+    "passed": true,
+    "formReadyMs": 7152.199999988079,
+    "opacity": "0",
+    "navy": "rgb(6, 24, 45)",
+    "rect": {
+      "x": 976.8125,
+      "y": 135.125,
+      "width": 420,
+      "height": 629.734375,
+      "top": 135.125,
+      "right": 1396.8125,
+      "bottom": 764.859375,
+      "left": 976.8125
+    },
+    "position": "50% 50%",
+    "transition": "0.25s",
+    "usable": true,
+    "cls": 0,
+    "resources": [
+      {
+        "name": "http://127.0.0.1:59637/login-tropical-sunset-v2.webp",
+        "start": 7106.300000011921,
+        "end": 13310.800000011921,
+        "bytes": 255204
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "scenario": "mobile-slow",
+    "passed": true,
+    "formReadyMs": 7151.800000011921,
+    "opacity": "0",
+    "navy": "rgb(6, 24, 45)",
+    "rect": {
+      "x": 11.6875,
+      "y": 116.625,
+      "width": 366.625,
+      "height": 610.75,
+      "top": 116.625,
+      "right": 378.3125,
+      "bottom": 727.375,
+      "left": 11.6875
+    },
+    "position": "100% 50%",
+    "transition": "0.25s",
+    "usable": true,
+    "cls": 0,
+    "resources": [
+      {
+        "name": "http://127.0.0.1:59637/login-tropical-sunset-v2.webp",
+        "start": 7109.800000011921,
+        "end": 13186.199999988079,
+        "bytes": 255204
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "scenario": "tablet",
+    "passed": true,
+    "formReadyMs": 7207.800000011921,
+    "opacity": "0",
+    "navy": "rgb(6, 24, 45)",
+    "rect": {
+      "x": 463,
+      "y": 195.125,
+      "width": 400,
+      "height": 609.75,
+      "top": 195.125,
+      "right": 863,
+      "bottom": 804.875,
+      "left": 463
+    },
+    "position": "42% 50%",
+    "transition": "0.25s",
+    "usable": true,
+    "cls": 0,
+    "resources": [
+      {
+        "name": "http://127.0.0.1:59637/login-tropical-sunset-v2.webp",
+        "start": 7162.300000011921,
+        "end": 9492.800000011921,
+        "bytes": 255204
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "scenario": "reduced-motion",
+    "passed": true,
+    "formReadyMs": 7165.699999988079,
+    "opacity": "0",
+    "navy": "rgb(6, 24, 45)",
+    "rect": {
+      "x": 976.8125,
+      "y": 135.125,
+      "width": 420,
+      "height": 629.734375,
+      "top": 135.125,
+      "right": 1396.8125,
+      "bottom": 764.859375,
+      "left": 976.8125
+    },
+    "position": "50% 50%",
+    "transition": "1e-05s",
+    "usable": true,
+    "cls": 0,
+    "resources": [
+      {
+        "name": "http://127.0.0.1:51462/login-tropical-sunset-v2.webp",
+        "start": 7134.399999976158,
+        "end": 9462.899999976158,
+        "bytes": 255204
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "scenario": "failure",
+    "passed": true,
+    "formReadyMs": 7158.800000011921,
+    "opacity": "0",
+    "navy": "rgb(6, 24, 45)",
+    "rect": {
+      "x": 11.6875,
+      "y": 116.625,
+      "width": 366.625,
+      "height": 610.75,
+      "top": 116.625,
+      "right": 378.3125,
+      "bottom": 727.375,
+      "left": 11.6875
+    },
+    "position": "100% 50%",
+    "transition": "0.25s",
+    "usable": true,
+    "cls": 0,
+    "resources": [
+      {
+        "name": "http://127.0.0.1:51462/login-tropical-sunset-v2.webp",
+        "start": 7119.300000011921,
+        "end": 7298.800000011921,
+        "bytes": 0
+      }
+    ],
+    "overflow": false
+  },
+  {
+    "scenario": "decode-gated",
+    "passed": true,
+    "formReadyMs": 7151.900000035763,
+    "opacity": "0",
+    "navy": "rgb(6, 24, 45)",
+    "rect": {
+      "x": 976.8125,
+      "y": 135.125,
+      "width": 420,
+      "height": 629.734375,
+      "top": 135.125,
+      "right": 1396.8125,
+      "bottom": 764.859375,
+      "left": 976.8125
+    },
+    "position": "50% 50%",
+    "transition": "0.25s",
+    "usable": true,
+    "cls": 0,
+    "resources": [
+      {
+        "name": "http://127.0.0.1:52586/login-tropical-sunset-v2.webp",
+        "start": 7115.800000011921,
+        "end": 9439.400000035763,
+        "bytes": 255204
+      }
+    ],
+    "overflow": false,
+    "initialCls": 0,
+    "imageLoadingCls": 0
+  }
+]

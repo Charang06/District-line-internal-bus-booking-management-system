@@ -1,0 +1,11 @@
+{
+  "database": "postgres",
+  "version": "PostgreSQL 18.7 on x86_64-windows, compiled by msvc-19.44.35229, 64-bit",
+  "data_directory": "C:/Users/Abbishathanan/Desktop/p1/New folder/last/D BUS BOOKING M/artifacts/multi-seat-cancellation/cluster-1794947394871/data",
+  "started": "2026-11-17T20:30:01.902Z",
+  "host": "127.0.0.1",
+  "port": 58013,
+  "independentlyVerifiedEmpty": true,
+  "createdByHarness": true,
+  "syntheticOnly": true
+}
